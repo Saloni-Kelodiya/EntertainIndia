@@ -1,0 +1,13 @@
+'use client';
+
+
+import SearchPage from '../../src/pages/SearchPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Search() {
+  return (
+    <LayoutWrapper>
+      <SearchPage />
+    </LayoutWrapper>
+  );
+}

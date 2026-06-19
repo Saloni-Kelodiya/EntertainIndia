@@ -1,0 +1,13 @@
+'use client';
+
+
+import RegisterPage from '../../src/pages/RegisterPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Register() {
+  return (
+    <LayoutWrapper>
+      <RegisterPage />
+    </LayoutWrapper>
+  );
+}

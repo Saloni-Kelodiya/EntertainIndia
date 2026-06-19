@@ -1,0 +1,12 @@
+'use client';
+
+import TagPage from '../../../src/pages/TagPage';
+import LayoutWrapper from '../../LayoutWrapper';
+
+export default function TagSlugPage() {
+  return (
+    <LayoutWrapper>
+      <TagPage />
+    </LayoutWrapper>
+  );
+}

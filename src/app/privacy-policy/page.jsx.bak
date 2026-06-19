@@ -1,0 +1,13 @@
+'use client';
+
+
+import PrivacyPolicy from '../../src/pages/PrivacyPolicy';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function PrivacyPolicyPage() {
+  return (
+    <LayoutWrapper>
+      <PrivacyPolicy />
+    </LayoutWrapper>
+  );
+}

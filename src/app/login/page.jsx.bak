@@ -1,0 +1,13 @@
+'use client';
+
+
+import LoginPage from '../../src/pages/LoginPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Login() {
+  return (
+    <LayoutWrapper>
+      <LoginPage />
+    </LayoutWrapper>
+  );
+}

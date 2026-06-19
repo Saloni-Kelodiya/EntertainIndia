@@ -1,0 +1,13 @@
+'use client';
+
+
+import ContactPage from '../../src/pages/ContactPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Contact() {
+  return (
+    <LayoutWrapper>
+      <ContactPage />
+    </LayoutWrapper>
+  );
+}

@@ -1,0 +1,13 @@
+'use client';
+
+
+import ProfilePage from '../../src/pages/ProfilePage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Profile() {
+  return (
+    <LayoutWrapper>
+      <ProfilePage />
+    </LayoutWrapper>
+  );
+}

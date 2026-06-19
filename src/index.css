@@ -1,0 +1,407 @@
+/* Google Fonts */
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --------------------------
+   BASE (GLOBAL)
+--------------------------- */
+@layer base {
+
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden; /* Stability fix here (not on body) */
+    
+  }
+
+  body {
+    @apply bg-slate-300 text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans;
+    margin: 0;
+    padding: 0;
+    overflow-x:clip; /* Prevent horizontal scroll issues on small screens */
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  p {
+    @apply text-gray-800 dark:text-gray-300;
+  }
+
+  input, textarea, select, button {
+    @apply focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-1;
+  }
+}
+
+/* --------------------------
+   COMPONENT UTILITIES
+--------------------------- */
+@layer components {
+
+  /* Perfect Mobile Container */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Section Title */
+  .section-title {
+    @apply flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white mb-4;
+  }
+
+  /* THEME CARDS (Mobile stable) */
+ .card-theme {
+    @apply 
+     dark:bg-gray-900 bg-white
+     dark:text-gray-100 text-gray-900
+      rounded-xl 
+      shadow-sm 
+      hover:shadow-md 
+      transition-all 
+      duration-300 
+      p-2;
+ }
+
+  /* THEME BUTTONS */
+  .btn-primary-theme {
+    @apply bg-blue-600 dark:bg-blue-700 
+           text-white px-5 py-2 rounded-lg shadow 
+           hover:bg-blue-700 dark:hover:bg-blue-800 transition duration-200;
+  }
+
+  .btn-outline-theme {
+    @apply border border-gray-400 dark:border-gray-500
+           text-gray-900 dark:text-gray-100 
+           px-5 py-2 rounded-lg
+           hover:bg-gray-100 dark:hover:bg-gray-800 transition duration-200;
+  }
+
+  /* THEME TEXT */
+  .text-theme {
+    @apply text-gray-900 dark:text-gray-200;
+  }
+
+  /* THEME BACKGROUND */
+  .bg-theme {
+    @apply bg-white dark:bg-gray-900;
+  }
+
+  .heading-theme {
+    @apply text-black dark:text-white font-bold;
+  }
+
+  .card-heading {
+    @apply text-white dark:text-black font-bold;
+  }
+ /* Default tab style */
+  .tab-base {
+    @apply px-5 py-2.5 rounded-full text-sm font-medium transition;
+  }
+
+  /* Active tab */
+  .tab-active {
+    @apply bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg;
+  }
+
+  /* Inactive tab */
+  .tab-inactive {
+    @apply bg-gray-200 dark:bg-gray-800 
+           text-gray-700 dark:text-gray-300 
+           hover:bg-gray-300 dark:hover:bg-gray-700 
+           border border-gray-300 dark:border-gray-700;
+  }
+  /* .link-theme {
+    @apply text-blue-600 hover:underline dark:text-pink-400;
+  } */
+}
+
+/* --------------------------
+   UTILITIES
+--------------------------- */
+@layer utilities {
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Skeleton Loader */
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(
+      to right,
+      #e0e0e0 0%,
+      #f2f2f2 20%,
+      #e0e0e0 40%,
+      #e0e0e0 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 1.8s infinite linear;
+  }
+
+  html.dark .skeleton {
+    background: linear-gradient(
+      to right,
+      #3b3b3b 0%,
+      #4b4b4b 20%,
+      #3b3b3b 40%,
+      #3b3b3b 100%
+    );
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  /* Hide scrollbar for alphabet filter */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+/* Add once globally */
+.dropdown-btn {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.dropdown-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.dark .dropdown-btn:hover {
+  background: #0f2236;
+}
+/* mobile menu buttons */
+.mobile-btn {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+}
+.mobile-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+.dark .mobile-btn:hover {
+  background: #0f2236;
+}
+/* Modern smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(83, 71, 81); /* indigo */
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* 🔥 When search modal is open */
+body.search-open {
+  background-color: #000; /* or blue / gradient */
+  overflow: hidden;
+}
+
+/* Optional: dim existing content */
+body.search-open #__next,
+body.search-open main {
+  filter: blur(4px) brightness(0.6);
+  transition: filter 0.2s ease;
+}
+body.Menu-open {
+  background-color: #000; /* or blue / gradient */
+  overflow: hidden;
+}
+
+/* Optional: dim existing content */
+body.Menu-open #__next,
+body.Menu-open main {
+  filter: blur(4px) brightness(0.6);
+  transition: filter 0.2s ease;
+}
+@keyframes vertical-scroll {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-vertical-scroll {
+  animation: vertical-scroll var(--scroll-duration, 25s) linear infinite;
+}
+
+/* ======================================================
+   UNIVERSAL EMBED & MEDIA FIXES (EntertainIndia)
+   ====================================================== */
+
+/* 1. Universal Container for Embeds */
+.embed-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 2.5rem auto; /* Upar niche space */
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto !important; /* Play button fix */
+}
+
+/* 2. YouTube & Video Iframes (Instagram/Twitter ko chhod kar) */
+/* 2. YouTube Videos Fix (Sirf YouTube iframes pe lagega) */
+.article-body iframe[src*="youtube.com"],
+.article-body iframe[src*="youtu.be"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  background-color: #000;
+}
+
+/* Instagram Iframe Fix */
+iframe.instagram-media {
+  aspect-ratio: auto !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Twitter (X) Iframe Fix (Isko dalna zaroori hai Twitter ke liye) */
+/* Twitter (X) Iframe Fix (Updated for Videos) */
+.article-body .twitter-tweet iframe,
+.article-body iframe[id^="twitter-widget-"] {
+  aspect-ratio: auto !important;
+  width: 100% !important;
+  /* Yahan se height: auto !important; HATA DIYA HAI */
+  margin: 0 auto !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+/* Twitter ke main container ke liye extra fix taaki scroll ya cut na ho */
+.twitter-tweet {
+  margin: 0 auto !important;
+  max-width: 550px !important;
+  min-height: 400px; /* Load hone se pehle thodi jagah banaye rakhega */
+}
+
+.instagram-media {
+  min-width: 326px !important;
+  max-width: 550px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  background: white;
+  border-radius: 12px !important;
+  border: 1px solid #e1e1e1 !important;
+  box-shadow: none !important;
+  pointer-events: auto !important; /* Click interaction allow karne ke liye */
+}
+
+
+.article-body img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 2rem 0;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .embed-container {
+    margin: 1.5rem auto;
+  }
+  
+  .article-body iframe[src*="youtube.com"],
+  .article-body iframe[src*="youtu.be"] {
+    border-radius: 8px;
+  }
+  
+  .instagram-media {  
+    min-width: 100% !important;
+  }
+}
+
+.prose blockquote:not(.instagram-media) {
+  /* Ye styles sirf normal text quotes pe lagenge, Instagram pe nahi */
+  padding: 0 !important;
+  margin: 0 auto !important;
+  border: none !important;
+  background: transparent !important;
+  quotes: none !important;
+}
+
+.prose blockquote::before, 
+.prose blockquote::after {
+  content: none !important;
+}
+@keyframes sidebar-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.animate-sidebar-scroll {
+  animation: sidebar-scroll 20s linear infinite;
+}
+
+.animate-sidebar-scroll:hover {
+  animation-play-state: paused;
+}
+
+
+/* Card Component ki CSS */
+.article-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* 1280x720 logic */
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.article-image {
+  object-fit: cover; /* Image stretch nahi hogi, extra part cut jayega */
+  object-position: center;
+}
+
+.story-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16; /* 720x1280 logic */
+  overflow: hidden;
+  border-radius: 8px;
+}

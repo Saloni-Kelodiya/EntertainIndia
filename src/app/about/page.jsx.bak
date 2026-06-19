@@ -1,0 +1,13 @@
+'use client';
+
+
+import AboutPage from '../../src/pages/AboutPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function About() {
+  return (
+    <LayoutWrapper>
+      <AboutPage />
+    </LayoutWrapper>
+  );
+}

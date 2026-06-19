@@ -1,0 +1,13 @@
+'use client';
+
+import ArticleCategory from '../../src/pages/ArticleCategory';
+import LayoutWrapper from '../LayoutWrapper';
+
+
+export default function BollywoodPage() {
+  return (
+    <LayoutWrapper>
+      <ArticleCategory category="bollywood" />
+    </LayoutWrapper>
+  );
+}

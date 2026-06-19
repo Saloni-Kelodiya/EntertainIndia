@@ -1,0 +1,13 @@
+'use client';
+
+
+import VideosPage from '../../src/pages/VideosPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Videos() {
+  return (
+    <LayoutWrapper>
+      <VideosPage />
+    </LayoutWrapper>
+  );
+}

@@ -1,0 +1,13 @@
+'use client';
+
+
+import PhotosPage from '../../src/pages/PhotosPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function Photos() {
+  return (
+    <LayoutWrapper>
+      <PhotosPage />
+    </LayoutWrapper>
+  );
+}

@@ -1,0 +1,15 @@
+'use client';
+
+
+import CategoryPage from '../../page-components/CategoryPage';
+import LayoutWrapper from '../LayoutWrapper';
+
+export default function OttPage() {
+  return (
+    <LayoutWrapper>
+      <CategoryPage category="ott" />
+    </LayoutWrapper>
+  );
+}
+
+
