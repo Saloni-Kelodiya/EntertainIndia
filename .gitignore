@@ -7,7 +7,6 @@ out/
 .svn/
 node_modules
 .next
-.env
 .env.local
 .vercel
 # environment variables
