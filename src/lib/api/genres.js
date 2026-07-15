@@ -33,7 +33,7 @@ export const GenresAPI = {
   },
 };
 
-// ✅ GENRE NORMALIZER (simple, no hindi translation)
+//  GENRE NORMALIZER (simple, no hindi translation)
 export const normalizeGenre = (genre) => {
   if (!genre) return null;
   const data = genre.attributes || genre;
@@ -44,11 +44,11 @@ export const normalizeGenre = (genre) => {
   };
 };
 
-// ✅ GENRE API (simple, no hindi translation)
+//  GENRE API (simple, no hindi translation)
 export const genresAPI = {
   getAll: async () => {
     const q = new URLSearchParams({
-      'pagination[pageSize]': 100, // ✅ VERY IMPORTANT
+      'pagination[pageSize]': 100, //  VERY IMPORTANT
       sort: 'name:asc',
     });
     const res = await apiClient.get(`/genres?${q.toString()}`);

@@ -3,18 +3,18 @@ import WebStoriesPage from '../../page-components/WebStoriesPage';
 import LayoutWrapper from '../LayoutWrapper';
 import { notFound } from 'next/navigation';
 
-// ✅ Dynamic Config - Fresh Data हमेशा
+//  Dynamic Config - Fresh Data हमेशा
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// ✅ SEO मेटाडेटा (SEO लिमिट के साथ)
+//  SEO मेटाडेटा (SEO लिमिट के साथ)
 export async function generateMetadata() {
-  // ✅ Title - MAX 60-70 characters
+  //  Title - MAX 60-70 characters
   const seoTitle = 'वेब स्टोरीज | शॉर्ट स्टोरीज |नवीनतम वेब स्टोरीज - EntertainIndia';
   // लंबाई: लगभग 55 characters
   
-  // ✅ Description - MAX 150-160 characters
+  //  Description - MAX 150-160 characters
   const seoDescription = 'पढ़ें नवीनतम वेब स्टोरीज, शॉर्ट एंटरटेनमेंट स्टोरीज और एक्सक्लूसिव कंटेंट EntertainIndia पर।';
   // लंबाई: लगभग 120 characters (सेफ)
 
@@ -56,7 +56,7 @@ export async function generateMetadata() {
       description: seoDescription.slice(0, 150),
       images: ['https://entertainindia.in/web-stories-og-image.jpg'],
     },
-    // ✅ अतिरिक्त SEO टैग्स
+    //  अतिरिक्त SEO टैग्स
     category: 'entertainment',
     authors: [{ name: 'EntertainIndia Team' }],
     creator: 'EntertainIndia',
@@ -67,7 +67,7 @@ export async function generateMetadata() {
       address: false,
     },
     verification: {
-      google: 'your-google-verification-code', // ✅ Google Search Console के लिए
+      google: 'your-google-verification-code', //  Google Search Console के लिए
     },
     other: {
       'facebook-domain-verification': 'your-facebook-verification-code',
@@ -75,11 +75,11 @@ export async function generateMetadata() {
   };
 }
 
-// ✅ WebStories स्कीमा (Google Web Stories के लिए जरूरी)
+//  WebStories स्कीमा (Google Web Stories के लिए जरूरी)
 function generateWebStoriesSchema(stories) {
   if (!stories || stories.length === 0) return null;
 
-  // ✅ सिर्फ 10 स्टोरीज दिखाएं (बहुत ज्यादा नहीं)
+  //  सिर्फ 10 स्टोरीज दिखाएं (बहुत ज्यादा नहीं)
   const storyItems = stories.slice(0, 10).map((story, index) => ({
     "@type": "ListItem",
     "position": index + 1,
@@ -105,7 +105,7 @@ function generateWebStoriesSchema(stories) {
   };
 }
 
-// ✅ BreadcrumbList स्कीमा
+//  BreadcrumbList स्कीमा
 function generateBreadcrumbSchema() {
   return {
     "@context": "https://schema.org",
@@ -127,7 +127,7 @@ function generateBreadcrumbSchema() {
   };
 }
 
-// ✅ CollectionPage स्कीमा (Web Stories के लिए)
+//  CollectionPage स्कीमा (Web Stories के लिए)
 function generateCollectionPageSchema() {
   return {
     "@context": "https://schema.org",
@@ -149,7 +149,7 @@ function generateCollectionPageSchema() {
   };
 }
 
-// ✅ मुख्य सर्वर कंपोनेंट
+//  मुख्य सर्वर कंपोनेंट
 export default async function WebStories() {
   let stories = [];
   let error = null;
@@ -158,7 +158,7 @@ export default async function WebStories() {
     const res = await webStoriesAPIServer.getAll();
     stories = res?.stories || [];
     
-    // ✅ अगर कोई स्टोरी नहीं है तो 404 नहीं दिखाना (खाली पेज दिखाएं)
+    //  अगर कोई स्टोरी नहीं है तो 404 नहीं दिखाना (खाली पेज दिखाएं)
     if (stories.length === 0) {
       console.log('No web stories found');
     }
@@ -167,14 +167,14 @@ export default async function WebStories() {
     error = e.message;
   }
 
-  // ✅ Schema जनरेट करें
+  //  Schema जनरेट करें
   const webStoriesSchema = generateWebStoriesSchema(stories);
   const breadcrumbSchema = generateBreadcrumbSchema();
   const collectionPageSchema = generateCollectionPageSchema();
 
   return (
     <>
-      {/* ✅ सभी Schema.org स्क्रिप्ट्स */}
+      {/*  सभी Schema.org स्क्रिप्ट्स */}
       {webStoriesSchema && (
         <script
           type="application/ld+json"
@@ -192,9 +192,9 @@ export default async function WebStories() {
 
       <LayoutWrapper>
         <article>
-          {/* ✅ Hidden SEO H1 - सिर्फ Google के लिए */}
+          {/*  Hidden SEO H1 - सिर्फ Google के लिए */}
         
-          {/* ✅ एरर हैंडलिंग */}
+          {/*  एरर हैंडलिंग */}
           {error ? (
             <div className="text-center py-20 px-4">
               <h2 className="text-2xl font-bold text-red-600 mb-4">

@@ -1,7 +1,7 @@
 import apiClient from './client';
 import qs from "qs";
-import { normalizeMedia} from './helpers';
-
+import { normalizeMedia,getDisplayValue,getImageUrl} from './helper';
+import {normalizeGenres} from './genres';
 
 export const normalizeMovie = (movie) => {
   if (!movie) return null;
@@ -36,7 +36,7 @@ export const normalizeMovie = (movie) => {
     industry: getDisplayValue(data.industry),
     // Meta
     rating: getDisplayValue(data.rating),
-    language: data.language, // ✅ language field भी normalize करें
+    language: data.language, //  language field भी normalize करें
     duration: data.duration || "",
     releaseDate: data.releaseDate || null,
     year: data.releaseDate ? new Date(data.releaseDate).getFullYear() : null,
@@ -80,7 +80,7 @@ export const normalizeMovie = (movie) => {
       };
     })(),
 
-    // ✅ Categories (ARRAY)
+    //  Categories (ARRAY)
     categories: Array.isArray(data.categories)
       ? data.categories.map(cat => ({
         id: cat.id,
@@ -132,11 +132,12 @@ export const normalizeMovie = (movie) => {
       ? data.articles.map((a) => ({
         id: a.id,
         documentId: a.documentId,
-        title: a.title || '',
+        title: a.title,
+        h1_title:a.h1_title,
         slug: a.slug || '',
         summary: a.summary || '',
         excerpt: a.summary || '',
-        mainCategory:a.MainCategory||'',
+        MainCategory:a.MainCategory,
         body: a.body || '',
         publishedAt: a.createdAt|| a.publishedAt,
         views: a.views ?? 0,
@@ -147,7 +148,7 @@ export const normalizeMovie = (movie) => {
       }))
       : [],
 
-   // ✅ FIXED SIMILAR MOVIES
+   //  FIXED SIMILAR MOVIES
     similarMovies: (() => {
       // Check multiple possible paths
       let similarData = data.similarMovies || movie.similarMovies || [];
@@ -170,7 +171,7 @@ export const normalizeMovie = (movie) => {
           duration: m.duration || "",
          category: (() => {
   const cat = m.category?.data?.attributes || m.category;
-  return cat?.name || "";
+ return (cat?.slug || cat?.name || "").toLowerCase();
 })(),
           poster: m.poster ? getImageUrl(m.poster) : null,
           backdrop: m.backdrop ? getImageUrl(m.backdrop) : null,
@@ -209,10 +210,7 @@ export const normalizeMovie = (movie) => {
               rating: movieData.rating?.title || movieData.rating || "",
               year: movieData.releaseDate ? new Date(movieData.releaseDate).getFullYear() : null,
               duration: movieData.duration || "",
-              category: (() => {
-  const cat = (m.attributes || m).category?.data?.attributes || (m.attributes || m).category;
-  return cat?.name || "";
-})(),
+              category: movieData.category,
               poster: movieData.poster ? getImageUrl(movieData.poster) : null,
               backdrop: movieData.backdrop ? getImageUrl(movieData.backdrop) : null,
             };
@@ -264,7 +262,7 @@ crew: Array.isArray(data?.data?.[0]?.crewMembers)
 };
 export const moviesAPI = {
   // Get all movies
-  getAllLight: async (params = {}) => {
+ getAllLight: async (params = {}) => {
     let finalSort = params.sort || 'releaseDate:desc';
   
     const queryObj = {
@@ -273,8 +271,8 @@ export const moviesAPI = {
         pageSize: params.pageSize || 12,
       },
       sort: finalSort,
-      // ✅ SIRF POSTER POPULATE KARO - Baaki kuch nahi chahiye
-      populate: ['poster','category'],
+      //  SIRF POSTER POPULATE KARO - Baaki kuch nahi chahiye
+      populate: ['poster','category','languages'],
       filters: {
         language: { $eq: "hi" },
 
@@ -291,12 +289,12 @@ if (params.filters?.trending) {
       queryObj.filters.title = { $containsi: params.search.trim() };
     }
   
-    // ✅ CATEGORY filter
+    //  CATEGORY filter
     if (params.category && params.category !== 'all') {
       queryObj.filters.category = { slug: { $eq: params.category } };
     }
   
-    // ✅ GENRE filter
+    //  GENRE filter
     if (params.genre && params.genre !== 'All' && params.genre !== 'all') {
       queryObj.filters.genres = { name: { $eq: params.genre } };
     }
@@ -352,6 +350,7 @@ getCompleteMovieDetails: async (slug) => {
         
         // Articles (only published)
         articles: {
+           sort: ['createdAt:desc'], 
           filters: {
             moderation_status: { $eq: "published" }
           },
@@ -408,7 +407,7 @@ getCompleteMovieDetails: async (slug) => {
       sort: finalSort,
       populate: ['genres', 'poster', 'backdrop', 'boxOffice', 'languages', 'age_rating', 'rating', 'release_year', 'category'],
       filters: {
-        // ✅ FORCE ENGLISH LANGUAGE FILTER
+        //  FORCE ENGLISH LANGUAGE FILTER
         language: { $eq: "hi" }
       }
     };
@@ -422,12 +421,12 @@ getCompleteMovieDetails: async (slug) => {
       q.append("filters[$and][1][$or][2][slug][$containsi]", params.search);
     }
   
-    // ✅ RELEASE TYPE filter
+    //  RELEASE TYPE filter
     if (params.releaseType) {
       queryObj.filters.releaseType = { $eq: params.releaseType };
     }
   
-    // ✅ ADDITIONAL FILTERS
+    //  ADDITIONAL FILTERS
     if (params.filters) {
       if (params.filters.genre && params.filters.genre !== "All") {
         queryObj.filters.genres = { name: { $containsi: params.filters.genre } };
@@ -443,12 +442,12 @@ getCompleteMovieDetails: async (slug) => {
       }
     }
   
-    // ✅ CATEGORY filter only (INDUSTRY logic REMOVED)
+    //  CATEGORY filter only (INDUSTRY logic REMOVED)
     if (params.category && params.category !== 'all') {
       queryObj.filters.category = { slug: { $eq: params.category } };
     }
   
-    // ✅ GENRE filter (Specific)
+    //  GENRE filter (Specific)
     if (params.genre && params.genre !== 'All' && params.genre !== 'all') {
       queryObj.filters.genres = { ...queryObj.filters.genres, name: { $eq: params.genre } };
     }
@@ -466,8 +465,67 @@ getCompleteMovieDetails: async (slug) => {
       return { movies: [], pagination: {} };
     }
   },
-  
-  // ✅ SIMPLE SEARCH METHOD - सबसे सुरक्षित और तेज़
+  getTrending: async (params = {}) => {
+  const queryObj = {
+    pagination: {
+      page: params.page || 1,
+      pageSize: params.pageSize || 10, // trending list aksar chhoti hoti hai
+    },
+    // ✅ Trending ke liye sort — agar 'topSearchRank' field hai toh usi se sort karo,
+    // warna releaseDate:desc fallback rahega
+    sort: params.sort || 'topSearchRank:desc',
+    // ✅ Sirf zaroori fields — response lightweight rahega
+    fields: ['title', 'slug', 'releaseDate'],
+    populate: {
+      category: {
+        fields: ['name', 'slug'],
+      },
+    },
+    filters: {
+      language: { $eq: "hi" },
+    },
+  };
+if (params.filters?.trending) {
+  queryObj.filters.trending = {
+    $eq: true
+  };
+}
+  // Optional: category-specific trending
+  if (params.category && params.category !== 'all') {
+    queryObj.filters.category = { slug: { $eq: params.category } };
+  }
+
+  try {
+    const query = qs.stringify(queryObj, { encodeValuesOnly: true });
+    const res = await apiClient.get(`/movies?${query}`);
+
+    // ✅ Sirf name, category, release date return karo — normalizeMovie() nahi (woh poora object banata hai)
+    const movies = (res.data?.data || []).map((item) => {
+      const d = item.attributes || item; // Strapi v4/v5 dono handle karega
+      const cat = d.category?.data?.attributes || d.category;
+
+      return {
+        id: item.id,
+        title: d.title || '',
+        slug: d.slug || '',
+        releaseDate: d.releaseDate || null,
+        category: {
+          name: cat?.name || null,
+          slug: cat?.slug || null,
+        },
+      };
+    });
+
+    return {
+      movies,
+      pagination: res.data?.meta?.pagination || {},
+    };
+  } catch (error) {
+    console.error("❌ moviesAPI.getTrending Error:", error);
+    return { movies: [], pagination: {} };
+  }
+},
+  //  SIMPLE SEARCH METHOD - सबसे सुरक्षित और तेज़
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8, category } = options;
@@ -512,7 +570,7 @@ getCompleteMovieDetails: async (slug) => {
     }
   },
 
-  // ✅ NEW: Get movies by movieType
+  //  NEW: Get movies by movieType
   getByMovieType: async (movieType, params = {}) => {
     try {
       const queryObj = {
@@ -557,10 +615,10 @@ getCompleteMovieDetails: async (slug) => {
          'crewMembers.photo',
          'languages',
          'articles.hero_image',
-         'similarMovies',  // ✅ Add this
-         'similarMovies.poster',  // ✅ Add this for poster
-         'similarMovies.backdrop',  // ✅ Optional
-         'similarMovies.category',   // ✅ ADD THIS
+         'similarMovies',  //  Add this
+         'similarMovies.poster',  //  Add this for poster
+         'similarMovies.backdrop',  //  Optional
+         'similarMovies.category',   //  ADD THIS
          'award',
          'where_to_watch',
          'cast.celebrities_profile.Avatar'
@@ -712,7 +770,7 @@ getBySlugWithArticles: async (slug) => {
 
 export const movieReviewsAPI = {
 
-  // ✅ Create review
+  //  Create review
   create: async (movieId, review) => {
     // Note: We bypass token in the interceptor for this endpoint
     const res = await apiClient.post('/movie-reviews', {
@@ -728,7 +786,7 @@ export const movieReviewsAPI = {
     return res.data;
   },
 
-  // ✅ Get reviews of a movie
+  //  Get reviews of a movie
   getByMovie: async (movieId) => {
     const query = qs.stringify({
       filters: {
@@ -741,7 +799,7 @@ export const movieReviewsAPI = {
     return res.data?.data || [];
   },
 
-  // ✅ Delete review
+  //  Delete review
   delete: async (reviewDocumentId) => {
     try {
       if (!reviewDocumentId) {

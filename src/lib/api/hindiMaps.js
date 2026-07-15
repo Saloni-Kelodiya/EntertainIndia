@@ -1,5 +1,5 @@
 //cd /home/claude/api && cat > hindiMaps.js << 'EOF'
-// ✅ Genre, Language, Profession ke Hindi translation maps + helper functions
+//  Genre, Language, Profession ke Hindi translation maps + helper functions
 // Genres, Movies, WebSeries, TvShows, Celebrities, Professions sabhi isko use karte hain
 
 export const GENRE_HINDI_MAP = {
@@ -161,7 +161,7 @@ export const GENRE_HINDI_MAP = {
   "action-soundtrack": "एक्शन साउंडट्रैक"
 };
 
-// ✅ Genre name (slug/string/object) -> Hindi name
+//  Genre name (slug/string/object) -> Hindi name
 export const getHindiGenreName = (genre) => {
   if (!genre) return "";
 
@@ -210,7 +210,7 @@ export const getHindiGenreName = (genre) => {
     .join(' ');
 };
 
-// ✅ Hindi Language Mapping
+//  Hindi Language Mapping
 export const LANGUAGE_HINDI_MAP = {
   // Indian Languages
   "hindi": "हिंदी",
@@ -265,7 +265,7 @@ export const LANGUAGE_HINDI_MAP = {
   "multiple": "एकाधिक"
 };
 
-// ✅ Language name -> Hindi name
+//  Language name -> Hindi name
 export const getHindiLanguageName = (language) => {
   if (!language) return "";
 
@@ -287,7 +287,7 @@ export const getHindiLanguageName = (language) => {
   return langValue;
 };
 
-// ✅ Hindi Profession Mapping
+//  Hindi Profession Mapping
 export const professionHindiMap = {
   "actor": "अभिनेता",
   "actress": "अभिनेत्री",
@@ -336,7 +336,7 @@ export const professionHindiMap = {
   "badminton_player": "बैडमिंटन खिलाड़ी"
 };
 
-// ✅ Profession name -> Hindi name
+//  Profession name -> Hindi name
 export const getHindiProfession = (professionName) => {
   if (!professionName) return professionName;
   const lowerProf = professionName.toLowerCase().trim();

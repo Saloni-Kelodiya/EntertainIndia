@@ -1,18 +1,20 @@
 import BoxOfficePage from '../../../page-components/BoxOfficePage';
 import LayoutWrapper from '../../LayoutWrapper';
-import { moviesAPI } from "../../../lib/api";
-import { notFound } from 'next/navigation'; // ✅ 404 handle karne ke liye
+import { moviesAPI } from "../../../lib/api/movies";
+import { notFound, redirect } from 'next/navigation'; // 404 aur redirect handle karne ke liye
 
-// ✅ Force dynamic rendering
+// Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
 export const fetchCache = 'force-cache';
 
-
-// ✅ Allowed Categories List (Iske alawa sab 404)
+// Allowed Categories List (Iske alawa sab 404)
 const ALLOWED_BOX_OFFICE_CATEGORIES = ['bollywood', 'tollywood', 'hollywood', 'bhojiwood', 'korean'];
 
-// ✅ हिंदी ट्रांसलेशन (SEO, metadata aur schemas ke liye)
+// ✅ FUTURE-PROOF: Kitne pages tak index karna hai (baaki index:false, follow:true rahenge)
+const MAX_INDEXABLE_PAGE = 5;
+
+// हिंदी ट्रांसलेशन (SEO, metadata aur schemas ke liye)
 const categoryTranslations = {
   'bollywood': 'बॉलीवुड',
   'hollywood': 'हॉलीवुड',
@@ -21,9 +23,11 @@ const categoryTranslations = {
   'korean': 'कोरियाई',
 };
 
-// ✅ SEO: Dynamic Metadata Generation
-export async function generateMetadata({ params }) {
+// SEO: Dynamic Metadata Generation
+export async function generateMetadata({ params, searchParams }) {
   const { category } = await params;
+  const sParams = await searchParams;
+  const page = parseInt(sParams?.page) || 1;
   const categoryKey = category?.toLowerCase();
 
   // ❌ Agar category allowed list mein nahi hai, toh stop index
@@ -35,42 +39,52 @@ export async function generateMetadata({ params }) {
   }
 
   const categoryHindi = categoryTranslations[categoryKey] || categoryKey;
+  const siteUrl = 'https://entertainindia.in';
 
-  // ✅ टाइटल
+  // टाइटल
   let pageTitle = `${categoryHindi} बॉक्स ऑफिस कलेक्शन: वर्ल्डवाइड रैंकिंग | EntertainIndia`;
   if (pageTitle.length > 68) {
     pageTitle = pageTitle.slice(0, 65) + '...';
   }
 
-  // ✅ डिस्क्रिप्शन
+  // डिस्क्रिप्शन
   let pageDesc = `नवीनतम ${categoryHindi} बॉक्स ऑफिस रिपोर्ट देखें। वर्ल्डवाइड कलेक्शन, बजट, और फिल्मों के वर्डिक्ट्स की तुलना करें। EntertainIndia के ऑफिशियल ट्रैकर पर।`;
   if (pageDesc.length > 155) {
     pageDesc = pageDesc.slice(0, 152) + '...';
   }
 
+  // Self-referencing canonical — har page apna asli URL point karega
+  const canonicalUrl = page > 1
+    ? `${siteUrl}/${categoryKey}/box-office?page=${page}`
+    : `${siteUrl}/${categoryKey}/box-office`;
+
+  // ✅ FUTURE-PROOF: Deep pages (page > MAX_INDEXABLE_PAGE) index nahi honge,
+  // lekin crawler follow karke deeper movies discover kar sakta hai
+  const shouldIndex = page <= MAX_INDEXABLE_PAGE;
+
   return {
     title: pageTitle,
     description: pageDesc,
     robots: {
-      index: true,
+      index: shouldIndex,
       follow: true,
       googleBot: {
-        index: true,
+        index: shouldIndex,
         follow: true,
         'max-image-preview': 'large',
       },
     },
     alternates: {
-      canonical: `https://entertainindia.in/${categoryKey}/box-office`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title: pageTitle.slice(0, 60),
       description: pageDesc.slice(0, 150),
-      url: `https://entertainindia.in/${categoryKey}/box-office`,
+      url: canonicalUrl,
       siteName: 'EntertainIndia',
-      images: [{ 
-        url: "/box-office-default-og.jpg", 
-        width: 1200, 
+      images: [{
+        url: "/box-office-default-og.jpg",
+        width: 1200,
         height: 630,
         alt: `${categoryHindi} बॉक्स ऑफिस रिपोर्ट`
       }],
@@ -87,17 +101,24 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ मेन कंपोनेंट
+// मेन कंपोनेंट
 export default async function DynamicBoxOffice({ params, searchParams }) {
-  const { category } = await params; 
+  const { category } = await params;
   const categoryKey = category?.toLowerCase();
-  
+
   // ❌ Strict Validation: Agar criteria match na ho toh seedhe Next.js 404 fetch karein
   if (!ALLOWED_BOX_OFFICE_CATEGORIES.includes(categoryKey)) {
     notFound();
   }
 
   const sParams = await searchParams;
+
+  // ✅ FIX: Agar koi explicitly ?page=1 pe aaye, toh usse clean URL pe redirect kar do
+  // Isse duplicate content (base URL vs ?page=1) permanently khatam ho jaata hai
+  if (sParams?.page === '1') {
+    redirect(`/${categoryKey}/box-office`);
+  }
+
   const page = parseInt(sParams.page) || 1;
 
   let initialData = { movies: [], pagination: null };
@@ -118,7 +139,7 @@ export default async function DynamicBoxOffice({ params, searchParams }) {
   const categoryHindi = categoryTranslations[categoryKey] || categoryKey;
   const siteUrl = 'https://entertainindia.in';
 
-  // ✅ ब्रेडक्रंब स्कीमा - शुद्ध हिंदी में
+  // ब्रेडक्रंब स्कीमा - शुद्ध हिंदी में
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -129,7 +150,7 @@ export default async function DynamicBoxOffice({ params, searchParams }) {
     ]
   };
 
-  // ✅ आइटमलिस्ट स्कीमा (Cleaned Single Article URLs)
+  // आइटमलिस्ट स्कीमा (category slug reliably resolve hoga)
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -140,21 +161,23 @@ export default async function DynamicBoxOffice({ params, searchParams }) {
     "itemListElement": (initialData?.movies || []).slice(0, 10).map((movie, index) => {
       let imageUrl = movie.poster?.formats?.large?.url || movie.poster?.url || "/default-poster.jpg";
       const releaseDate = movie.releaseDate || null;
-      
+
       let directorName = null;
       if (movie.crewMembers && Array.isArray(movie.crewMembers)) {
         const directorObj = movie.crewMembers.find(member => member.role === "Director");
         if (directorObj) directorName = directorObj.name;
       }
-      
+
+      // movie.category?.slug undefined hone par categoryKey fallback use hoga
+      const movieCategorySlug = movie.category?.slug || categoryKey;
+
       return {
         "@type": "ListItem",
         "position": (page - 1) * 10 + (index + 1),
         "item": {
           "@type": "Movie",
           "name": movie.title,
-          // ✅ FIXED PATTERN: Double '/movies' segments completely clean kar diye hain
-          "url": `${siteUrl}/${movie.category?.slug }/${movie.slug}`,
+          "url": `${siteUrl}/${movieCategorySlug}/${movie.slug}`,
           "image": imageUrl,
           ...(releaseDate && { dateCreated: releaseDate }),
           ...(directorName && { director: { "@type": "Person", "name": directorName } })
@@ -163,7 +186,7 @@ export default async function DynamicBoxOffice({ params, searchParams }) {
     })
   };
 
-  // ✅ कलेक्शनपेज स्कीमा
+  // कलेक्शनपेज स्कीमा
   const collectionLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -179,31 +202,31 @@ export default async function DynamicBoxOffice({ params, searchParams }) {
 
   return (
     <>
-      {/* ✅ पैजिनेशन लिंक्स */}
+      {/* पैजिनेशन लिंक्स */}
       {page > 1 && (
-        <link 
-          rel="prev" 
-          href={`${siteUrl}/${categoryKey}/box-office?page=${page - 1}`} 
+        <link
+          rel="prev"
+          href={`${siteUrl}/${categoryKey}/box-office${page - 1 > 1 ? `?page=${page - 1}` : ''}`}
         />
       )}
       {page < (initialData?.pagination?.pageCount || 1) && (
-        <link 
-          rel="next" 
-          href={`${siteUrl}/${categoryKey}/box-office?page=${page + 1}`} 
+        <link
+          rel="next"
+          href={`${siteUrl}/${categoryKey}/box-office?page=${page + 1}`}
         />
       )}
 
-      {/* ✅ स्कीमा स्क्रिप्ट्स */}
+      {/* स्कीमा स्क्रिप्ट्स */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, itemListLd, collectionLd]) }}
       />
-      
-      {/* ✅ हिडन H1 - सिर्फ गूगल के लिए */}
+
+      {/* हिडन H1 - सिर्फ गूगल के लिए */}
       <h1 className="sr-only">
-        {categoryHindi} बॉक्स ऑफिस收藏 और रिपोर्ट | EntertainIndia
+        {categoryHindi} बॉक्स ऑफिस संग्रह और रिपोर्ट | EntertainIndia
       </h1>
-      
+
       <LayoutWrapper>
         {error && !initialData?.movies?.length ? (
           <div className="text-center py-20 px-4">
@@ -215,11 +238,11 @@ export default async function DynamicBoxOffice({ params, searchParams }) {
             </p>
           </div>
         ) : (
-          <BoxOfficePage 
-            initialMovies={initialData?.movies || []} 
+          <BoxOfficePage
+            initialMovies={initialData?.movies || []}
             initialPagination={initialData?.pagination}
             initialPage={page}
-            serverCategory={categoryKey} 
+            serverCategory={categoryKey}
           />
         )}
       </LayoutWrapper>

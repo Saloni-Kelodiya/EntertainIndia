@@ -1,0 +1,6 @@
+# Allow all crawlers to index everything
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://entertainindia.in/sitemap.xml

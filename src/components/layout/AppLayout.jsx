@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useStore } from '../../store/useStore';
-
+import Header from "./Header";
 // Header aur Footer ko dynamic chunking ke sath import karein
-const Header = dynamic(() => import('./Header'), { ssr: true });
+
 const Footer = dynamic(() => import('./Footer'), { ssr: true });
 
 export default function AppLayout({ theme, setTheme, children }) {

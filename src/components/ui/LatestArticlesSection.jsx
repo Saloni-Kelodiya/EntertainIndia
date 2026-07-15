@@ -4,6 +4,8 @@ import { Clock } from 'lucide-react';
 import { getStrapiMedia } from '../../lib/constants';
 import { formatDate } from '../../lib/helpers';
 import { memo } from 'react';
+import { getResponsiveImageUrl } from "../../lib/api/helper"; // आपका ग्लोबल इमेज हेल्पर
+import OptimizedImage from "./OptimizedImage"; //  आपका ग्लोबल इमेज कंपोनेंट
 
 const categoryHindiNames = {
   bollywood: "बॉलीवुड",
@@ -15,15 +17,11 @@ const categoryHindiNames = {
   korean: "कोरियाई",
 };
 
-// ✅ Memoized Article Card Component for better performance
+//  Memoized Article Card Component for better performance
 const ArticleCard = memo(({ article }) => {
-  const imgUrl = getStrapiMedia(
-    article?.heroImage?.formats?.medium?.url ||
-    article?.heroImage?.formats?.small?.url ||
-    article?.heroImage?.url
-  );
+  const imgUrl = getResponsiveImageUrl(article, "medium"); // ✅ "small" se "medium" kiya
 
-  const categoryName = article?.categories?.[0]?.name || article?.category?.name || "News";
+  const categoryName = article?.categories?.[0]?.name || article?.category?.name;
 
   return (
     <Link
@@ -33,15 +31,14 @@ const ArticleCard = memo(({ article }) => {
     >
       <div className="relative w-full aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
         {imgUrl ? (
-          <Image
+          <OptimizedImage
             src={imgUrl}
             alt={article.title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={75}
-            loading="lazy"
-            // ✅ REMOVED unoptimized - WebP conversion now works!
+            type="featured"
+            isPriority={false}
+            quality={85} // ✅ quality badhayi
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw" // ✅ grid breakpoints se match
+            className="transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-200 dark:bg-gray-700">

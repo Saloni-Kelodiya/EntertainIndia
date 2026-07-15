@@ -1,7 +1,7 @@
 import apiClient from './client';
 
 export const normalizeProfession = (professions) => {
-  // ✅ FIX: Check professions parameter, not genres
+  //  FIX: Check professions parameter, not genres
   if (!professions || !Array.isArray(professions)) return [];
 
   return professions.map((profession) => {
@@ -11,8 +11,8 @@ export const normalizeProfession = (professions) => {
     
     return {
       id: profession.id || data.id,
-      name: hindiName, // ✅ हिंदी नाम
-      originalName: originalName, // ✅ मूल नाम (अगर जरूरत हो)
+      name: hindiName, //  हिंदी नाम
+      originalName: originalName, //  मूल नाम (अगर जरूरत हो)
       slug: data.slug || originalName?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
     };
   });
@@ -85,7 +85,7 @@ export const ProfessionAPI = {
   },
 };
 // Hindi Profession Mapping
-const professionHindiMap = {
+export const professionHindiMap = {
   "actor": "अभिनेता",
   "actress": "अभिनेत्री",
   "singer": "गायक",
@@ -134,7 +134,7 @@ const professionHindiMap = {
 };
 
 // Function to get Hindi profession name
-const getHindiProfession = (professionName) => {
+ export const getHindiProfession = (professionName) => {
   if (!professionName) return professionName;
   const lowerProf = professionName.toLowerCase().trim();
   

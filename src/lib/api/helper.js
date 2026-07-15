@@ -1,6 +1,7 @@
 import { MEDIA_URL } from '../constants';
+import { getStrapiMedia } from "../constants";
 
-// ✅ Simple image url resolver (string ya {url} / {attributes:{url}} object)
+//  Simple image url resolver (string ya {url} / {attributes:{url}} object)
 export const getImageUrl = (img) => {
   if (!img) return null;
   const url = typeof img === 'string' ? img : (img.attributes?.url || img.url);
@@ -8,7 +9,7 @@ export const getImageUrl = (img) => {
   return url.startsWith('http') ? url : `${MEDIA_URL}${url}`;
 };
 
-// ✅ Best-quality media url resolver (formats.large > medium > small > thumbnail)
+//  Best-quality media url resolver (formats.large > medium > small > thumbnail)
 export const getMediaUrl = (media) => {
   if (!media) return null;
 
@@ -24,7 +25,7 @@ export const getMediaUrl = (media) => {
   return url.startsWith("http") ? url : `${MEDIA_URL}${url}`;
 };
 
-// ✅ Default team author (jab article par koi author na ho)
+//  Default team author (jab article par koi author na ho)
 export const DEFAULT_TEAM_AUTHOR = {
   id: 'team',
   name: 'EntertainIndia Team',
@@ -32,7 +33,7 @@ export const DEFAULT_TEAM_AUTHOR = {
   avatar: null
 };
 
-// ✅ Full media object normalizer (formats ke saath)
+//  Full media object normalizer (formats ke saath)
 export const normalizeMedia = (media) => {
   if (!media) return null;
   const data = media.attributes || media;
@@ -63,7 +64,7 @@ export const normalizeMedia = (media) => {
   };
 };
 
-// ✅ Author normalizer (articles ke liye)
+//  Author normalizer (articles ke liye)
 export const normalizeAuthor = (author) => {
   if (!author) return null;
   const data = author.attributes || author;
@@ -91,7 +92,7 @@ export const normalizeAuthor = (author) => {
   };
 };
 
-// ✅ Date -> IST formatted string
+//  Date -> IST formatted string
 export const toIST = (dateStr) => {
   if (!dateStr) return null;
   return new Intl.DateTimeFormat("en-IN", {
@@ -105,7 +106,7 @@ export const toIST = (dateStr) => {
   }).format(new Date(dateStr));
 };
 
-// ✅ Strapi rich text blocks -> plain text
+//  Strapi rich text blocks -> plain text
 export const normalizeRichText = (blocks = []) =>
   blocks
     .map((b) =>
@@ -115,7 +116,7 @@ export const normalizeRichText = (blocks = []) =>
     )
     .join("\n\n");
 
-// ✅ Strapi relation object se display value nikalne ke liye
+//  Strapi relation object se display value nikalne ke liye
 export const getDisplayValue = (val) => {
   if (!val) return null;
   const target = val.data ? (val.data.attributes || val.data) : (val.attributes || val);
@@ -124,4 +125,16 @@ export const getDisplayValue = (val) => {
     return target.language || target.name || target.title || target.value || target.slug || target.language_name || target.LanguageName || target.Name || target.lang || target.Lang || null;
   }
   return target;
+};
+export const getResponsiveImageUrl = (article, size = "medium") => {
+  const img = article?.heroImage || article?.hero_image || article?.image;
+  if (!img) return null;
+
+  // अगर साइज स्पेसिफाइड है तो पहले उसे ढूंढो, नहीं तो फॉलबैक करो
+  const rawUrl = img?.formats?.[size]?.url || 
+                 img?.formats?.medium?.url || 
+                 img?.formats?.small?.url || 
+                 img?.url;
+
+  return rawUrl ? getStrapiMedia(rawUrl) : null;
 };

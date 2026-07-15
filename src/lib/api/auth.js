@@ -1,7 +1,6 @@
 
 import apiClient from './client';
-
-
+import qs from "qs";
 export const globalSearch = async (query) => {
   if (!query) return null;
 
@@ -11,8 +10,6 @@ export const globalSearch = async (query) => {
   if (!res.ok) throw new Error("Search failed");
   return res.json();
 };
-
-import apiClient from './client';
 
 export const normalizeComment = (comment) => {
   if (!comment) return null;
@@ -41,12 +38,6 @@ export const commentsAPI = {
       .then((res) => normalizeComment(res.data.data));
   },
 };
-
-
-cat > authors.js << 'EOF'
-
-
-import apiClient from './client';
 
 export const authAPI = {
   login: async (credentials) => {

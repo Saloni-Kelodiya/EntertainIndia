@@ -22,7 +22,7 @@ export function generateUniversalSchemas(article, siteUrl = 'https://entertainin
     "url": siteUrl,
     "logo": {
       "@type": "ImageObject",
-      "url": `${siteUrl}/logo.png`,
+      "url": `${siteUrl}/og-logo.png`,
       "width": 120,
       "height": 120
     },
@@ -39,7 +39,7 @@ export function generateUniversalSchemas(article, siteUrl = 'https://entertainin
     "@type": "WebPage",
     "@id": `${articleUrl}#webpage`,
     "url": articleUrl,
-    "name": article.h1_title || article.title,
+    "name": article.title,
     "inLanguage": "hi-IN",
     "isPartOf": {
       "@id": `${siteUrl}/#website`
@@ -78,7 +78,7 @@ export function generateUniversalSchemas(article, siteUrl = 'https://entertainin
     "@context": "https://schema.org",
     "@type": isNews ? "NewsArticle" : "Article",
     "@id": `${articleUrl}#article`,
-    "headline": article.h1_title || article.title,
+    "headline":  article.title,
     "alternativeHeadline": article.metaDescription || article.meta_description || article.summary,
     "description": article.metaDescription || article.meta_description || article.summary,
     "datePublished": article.publishDate || article.publish_datetime || article.createdAt,
@@ -105,7 +105,7 @@ export function generateUniversalSchemas(article, siteUrl = 'https://entertainin
       "name": "एंटरटेनइंडिया",
       "logo": {
         "@type": "ImageObject",
-        "url": `${siteUrl}/logo.png`,
+        "url": `${siteUrl}/og-logo.png`,
         "width": 120,
         "height": 120
       }
@@ -393,7 +393,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
   const categoryUrl = `${domain}/${categorySlug}`;
   const graph = [];
 
-  // ✅ 1️⃣ ब्रेडक्रंब स्कीमा (अब सही से काम करेगा)
+  //  1️⃣ ब्रेडक्रंब स्कीमा (अब सही से काम करेगा)
   graph.push({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -414,7 +414,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
     ]
   });
 
-  // ✅ 2️⃣ कंटेंट लिस्ट स्कीमा (मूवीज/शोज)
+  //  2️⃣ कंटेंट लिस्ट स्कीमा (मूवीज/शोज)
   if (movies && movies.length > 0) {
     graph.push({
       "@context": "https://schema.org",
@@ -437,7 +437,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
     });
   }
 
-  // ✅ 3️⃣ आर्टिकल लिस्ट स्कीमा (हिंदी)
+  //  3️⃣ आर्टिकल लिस्ट स्कीमा (हिंदी)
   if (articles && articles.length > 0) {
     graph.push({
       "@context": "https://schema.org",
@@ -465,7 +465,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
             "name": "एंटरटेनइंडिया",
             "logo": {
               "@type": "ImageObject",
-              "url": `${domain}/logo.png`
+              "url": `${domain}/og-logo.png`
             }
           }
         }
@@ -473,7 +473,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
     });
   }
 
-  // ✅ 4️⃣ कलेक्शन पेज स्कीमा (हिंदी)
+  //  4️⃣ कलेक्शन पेज स्कीमा (हिंदी)
   graph.push({
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -493,7 +493,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
     }
   });
 
-  // ✅ 5️⃣ वेबसाइट स्कीमा भी जोड़ें (पूरी साइट के लिए)
+  //  5️⃣ वेबसाइट स्कीमा भी जोड़ें (पूरी साइट के लिए)
   graph.push({
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -512,7 +512,7 @@ export function generateCategorySchema(categoryData, movies = [], articles = [],
     }
   });
 
-  // ✅ 6️⃣ फाइनल रिटर्न - @graph के साथ
+  //  6️⃣ फाइनल रिटर्न - @graph के साथ
   return {
     "@context": "https://schema.org",
     "@graph": graph

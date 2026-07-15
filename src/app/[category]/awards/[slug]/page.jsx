@@ -1,46 +1,47 @@
-import { AwardsAPI, articlesAPI } from "../../../../lib/api";
+import { AwardsAPI} from "../../../../lib/api/awards";
+import { articlesAPI } from "../../../../lib/api/articles";
 import AwardDetailClient from "../../../../page-components/AwardDetailClient";
 import LayoutWrapper from "../../../LayoutWrapper"; 
+import { notFound } from "next/navigation"; // 👈 1. notFound को इम्पोर्ट करें
 
-// ✅ SEO: Dynamic Metadata Generation
+//  SEO: Dynamic Metadata Generation
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const award = await AwardsAPI.getBySlug(slug);
+  
+  try {
+    const award = await AwardsAPI.getBySlug(slug);
+    if (!award) return {}; // 👈 अगर अवार्ड नहीं है तो खाली ऑब्जेक्ट दें (यह अपने आप 404 पर चला जाएगा)
 
-  if (!award) return { title: "Award Not Found" };
+    const seoTitle = `${award.subTitle || award.title} Winners & Highlights | EntertainIndia`;
+    const seoDesc = typeof award.description === 'string' 
+      ? award.description.substring(0, 160) 
+      : award.description?.[0]?.children?.[0]?.text?.substring(0, 160);
 
-  const seoTitle = `${award.subTitle || award.title} Winners & Highlights | EntertainIndia`;
-  const seoDesc = typeof award.description === 'string' 
-    ? award.description.substring(0, 160) 
-    : award.description?.[0]?.children?.[0]?.text?.substring(0, 160);
-
-  return {
-    title: seoTitle,
-    description: seoDesc || `Get complete details of ${award.title}, winners list, nominees, and red carpet highlights.`,
-    openGraph: {
+    return {
       title: seoTitle,
-      description: seoDesc,
-      images: [{ url: award.image?.url || '' }],
-    },
-    robots: { index: true, follow: true },
-  };
+      description: seoDesc || `Get complete details of ${award.title}, winners list, nominees, and red carpet highlights.`,
+      openGraph: {
+        title: seoTitle,
+        description: seoDesc,
+        images: [{ url: award.image?.url || '' }],
+      },
+      robots: { index: true, follow: true },
+    };
+  } catch (error) {
+    return {};
+  }
 }
 
 export default async function Page({ params }) {
   const { slug, category } = await params; 
   
   try {
-    // ✅ Parallel Fetching for SEO Speed
+    //  Parallel Fetching for SEO Speed
     const award = await AwardsAPI.getBySlug(slug);
 
+    // 👈 2. अगर अवार्ड नहीं मिलता है, तो Next.js का 404 पेज ट्रिगर करें
     if (!award) {
-      return (
-        <LayoutWrapper>
-          <div className="min-h-screen flex flex-col items-center justify-center">
-            <h2 className="text-2xl font-bold text-red-500">Award Data Not Found</h2>
-          </div>
-        </LayoutWrapper>
-      );
+      notFound(); 
     }
 
     // Fetch articles and other awards in parallel
@@ -49,7 +50,7 @@ export default async function Page({ params }) {
       AwardsAPI.getAll({ pageSize: 10 }) // Get more awards for filtering
     ]);
 
-    // ✅ FIX: AwardsAPI.getAll returns { data, pagination }, not array
+    //  FIX: AwardsAPI.getAll returns { data, pagination }, not array
     const awardsList = awardsRes.data || [];
     
     // Data filtering for "Explore More"
@@ -57,8 +58,7 @@ export default async function Page({ params }) {
       .filter(a => a.id !== award.id)
       .slice(0, 3);
 
-
-      const capitalizedCategory = category && category !== 'all' 
+    const capitalizedCategory = category && category !== 'all' 
       ? category.charAt(0).toUpperCase() + category.slice(1) 
       : "Latest";
 
@@ -94,25 +94,21 @@ export default async function Page({ params }) {
       ]
     };
 
-
-
     return (
       <>
-      <script
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }}
         />
-      <LayoutWrapper>
-        {/* ✅ Sending all data to client component */}
-        <AwardDetailClient 
-          award={award} 
-          initialHighlights={articlesRes.articles || []}
-          initialOthers={otherAwards}
-          serverCategory={category}
-        />
-      </LayoutWrapper>
+        <LayoutWrapper>
+          <AwardDetailClient 
+            award={award} 
+            initialHighlights={articlesRes.articles || []}
+            initialOthers={otherAwards}
+            serverCategory={category}
+          />
+        </LayoutWrapper>
       </>
-
     );
   } catch (error) {
     console.error("❌ Fetch error details:", {

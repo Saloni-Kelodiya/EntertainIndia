@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default function Contact() {
-  // --- ✅ 1. Contact Page Schema ---
+  // ---  1. Contact Page Schema ---
   const contactJsonLd = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
@@ -21,7 +21,7 @@ export default function Contact() {
     "mainEntity": {
       "@type": "Organization",
       "name": "EntertainIndia",
-      "logo": "https://entertainindia.in/logo.png",
+      "logo": "https://entertainindia.in/og-logo.png",
       "contactPoint": {
         "@type": "ContactPoint",
         "email": "contact@entertainindia.in", // Aapka official email yahan aayega
@@ -30,7 +30,7 @@ export default function Contact() {
     }
   };
 
-  // --- ✅ 2. Breadcrumb Schema ---
+  // ---  2. Breadcrumb Schema ---
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -52,7 +52,7 @@ export default function Contact() {
 
   return (
     <>
-      {/* ✅ Structured Data Injection */}
+      {/*  Structured Data Injection */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }}
@@ -63,7 +63,7 @@ export default function Contact() {
       />
 
       <LayoutWrapper>
-        {/* ✅ SEO H1 (Screen Reader Only) */}
+        {/*  SEO H1 (Screen Reader Only) */}
         <h1 className="sr-only">Contact EntertainIndia - Feedback and Inquiries</h1>
         
         <ContactPage />

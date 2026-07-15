@@ -14,7 +14,7 @@ export async function GET() {
     let hasMore = true;
     
     while (hasMore) {
-      // ✅ CHANGE 1: API filter ko 'hi' (Hindi) set kiya
+      //  CHANGE 1: API filter ko 'hi' (Hindi) set kiya
       const queryParams = new URLSearchParams({
         'pagination[page]': page.toString(),
         'pagination[pageSize]': pageSize.toString(),
@@ -46,7 +46,7 @@ export async function GET() {
         break;
       }
 
-      // ✅ CHANGE 2: Sirf wahi galleries rakhein jinke title mein Hindi ho
+      //  CHANGE 2: Sirf wahi galleries rakhein jinke title mein Hindi ho
       rawGalleries.forEach(item => {
         const attrs = item.attributes || item;
         const slug = attrs.slug;

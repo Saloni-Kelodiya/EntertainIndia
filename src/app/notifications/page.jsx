@@ -48,8 +48,8 @@ const NotificationsPage = () => {
     }
   };
 
-  // ✅ Direct API call - Most reliable method
-  // ✅ DEBUG VERSION
+  //  Direct API call - Most reliable method
+  //  DEBUG VERSION
 
 const loadNotifications = async (userId) => {
   try {

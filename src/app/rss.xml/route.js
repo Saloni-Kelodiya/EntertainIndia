@@ -111,7 +111,7 @@ export async function GET() {
   <generator>EntertainIndia Master RSS Generator</generator>
   <atom:link href="${BASE_URL}/hindi-rss.xml" rel="self" type="application/rss+xml"/>
   <image>
-    <url>${BASE_URL}/logo.png</url>
+    <url>${BASE_URL}/og-logo.png</url>
     <title>EntertainIndia</title>
     <link>${BASE_URL}</link>
     <width>144</width>

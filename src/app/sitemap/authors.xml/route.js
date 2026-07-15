@@ -52,7 +52,7 @@ export async function GET() {
         const updatedAt = user.updatedAt || user.createdAt || new Date().toISOString();
         
         if (rawSlug && String(rawSlug).trim() !== '') {
-          // ✅ MAGIC HERE: Sab kuch small letters mein karega aur spaces ko '-' banayega
+          //  MAGIC HERE: Sab kuch small letters mein karega aur spaces ko '-' banayega
           const cleanSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-');
           
           allAuthors.push({

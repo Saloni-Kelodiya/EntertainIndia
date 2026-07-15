@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { articlesAPI, categoriesAPI, tagsAPI, moviesAPI, genresAPI } from "../../lib/api";
+import { articlesAPI } from "../../lib/api/articles";
+import { categoriesAPI } from "../../lib/api/categories";
+import { tagsAPI } from "../../lib/api/tags";
+import { moviesAPI } from "../../lib/api/movies";
 
 // Dynamic import for markdown editor (to avoid SSR issues)
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
@@ -99,7 +102,7 @@ const handleBodyImageUpload = async (e) => {
       body: prev.body + imageMarkdown
     }));
 
-    setMessage("✅ Image added to content!");
+    setMessage(" Image added to content!");
   } catch (err) {
     setMessage(`❌ Failed: ${err.message}`);
   } finally {
@@ -150,7 +153,7 @@ const handleBodyImageUpload = async (e) => {
         hero_image: { id: uploaded.id },
       }));
 
-      setMessage("✅ Image uploaded successfully!");
+      setMessage(" Image uploaded successfully!");
     } catch (err) {
       console.error("Image upload failed:", err);
       setMessage(`❌ Image upload failed: ${err.message}`);
@@ -306,7 +309,7 @@ const handleSubmit = async (e) => {
 
     // 5. Success UI Feedback
     const actionText = isEditMode ? "updated" : "created";
-    setMessage(`✅ Article ${actionText} successfully!`);
+    setMessage(` Article ${actionText} successfully!`);
 
     // Modal ko thodi der baad band karo
     setTimeout(() => {
@@ -428,7 +431,7 @@ const languageOptions = [
         {message && (
           <div
             className={`p-3 rounded-lg mb-4 ${
-              message.includes("✅")
+              message.includes("")
                 ? "bg-green-900 text-green-200"
                 : "bg-red-900 text-red-200"
             }`}

@@ -1,6 +1,7 @@
 
 import apiClient from './client';
-import { normalizeMedia } from './helpers';
+import { normalizeMedia , getMediaUrl} from './helper';
+import { normalizeProfession,getHindiProfession} from './professions';
 
 export const normalizeCelebrity = (celebrity) => {
   if (!celebrity) return null;
@@ -30,8 +31,8 @@ export const normalizeCelebrity = (celebrity) => {
     total_webseries: data.total_webseries || 0,
     language: data.language,
      trending:data.trending,
-    // ✅ PROFESSIONS
- // ✅ PROFESSIONS - WITH HINDI TRANSLATION
+    //  PROFESSIONS
+ //  PROFESSIONS - WITH HINDI TRANSLATION
     professions: Array.isArray(data.professions)
       ? data.professions.map((p) => {
           const prof = p.attributes ?? p;
@@ -41,8 +42,8 @@ export const normalizeCelebrity = (celebrity) => {
           return {
             id: p.id,
             documentId: prof.documentId,
-            name: hindiName, // ✅ हिंदी नाम
-            originalName: originalName, // ✅ मूल नाम (अगर जरूरत हो)
+            name: hindiName, //  हिंदी नाम
+            originalName: originalName, //  मूल नाम (अगर जरूरत हो)
             slug: originalName
               .toLowerCase()
               .replace(/\s+/g, '-')
@@ -51,7 +52,7 @@ export const normalizeCelebrity = (celebrity) => {
         })
       : [],
     
-    // ✅ AVATAR
+    //  AVATAR
    avatar: data.Avatar ? {
       id: data.Avatar.id,
       url: data.Avatar.url || data.Avatar.formats?.large?.url || null,
@@ -67,7 +68,8 @@ export const normalizeCelebrity = (celebrity) => {
       ? data.articles.map((a) => ({
         id: a.id,
         documentId: a.documentId,
-        title: a.title || '',
+        title: a.title,
+        h1_title:a.h1_title,
         slug: a.slug || '',
         summary: a.summary || '',
         excerpt: a.summary || '',
@@ -82,7 +84,7 @@ export const normalizeCelebrity = (celebrity) => {
       }))
       : [],
 
-    // ✅ MOVIES
+    //  MOVIES
     movies: Array.isArray(data.movies)
       ? data.movies.map((movie) => ({
         id: movie.id,
@@ -175,7 +177,7 @@ export const normalizeCelebrity = (celebrity) => {
     personalLife: data.personalLife || null,
     familyDetails: data.familyDetails || null,
 
-   // ✅ FIXED GALLERIES - Added slug extraction
+   //  FIXED GALLERIES - Added slug extraction
       galleries: Array.isArray(data.galleries)
         ? data.galleries.map((g) => {
             // Get gallery data (handle both Strapi v4 and v5)
@@ -226,13 +228,13 @@ export const normalizeCelebrity = (celebrity) => {
             return {
               id: g.id,
               title: galleryData.title || '',
-              slug: gallerySlug, // ✅ NOW SLUG WILL BE INCLUDED
+              slug: gallerySlug, //  NOW SLUG WILL BE INCLUDED
               photos: photos,
             };
           })
         : [],
     
-    // ✅ Industry
+    //  Industry
     industry: Array.isArray(data.industry)
       ? data.industry.map((cat) => ({
         id: cat.id,
@@ -246,7 +248,45 @@ export const normalizeCelebrity = (celebrity) => {
     publishedAt: data.publishedAt,
   };
 };
+const normalizeLightCelebrity = (item) => {
+  if (!item) return null;
+  const data = item.attributes ?? item;
 
+  let avatarUrl = null;
+  const av = data.Avatar;
+  if (av) {
+    avatarUrl = av.url || av.formats?.thumbnail?.url || av.formats?.small?.url || null;
+    if (avatarUrl && !avatarUrl.startsWith('http')) {
+      avatarUrl = `${MEDIA_URL}${avatarUrl}`;
+    }
+  }
+
+  const professions = (data.professions || []).map(p => {
+    const prof = p.attributes ?? p;
+    return { name: prof.profession_Field || prof.name || '' };
+  });
+
+  // 🔥 NEW: industry array add karo
+  const industry = Array.isArray(data.industry)
+    ? data.industry.map((ind) => {
+        const indData = ind.attributes ?? ind;
+        return {
+          id: ind.id,
+          name: indData.name || '',
+          slug: indData.slug || '',
+        };
+      })
+    : [];
+
+  return {
+    id: data.id,
+    slug: data.Slug || data.slug || '',
+    name: data.name || '',
+    avatar: avatarUrl ? { url: avatarUrl } : null,
+    professions: professions.slice(0, 2),
+    industry, // 🔥 NEW
+  };
+};
 export const celebritiesAPI = {
  getAll: async ({ page = 1, pageSize = 12, ...params } = {}) => {
     try {
@@ -262,7 +302,7 @@ export const celebritiesAPI = {
       if (params.search && params.search.trim().length > 0) {
         const searchTerm = params.search.trim();
         
-        // ✅ सही फील्ड नाम - अपने Strapi schema के अनुसार adjust करें
+        //  सही फील्ड नाम - अपने Strapi schema के अनुसार adjust करें
         q.append('filters[$or][0][name][$containsi]', searchTerm);
         q.append('filters[$or][1][Slug][$containsi]', searchTerm);
         // अगर Bio फील्ड है तो use करें, नहीं तो हटा दें
@@ -275,7 +315,7 @@ export const celebritiesAPI = {
 if (params.letter && params.letter !== '') {
   const letterValue = params.letter.toUpperCase();
   
-  // ✅ CORRECT: Use $or for multiple field search
+  //  CORRECT: Use $or for multiple field search
   q.append('filters[$or][0][name][$startsWith]', letterValue);
   q.append('filters[$or][1][Slug][$startsWith]', letterValue);
   
@@ -311,6 +351,138 @@ if (params.letter && params.letter !== '') {
       return { celebrities: [], pagination: null };
     }
   },
+
+ getLightList: async (params = {}) => {
+  const q = new URLSearchParams({
+    'pagination[page]': params.page || 1,
+    'pagination[pageSize]': params.pageSize || 12,
+    'sort[0]': params.sort || 'createdAt:desc',
+    'filters[language][$eq]': 'hi',
+    'populate[Avatar][populate]': '*',
+    'populate[professions][populate]': '*',
+ 'populate[industry][populate]': '*',
+  });
+
+  if (params.industry && params.industry !== 'all') {
+    q.append('filters[industry][name][$eqi]', params.industry);
+  }
+  if (params.profession && params.profession !== 'all') {
+    q.append('filters[professions][slug][$eq]', params.profession);
+  }
+  if (params.search?.trim()) {
+    const term = params.search.trim();
+    q.append('filters[$or][0][name][$containsi]', term);
+    q.append('filters[$or][1][Slug][$containsi]', term);
+  }
+
+  // ✅ Trending filter – fixed
+  if (params.trending === true) {
+    q.append('filters[trending][$eq]', 'true');
+  }
+
+  try {
+    const res = await apiClient.get(`/celebrities-profiles?${q.toString()}`);
+    return {
+      celebrities: (res?.data?.data || []).map(normalizeLightCelebrity).filter(Boolean),
+      pagination: res?.data?.meta?.pagination || {},
+    };
+  } catch (error) {
+    console.error('❌ [getLightList] Request failed');
+    console.error('❌ status:', error?.response?.status);
+    console.error('❌ statusText:', error?.response?.statusText);
+    console.error('❌ Strapi error body:', JSON.stringify(error?.response?.data, null, 2));
+    console.error('❌ request URL was:', error?.config?.url);
+    console.error('❌ full axios error message:', error?.message);
+    return { celebrities: [], pagination: {} };
+  }
+},
+// 🔥 NEW: Global sort (main industry pehle) + manual pagination
+getLightListSorted: async (params = {}) => {
+  const MAX_PAGE_SIZE = 100;
+  const SAFETY_PAGE_CAP = 20; // max ~2000 records tak fetch karega
+
+  const buildQuery = (page) => {
+    const q = new URLSearchParams({
+      'pagination[page]': page,
+      'pagination[pageSize]': MAX_PAGE_SIZE,
+      'sort[0]': params.sort || 'createdAt:desc',
+      'filters[language][$eq]': 'hi',
+      'populate[Avatar][populate]': '*',
+      'populate[professions][populate]': '*',
+      'populate[industry][populate]': '*',
+    });
+
+    if (params.industry && params.industry !== 'all') {
+      q.append('filters[industry][name][$eqi]', params.industry);
+    }
+    if (params.profession && params.profession !== 'all') {
+      q.append('filters[professions][slug][$eq]', params.profession);
+    }
+    if (params.search?.trim()) {
+      const term = params.search.trim();
+      q.append('filters[$or][0][name][$containsi]', term);
+      q.append('filters[$or][1][Slug][$containsi]', term);
+    }
+    if (params.letter) {
+      const letterValue = params.letter.toUpperCase();
+      q.append('filters[$or][0][name][$startsWith]', letterValue);
+      q.append('filters[$or][1][Slug][$startsWith]', letterValue);
+    }
+    if (params.trending === true) {
+      q.append('filters[trending][$eq]', 'true');
+    }
+    return q;
+  };
+
+  try {
+    let allResults = [];
+    let page = 1;
+    let pageCount = 1;
+
+    do {
+      const q = buildQuery(page);
+      const res = await apiClient.get(`/celebrities-profiles?${q.toString()}`);
+      const pageData = (res?.data?.data || []).map(normalizeLightCelebrity).filter(Boolean);
+      allResults = allResults.concat(pageData);
+      pageCount = res?.data?.meta?.pagination?.pageCount || 1;
+      page++;
+    } while (page <= pageCount && page <= SAFETY_PAGE_CAP);
+
+    const category = (params.industry || '').toLowerCase();
+    const isMainMatch = (celeb) => {
+      const first = celeb.industry?.[0];
+      if (!first) return false;
+      return (
+        first.slug?.toLowerCase() === category ||
+        first.name?.toLowerCase() === category
+      );
+    };
+
+    const matched = [];
+    const unmatched = [];
+    allResults.forEach((c) => (isMainMatch(c) ? matched : unmatched).push(c));
+    const sorted = [...matched, ...unmatched];
+
+    const pageNum = Number(params.page) || 1;
+    const pageSize = Number(params.pageSize) || 8;
+    const start = (pageNum - 1) * pageSize;
+    const paginated = sorted.slice(start, start + pageSize);
+
+    return {
+      celebrities: paginated,
+      pagination: {
+        page: pageNum,
+        pageSize,
+        pageCount: Math.ceil(sorted.length / pageSize) || 1,
+        total: sorted.length,
+      },
+    };
+  } catch (error) {
+    console.error('❌ [getLightListSorted] failed:', error.message);
+    return { celebrities: [], pagination: {} };
+  }
+},
+
 getDetailedProfile: async (slug) => {
   try {
     // 💡 KEY FIX: Strapi query standard nested objects format
@@ -328,6 +500,7 @@ getDetailedProfile: async (slug) => {
       'populate[personalLife]': '*',
       'populate[social_account]': '*',
       'populate[industry]': '*',
+      'populate[awards][populate]':'*',
       
       // Deep Sub-relations populate filters
       'populate[movies][populate]': '*',
@@ -485,7 +658,7 @@ getDetailedProfile: async (slug) => {
     // Populate articles + hero image
     q.set('populate[articles][populate][hero_image][populate]', '*');
 
-    // ✅ Only published articles
+    //  Only published articles
     q.set('populate[articles][filters][moderation_status][$eq]', 'published');
     
     const queryString = q.toString();

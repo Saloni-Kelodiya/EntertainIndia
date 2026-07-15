@@ -243,7 +243,7 @@ export default function PremiumPage() {
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="text-5xl mb-3">⚡</div>
+                  <div className="text-5xl mb-3"></div>
                   <h4 className="font-bold mb-2">Early Access</h4>
                   <p className="text-sm text-gray-600">
                     Be the first to read reviews and watch exclusive videos

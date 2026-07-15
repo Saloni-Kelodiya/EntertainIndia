@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, LogIn, Mail, Eye, EyeOff, X, User, ArrowRight, Key } from "lucide-react";
-import { authAPI } from "../lib/api";
+import { authAPI } from "../lib/api/auth";
 import { useStore } from "../store/useStore";
 
 export default function AuthPage({ isModal = false, onClose = null, onSuccess = null }) {

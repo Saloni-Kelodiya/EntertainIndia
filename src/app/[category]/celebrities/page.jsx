@@ -1,4 +1,5 @@
-import { celebritiesAPI, ProfessionAPI, articlesAPI } from '../../../lib/api';
+import { celebritiesAPI,} from '../../../lib/api/celebrities';
+import { articlesAPI } from '../../../lib/api/articles';
 import CategoryCelebritiesPage from '../../../page-components/Category_Celebpage';
 import LaayoutWrapper from "../../LayoutWrapper";
 
@@ -6,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 300;
 export const fetchCache = 'force-cache';
 
-// ✅ SEO मेटाडेटा
+//  SEO मेटाडेटा
 export async function generateMetadata({ params }) {
   const { category } = await params;
 
@@ -70,7 +71,7 @@ export default async function Page({ params, searchParams }) {
 
   try {
     // सर्वर पर प्रारंभिक सेलिब्रिटी डेटा फेच करें
-    const celebritiesData = await celebritiesAPI.getAll({
+    const celebritiesData = await celebritiesAPI.getLightList({
       industry: category,
       page: page,
       pageSize: PAGE_SIZE,
@@ -91,6 +92,10 @@ export default async function Page({ params, searchParams }) {
     const pageCount = Math.ceil(total / PAGE_SIZE) || 1;
 
     return (
+      <>
+      <h1 className="sr-only">
+        {`टॉप ${category.charAt(0).toUpperCase() + category.slice(1)} सेलिब्रिटी, बायोग्राफी और समाचार | एंटरटेनइंडिया`}
+      </h1>
       <LaayoutWrapper>
         <CategoryCelebritiesPage
           serverCategory={category}
@@ -108,6 +113,7 @@ export default async function Page({ params, searchParams }) {
           initialArticles={articlesData?.articles || []} // आर्टिकल्स क्लाइंट कम्पोनेंट को पास करें
         />
       </LaayoutWrapper>
+      </>
     );
   } catch (error) {
     console.error("एसएसआर त्रुटि - सेलिब्रिटी फेच करने में विफल:", error);
@@ -140,13 +146,13 @@ export default async function Page({ params, searchParams }) {
 async function fetchCelebrityNewsArticles(category) {
   try {
     // विशिष्ट फ़िल्टर के साथ आर्टिकल फेच करें
-    const articles = await articlesAPI.getAll({
+    const articles = await articlesAPI.getAllLight({
       typecontent: "CelebrityNews", // आपके एक्चुअल कंटेंट टाइप के आधार पर
-      MainCategory: "news",
-      industry: category, // वैकल्पिक: इंडस्ट्री के आधार पर फ़िल्टर करें (बॉलीवुड, हॉलीवुड, आदि)
-      pageSize: 5, // साइडबार के लिए 5 आर्टिकल सीमित करें
+      mainCategory: "news",
+      category: category, // वैकल्पिक: इंडस्ट्री के आधार पर फ़िल्टर करें (बॉलीवुड, हॉलीवुड, आदि)
+      pageSize: 4, // साइडबार के लिए 5 आर्टिकल सीमित करें
       sort: "publishedAt:desc", // नवीनतम आर्टिकल पहले लाएं
-      populate: ['hero_image', 'author'] // संबंधित फ़ील्ड पॉपुलेट करें
+
     });
   
     return articles;

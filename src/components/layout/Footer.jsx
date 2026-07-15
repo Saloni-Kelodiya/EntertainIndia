@@ -62,7 +62,7 @@ export default function Footer() {
             {[
               { name: "हमारे बारे में", slug: "about" },
               { name: "संपर्क करें", slug: "contact" },
-              { name: "सामान्य प्रश्न", slug: "faq" }, // ✅ FAQ अब हिंदी में
+              { name: "सामान्य प्रश्न", slug: "faq" }, //  FAQ अब हिंदी में
               { name: "गोपनीयता नीति", slug: "privacy-policy" },
               { name: "अस्वीकरण", slug: "disclaimer" },
               { name: "नियम और शर्तें", slug: "terms-services" }

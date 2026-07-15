@@ -1,11 +1,12 @@
 import CategoryPage from '../../page-components/CategoryPage';
 import LayoutWrapper from '../LayoutWrapper';
 import { categoryAPIServer } from '../../lib/api-server';
-import { articlesAPI, tvShowsAPI } from '../../lib/api';
+import { articlesAPI} from '../../lib/api/articles';
+import { tvShowsAPI } from '../../lib/api/tv-shows';
 
 const SITE_URL = 'https://entertainindia.in';
 
-// ✅ टीवी पेज - परफेक्ट स्कीमा जेनरेटर
+//  टीवी पेज - परफेक्ट स्कीमा जेनरेटर
 function generateTvSchema(categoryData, tvShows = [], articles = [], categorySlug) {
   const domain = SITE_URL;
   const categoryUrl = `${domain}/tv`;
@@ -19,7 +20,7 @@ function generateTvSchema(categoryData, tvShows = [], articles = [], categorySlu
     "@id": `${domain}/#organization`,
     "name": "EntertainIndia",
     "url": domain,
-    "logo": `${domain}/logo.png`
+    "logo": `${domain}/og-logo.png`
   });
 
   // 2️⃣ वेबसाइट स्कीमा
@@ -92,9 +93,20 @@ function generateTvSchema(categoryData, tvShows = [], articles = [], categorySlu
           "url": `${domain}/article/${article.slug}`,
           "image": article.heroImage?.url,
           "datePublished": article.createdAt,
-          "author": {
-            "@type": "Person",
-            "name": article.Authors?.name || "EntertainIndia टीम"
+            "author": {
+          "@type": "Person",
+          "name": article.Authors?.name || "EntertainIndia Team", // 2. नाम न होने पर 'Missing Author' से बचाएगा
+          "url": article.Authors?.name 
+            ? `${SITE_URL}/author/${article.Authors.name?.toLowerCase().replace(/\s+/g, '-')}` 
+            : `${SITE_URL}/about` // 'Missing URL' की चेतावनी को ठीक करेगा
+        },
+         "publisher": {
+            "@type": "Organization",
+            "name": "EntertainIndia",
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${SITE_URL}/og-logo.png`
+            }
           }
         }
       }))
@@ -104,16 +116,16 @@ function generateTvSchema(categoryData, tvShows = [], articles = [], categorySlu
   return { "@context": "https://schema.org", "@graph": graph };
 }
 
-// ✅ एसईओ मेटाडेटा - पूरी तरह बैकेंड से
+//  एसईओ मेटाडेटा - पूरी तरह बैकेंड से
 export async function generateMetadata() {
   const category = 'tv';
   const categoryUrl = `${SITE_URL}/${category}`;
 
   try {
-    // ✅ सब कुछ बैकेंड से ले रहे हैं
+    //  सब कुछ बैकेंड से ले रहे हैं
     const categoryData = await categoryAPIServer.getBySlug(category);
     
-    // ✅ बैकेंड से डेटा मिला तो वो यूज करो, नहीं तो बेसिक
+    //  बैकेंड से डेटा मिला तो वो यूज करो, नहीं तो बेसिक
     const title = categoryData?.seo?.title || "टीवी शो | EntertainIndia";
     const description = categoryData?.seo?.description || "टीवी सीरियल्स और रियलिटी शो के ताजा अपडेट";
     const keywords = categoryData?.seo?.keywords || [];
@@ -142,7 +154,7 @@ export async function generateMetadata() {
       },
     };
   } catch (error) {
-    // ✅ एरर में भी डायनामिक
+    //  एरर में भी डायनामिक
     return {
       title: "टीवी शो | EntertainIndia",
       description: "टीवी सीरियल्स और रियलिटी शो के ताजा अपडेट",
@@ -152,55 +164,55 @@ export async function generateMetadata() {
   }
 }
 
-// ✅ मुख्य कंपोनेंट
+//  मुख्य कंपोनेंट
 export default async function TvPage({ searchParams }) {
   const sParams = await searchParams;
   const page = parseInt(sParams.page) || 1;
   const category = "tv";
 
-  const [categoryData, articleData, tvShowData] = await Promise.all([
-    categoryAPIServer.getBySlug(category).catch(e => null),
-    articlesAPI.getAll({ 
-      category, 
-      page, 
-      pageSize: 6, 
-      mainCategory: "article",
-      sort: "createdAt:desc" 
-    }).catch(e => ({ articles: [], pagination: {} })),
-    tvShowsAPI.getAll({ 
-      category, 
-      pageSize: 20,
-      sort: "createdAt:desc" 
-    }).catch(e => ({ data: [] }))
-  ]);
+const [categoryData, articleData, tvShowData] = await Promise.all([
+  categoryAPIServer.getBySlug(category).catch(e => null),
+  articlesAPI.getAllLight({ 
+    category, 
+    page, 
+    pageSize: 6, 
+    mainCategory: "article",
+    sort: "createdAt:desc" 
+  }).catch(e => ({ articles: [], pagination: {} })),
+  tvShowsAPI.getAllLight({ 
+    category, 
+    pageSize: 20,
+    sort: "createdAt:desc" 
+  }).catch(e => [])          // 👈 array fallback
+]);
 
-  const tvShows = tvShowData?.data || [];
-  const articles = articleData?.articles || [];
+const tvShows = Array.isArray(tvShowData) ? tvShowData : [];   // 👈 fix
+const articles = articleData?.articles || [];
+ 
 
-  // ✅ कस्टम टीवी स्कीमा
+  //  कस्टम टीवी स्कीमा
   const schemaData = generateTvSchema(categoryData, tvShows, articles, category);
 
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
-      
-      <h1 className="sr-only">
-        {categoryData?.seo?.h1 || "टीवी शो कलेक्शन"}
-      </h1>
+ return (
+  <>
+   
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+    />
+    
+    <h1 className="sr-only">...</h1>
 
-      <LayoutWrapper>
-        <CategoryPage
-          category={category}
-          categoryData={categoryData} 
-          initialArticles={articles}
-          initialMovies={tvShows}
-          initialPagination={articleData?.pagination || {}}
-          initialPage={page}
-        />
-      </LayoutWrapper>
-    </>
-  );
+    <LayoutWrapper>
+      <CategoryPage
+        category={category}
+        categoryData={categoryData}
+        initialArticles={articles}
+        initialMovies={tvShows}
+        initialPagination={articleData?.pagination || {}}
+        initialPage={page}
+      />
+    </LayoutWrapper>
+  </>
+);
 }

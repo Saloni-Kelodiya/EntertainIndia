@@ -2,19 +2,18 @@
 import { notFound } from 'next/navigation';
 import ArticlePageServer from '../../../page-components/ArticlePageServer';
 import LayoutWrapper from '../../LayoutWrapper';
-import { articlesAPIServer } from '../../../lib/api-server';
-
+import {articlesAPI} from '../../../lib/api/articles';
 const SITE_URL = 'https://entertainindia.in';
 
-// ✅ सिर्फ article URL बनाने का फंक्शन
+//  सिर्फ article URL बनाने का फंक्शन
 function getArticleUrl(slug) {
   return `${SITE_URL}/article/${slug}`;
 }
 
-// ✅ बिल्ड टाइम पर सभी आर्टिकल slugs प्री-जेनरेट करें
+//  बिल्ड टाइम पर सभी आर्टिकल slugs प्री-जेनरेट करें
 export async function generateStaticParams() {
   try {
-    const res = await articlesAPIServer.getAll({
+    const res = await articlesAPI.getAllLight({
       mainCategory: 'article',    // सिर्फ article वाले
       pageSize: 100,
       fields: ['slug'],
@@ -27,14 +26,14 @@ export async function generateStaticParams() {
   }
 }
 
-// ✅ ISR: 60 सेकंड बाद कैश रिफ्रेश (पेज फास्ट रहेगा)
+//  ISR: 60 सेकंड बाद कैश रिफ्रेश (पेज फास्ट रहेगा)
 export const revalidate = 60;
 export const dynamicParams = true;   // नए आर्टिकल को भी अनुमति
 
-// ✅ SEO Metadata
+//  SEO Metadata
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const article = await articlesAPIServer.getBySlug(slug);
+  const article = await articlesAPI.getBySlug(slug);
   if (!article || article.mainCategory !== 'article') {
     return { title: 'पेज नहीं मिला', robots: { index: false } };
   }
@@ -43,6 +42,7 @@ export async function generateMetadata({ params }) {
   return {
     title: article.seoTitle || article.title,
     description: article.metaDescription || article.summary,
+    keywords: article.meta_keywords|| article.keywords || undefined,   // <-- ye line add karo
     alternates: { canonical: articleUrl },
     openGraph: {
       title: article.title,
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ एक ही JSON-LD स्कीमा (सब कुछ एक साथ)
+//  एक ही JSON-LD स्कीमा (सब कुछ एक साथ)
 function generateCombinedSchema(article, articleUrl) {
   const domain = SITE_URL;
   const imageUrl = article.heroImage?.url || `${domain}/default-image.jpg`;
@@ -70,7 +70,7 @@ function generateCombinedSchema(article, articleUrl) {
         "@id": `${domain}/#organization`,
         "name": "EntertainIndia",
         "url": domain,
-        "logo": { "@type": "ImageObject", "url": `${domain}/logo.png` }
+        "logo": { "@type": "ImageObject", "url": `${domain}/og-logo.png` }
       },
       {
         "@type": "WebSite",
@@ -111,8 +111,8 @@ export default async function ArticleSlugPage({ params }) {
   let article = null;
 
   try {
-    article = await articlesAPIServer.getBySlug(slug);
-    // ✅ सिर्फ वही आर्टिकल जिनकी mainCategory === 'article' – बाकी 404
+    article = await articlesAPI.getBySlug(slug);
+    //  सिर्फ वही आर्टिकल जिनकी mainCategory === 'article' – बाकी 404
     if (!article || article.mainCategory !== 'article') {
       return notFound();
     }
@@ -126,7 +126,7 @@ export default async function ArticleSlugPage({ params }) {
 let related = [];
 try {
   // 1. बिना किसी एक्स्ट्रा फ़ील्ड्स या कैटेगरी फ़िल्टर के लेटेस्ट आर्टिकल्स मंगाएं
-  const relatedData = await articlesAPIServer.getAll({
+  const relatedData = await articlesAPI.getAllLight({
     mainCategory: 'article', // अगर इसे रखने पर भी 0 आए, तो इस लाइन को पूरी तरह हटा दें
     pageSize: 15,            // वर्तमान आर्टिकल हटाने के बाद भी बैकअप रहे
     sort: 'createdAt:desc',

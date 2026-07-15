@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server';
 
-// 🛑 1. DOMAIN GUARD: Yahan Apne Allowed Domains Daalo
+// 🛑 1. DOMAIN GUARD: Allowed Domains
 const ALLOWED_DOMAINS = [
     'http://localhost:3000',
     'https://entertainindia.com',
     'https://entertainindia.in'
 ];
 
-// 🛑 2. RATE LIMITER: Settings (Optional, aage use karne ke liye)
-const rateLimitMap = new Map();
-const LIMIT_TIME_WINDOW = 60 * 5000;
-const MAX_REQUESTS = 200;
+// ✅ THE MISSING PIECE: Is function ke bina aapka code crash ho raha tha
+function isAuthorized(request) {
+    const origin = request.headers.get('origin');
+    const referer = request.headers.get('referer');
+    return ALLOWED_DOMAINS.some(domain => 
+        (origin && origin.startsWith(domain)) || 
+        (referer && referer.startsWith(domain))
+    );
+}
 
 export async function POST(request) {
     try {
-        // Domain Check
         const origin = request.headers.get('origin');
         if (origin && !ALLOWED_DOMAINS.some(d => origin.startsWith(d))) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -30,7 +34,6 @@ export async function POST(request) {
         const STRAPI_URL = process.env.STRAPI_BACKEND_URL;
         const finalUrl = `${STRAPI_URL}/api/${endpoint}`;
 
-        // 👇 YAHAN FIX HAI: Headers pehle hi nikal liye taaki har request me jaye
         const contentType = request.headers.get("content-type") || "";
         const authHeader = request.headers.get("authorization");
         
@@ -40,25 +43,20 @@ export async function POST(request) {
             headers: {}
         };
 
-        // Agar user ka token hai, toh usko pakka set karo (chahe JSON ho ya Image)
         if (authHeader) {
             fetchOptions.headers['Authorization'] = authHeader;
         }
 
-        // Agar form data (image upload jaise Avatar) hai
         if (contentType.includes("multipart/form-data")) {
             const formData = await request.formData();
             fetchOptions.body = formData;
-            // Note: Content-Type browser khud set karega boundary ke sath
         } 
-        // Agar normal JSON (jaise Author Request, Login, Update Profile) hai
         else {
             const body = await request.json();
             fetchOptions.headers['Content-Type'] = 'application/json';
             fetchOptions.body = JSON.stringify(body);
         }
 
-        // Strapi ko request bhejna
         const response = await fetch(finalUrl, fetchOptions);
         const data = await response.json();
         
@@ -77,7 +75,6 @@ export async function POST(request) {
 
 export async function GET(request) {
     try {
-        // Domain Check
         const origin = request.headers.get('origin');
         const referer = request.headers.get('referer');
 
@@ -109,16 +106,13 @@ export async function GET(request) {
             finalUrl += `?${queryString}`;
         }
 
-        // 👇 YAHAN FIX HAI: Token Override logic theek kiya gaya hai
         const headers = { 'Content-Type': 'application/json' };
         const authHeader = request.headers.get("authorization");
         const isGoogleAuth = endpoint.includes('auth/google/callback');
         
         if (authHeader) {
-            // Priority 1: Agar logged-in user apna token bhej raha hai, toh usi ko use karo
             headers['Authorization'] = authHeader;
         } else if (!isGoogleAuth && TOKEN) {
-            // Priority 2: Agar user token nahi hai, tab Admin Token use karo
             headers['Authorization'] = `Bearer ${TOKEN}`;
         }
 
@@ -139,5 +133,89 @@ export async function GET(request) {
     } catch (error) {
         console.error("🔥 Proxy Server Crash:", error);
         return NextResponse.json({ error: "Internal Proxy Server Error" }, { status: 500 });
+    }
+}
+
+export async function PUT(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const endpoint = searchParams.get('endpoint');
+
+    if (!endpoint) {
+      return NextResponse.json({ error: "Endpoint missing" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const token = request.headers.get("authorization") || request.headers.get("Authorization");
+
+    const STRAPI_URL = process.env.STRAPI_BACKEND_URL;
+    
+    const response = await fetch(`${STRAPI_URL}/api/${endpoint}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': token } : {})
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+
+  } catch (error) {
+    console.error("Proxy PUT Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+    try {
+        if (!isAuthorized(request)) {
+            return NextResponse.json({ error: "Unauthorized Domain" }, { status: 403 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const endpoint = searchParams.get('endpoint');
+
+        if (!endpoint) {
+            return NextResponse.json({ error: "Endpoint missing" }, { status: 400 });
+        }
+
+        const token = request.headers.get("authorization") || request.headers.get("Authorization");
+        const STRAPI_URL = process.env.STRAPI_BACKEND_URL;
+
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = token;
+        }
+
+        const response = await fetch(`${STRAPI_URL}/api/${endpoint}`, {
+            method: 'DELETE',
+            headers: headers
+        });
+
+        const text = await response.text();
+        let data = {};
+        
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = { message: text };
+            }
+        } else {
+            // Strapi ne 204 No Content bheja hai
+            data = { success: true, message: "Deleted successfully" };
+        }
+        
+        // 🌟 FIX: Agar status 204 hai, toh Next.js ko 200 bhejne ko bolo, 
+        // warna body (JSON) ke sath 204 bhejne par Next.js crash hoke 500 de dega.
+        const statusCode = response.status === 204 ? 200 : response.status;
+        
+        return NextResponse.json(data, { status: statusCode });
+
+    } catch (error) {
+        console.error("🔥 Proxy DELETE Error:", error);
+        return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
     }
 }

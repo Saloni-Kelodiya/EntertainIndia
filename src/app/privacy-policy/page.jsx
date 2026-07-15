@@ -2,7 +2,7 @@ import PrivacyPage from '../../page-components/PrivacyPolicy';
 import LayoutWrapper from '../LayoutWrapper';
 
 export const metadata = {
-  title: 'Privacy Policy | EntertainIndia',
+  title: 'Privacy Policy - Data Protection & User Privacy | EntertainIndia',
   description: 'Read the Privacy Policy of EntertainIndia to understand how we collect, use, and protect your personal data.',
   keywords: 'privacy policy, data protection, cookies policy, entertainindia privacy',
   alternates: {
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default function Privacy() {
-  // --- ✅ 1. Privacy Policy Schema ---
+  // ---  1. Privacy Policy Schema ---
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "PrivacyPolicy",
@@ -24,12 +24,12 @@ export default function Privacy() {
       "name": "EntertainIndia",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://entertainindia.in/logo.png"
+        "url": "https://entertainindia.in/og-logo.png"
       }
     }
   };
 
-  // --- ✅ 2. Breadcrumb Schema ---
+  // ---  2. Breadcrumb Schema ---
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -51,7 +51,7 @@ export default function Privacy() {
 
   return (
     <>
-      {/* ✅ Structured Data Injection */}
+      {/*  Structured Data Injection */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

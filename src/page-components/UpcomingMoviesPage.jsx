@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { moviesAPI } from "../lib/api";
+import { moviesAPI } from "../lib/api/movies";
 import { getStrapiMedia } from "../lib/constants";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 

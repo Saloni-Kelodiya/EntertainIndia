@@ -163,7 +163,7 @@ export default function TVShowDetailClient({ initialData, slug, serverCategory }
   const [similar, setSimilar] = useState(initialData.similar);
   const [seasons, setSeasons] = useState(initialData.seasons);
   const [reviews, setReviews] = useState(initialData.show?.reviews || []);
-
+  const [selectedSeason, setSelectedSeason] = useState(null);
   // User and review states
   const [user, setUser] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
@@ -703,21 +703,72 @@ export default function TVShowDetailClient({ initialData, slug, serverCategory }
         )}
 
         {/* CAST SECTION */}
-        {cast.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <Users className="text-gray-900 dark:text-white" size={22} />
-              मुख्य कलाकार
-            </h3>
+       {/* CAST SECTION */}
+{cast.length > 0 && (() => {
+  // Extract unique seasons from cast
+  const allSeasons = [];
+  cast.forEach(role => {
+    (role.seasons || []).forEach(season => {
+      if (!allSeasons.find(s => s.id === season.id)) {
+        allSeasons.push(season);
+      }
+    });
+  });
+  allSeasons.sort((a, b) => a.number - b.number);
 
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
+      <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+        <Users className="text-gray-900 dark:text-white" size={22} />
+        मुख्य कलाकार
+      </h3>
+
+      {/* Season Tabs — only show if multiple seasons */}
+      {allSeasons.length > 1 && (
+        <div className="flex gap-2 flex-wrap mb-5">
+          <button
+            onClick={() => setSelectedSeason(null)}
+            className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
+              selectedSeason === null
+                ? "bg-red-500 text-white border-red-500"
+                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-neutral-600 hover:border-red-400"
+            }`}
+          >
+            सभी
+          </button>
+          {allSeasons.map(season => (
+            <button
+              key={season.id}
+              onClick={() => setSelectedSeason(season.id)}
+              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
+                selectedSeason === season.id
+                  ? "bg-red-500 text-white border-red-500"
+                  : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-neutral-600 hover:border-red-400"
+              }`}
+            >
+              Season {season.number}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Filtered Cast */}
+      {(() => {
+        const filteredCast = selectedSeason
+          ? cast.filter(role =>
+              (role.seasons || []).some(s => s.id === selectedSeason)
+            )
+          : cast;
+
+        return (
+          <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-[#f6f6f6] p-5 rounded-2xl dark:bg-gray-800">
-              {(showFullCast ? cast : cast.slice(0, 6)).map((role, i) => {
-               const avatarUrl = safeImageUrl(
-  role?.avatar?.url ||
-  role?.Avatar?.url ||
-  role?.celebrity?.avatar?.url
-);
-
+              {(showFullCast ? filteredCast : filteredCast.slice(0, 6)).map((role, i) => {
+                const avatarUrl = safeImageUrl(
+                  role?.avatar?.url ||
+                  role?.Avatar?.url ||
+                  role?.celebrity?.avatar?.url
+                );
                 const characterName = role.characterName || "अभिनेता";
                 const actorName = role.celebrity?.name || role.name || "कलाकार";
                 const celebritySlug = role.celebrity?.slug || role.slug;
@@ -730,13 +781,7 @@ export default function TVShowDetailClient({ initialData, slug, serverCategory }
                           <Link href={`/celebrities/${celebritySlug}`} className="block">
                             {avatarUrl ? (
                               <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-red-300">
-                                <Image
-                                  src={avatarUrl}
-                                  alt={characterName}
-                                  fill
-                                  sizes="64px"
-                                  className="object-cover group-hover:scale-110 transition-transform"
-                                />
+                                <Image src={avatarUrl} alt={characterName} fill sizes="64px" className="object-cover group-hover:scale-110 transition-transform" />
                               </div>
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
@@ -744,22 +789,14 @@ export default function TVShowDetailClient({ initialData, slug, serverCategory }
                               </div>
                             )}
                           </Link>
+                        ) : avatarUrl ? (
+                          <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-red-300">
+                            <Image src={avatarUrl} alt={characterName} fill sizes="64px" className="object-cover group-hover:scale-110 transition-transform" />
+                          </div>
                         ) : (
-                          avatarUrl ? (
-                            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-red-300">
-                              <Image
-                                src={avatarUrl}
-                                alt={characterName}
-                                fill
-                                sizes="64px"
-                                className="object-cover group-hover:scale-110 transition-transform"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
-                              <User size={26} className="text-gray-500" />
-                            </div>
-                          )
+                          <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
+                            <User size={26} className="text-gray-500" />
+                          </div>
                         )}
                       </div>
                       <div className="text-center">
@@ -771,9 +808,7 @@ export default function TVShowDetailClient({ initialData, slug, serverCategory }
                             {actorName}
                           </Link>
                         ) : (
-                          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                            {actorName}
-                          </div>
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{actorName}</div>
                         )}
                       </div>
                     </div>
@@ -782,20 +817,22 @@ export default function TVShowDetailClient({ initialData, slug, serverCategory }
               })}
             </div>
 
-            {cast.length > 6 && (
+            {filteredCast.length > 6 && (
               <div className="mt-5 text-center">
                 <button
                   onClick={() => setShowFullCast(!showFullCast)}
                   className="text-[12px] font-semibold text-red-500 hover:underline"
                 >
-                  {showFullCast
-                    ? "कम कलाकार देखें"
-                    : `और कलाकार देखें (${cast.length})`}
+                  {showFullCast ? "कम कलाकार देखें" : `और कलाकार देखें (${filteredCast.length})`}
                 </button>
               </div>
             )}
-          </div>
-        )}
+          </>
+        );
+      })()}
+    </div>
+  );
+})()}
 
         {/* CREW SECTION */}
         {crew.length > 0 && (

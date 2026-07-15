@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-import { moviesAPI, celebritiesAPI } from "../lib/api";
+import { moviesAPI } from "../lib/api/movies";
 import { formatDate } from "../lib/helpers";
 
 import Sidebar from "../components/layout/Sidebar";
@@ -123,10 +123,10 @@ export default function SingleMoviePage() {
       <article className="container-custom py-5">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-          {/* ✅ MAIN COLUMN (8/12) */}
+          {/*  MAIN COLUMN (8/12) */}
           <div className="lg:col-span-8">
 
-            {/* ✅ HEADER (Omitted for brevity) */}
+            {/*  HEADER (Omitted for brevity) */}
             <header className="mb-8">
               <div className="flex items-center gap-3 mb-2 text-sm font-semibold tracking-wider">
                 <Film size={16} className={statusClassName} />
@@ -153,7 +153,7 @@ export default function SingleMoviePage() {
               </div>
             </header>
 
-            {/* ✅ MOVIE POSTER (FIXED) */}
+            {/*  MOVIE POSTER (FIXED) */}
             {movie.poster && (
               <figure className="mb-10">
                 <div className="overflow-hidden rounded-2xl shadow-lg bg-gray-100 dark:bg-gray-900">
@@ -165,7 +165,7 @@ export default function SingleMoviePage() {
                 </div>
 
               </figure>)}
-            {/* ✅ CAST LIST (FIXED) */}
+            {/*  CAST LIST (FIXED) */}
             {movie.cast?.length > 0 && (
               <div className="mb-10">
                 <h3 className="text-xl font-bold mb-4 border-b pb-2">Main Cast</h3>
@@ -227,7 +227,7 @@ export default function SingleMoviePage() {
                 </div>
               </div>
             )}
-            {/* ✅ DESCRIPTION (Omitted for brevity) */}
+            {/*  DESCRIPTION (Omitted for brevity) */}
             {movie.description && (
               <div className="text-[12px] text-gray-700 dark:text-gray-300 mb-10 pl-6 ">
                 <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Synopsis</h2>
@@ -237,14 +237,14 @@ export default function SingleMoviePage() {
 
 
 
-            {/* ✅ SHARE BAR (Omitted for brevity) */}
+            {/*  SHARE BAR (Omitted for brevity) */}
             <div className="border-t border-gray-200 dark:border-gray-800 pt-8 mt-12">
               <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                 <ShareBar url={currentUrl} title={movie.title} />
               </div>
             </div>
 
-            {/* ✅ RELATED MOVIES (Omitted for brevity) */}
+            {/*  RELATED MOVIES (Omitted for brevity) */}
             {related.length > 0 && (
               <section className="pt-12 border-t border-gray-200 dark:border-gray-800">
                 <h3 className="text-2xl font-bold mb-8">
@@ -284,7 +284,7 @@ export default function SingleMoviePage() {
             )}
           </div>
 
-          {/* ✅ SIDEBAR (4/12) */}
+          {/*  SIDEBAR (4/12) */}
           <div className="lg:col-span-4">
             <div className="sticky top-24">
               <Sidebar />

@@ -1,188 +1,232 @@
 import SingleUserPage from '../../../page-components/SingleUserPage';
 import LayoutWrapper from '../../LayoutWrapper';
-import apiClient, { webStoriesAPI } from "../../../lib/api";
+import apiClient from "../../../lib/api/client";
 import { notFound } from "next/navigation";
 
-// हिंदी भाषा कोड
-const HINDI_LANG_CODE = 'hi';
+// ─── Schema-accurate constants ────────────────────────────────────────────────
+// Article schema: language enum = ["en","hi"], publish field = publish_datetime
+// Web Story schema: moderation_status (not moderationStatus), thumbnail (not coverImage)
 
-// SEO मेटा डेटा डायनामिक रूप से जनरेट करें
+const HINDI_LANG = 'hi'; // exact enum value from schema
+
+// Avatar only (meta call — no articles/stories needed)
+const META_POPULATE = 'populate[avatar]=true';
+
+// Articles: only fields used in ArticleCard + filtering
+// publish_datetime is always null in practice — removed to save bandwidth
+const ARTICLES_POPULATE = [
+  'populate[articles][fields][0]=title',
+  'populate[articles][fields][1]=slug',
+  'populate[articles][fields][2]=summary',
+  'populate[articles][fields][3]=publishedAt',
+  'populate[articles][fields][4]=views',
+  'populate[articles][fields][5]=language',
+  'populate[articles][fields][6]=moderation_status',
+  'populate[articles][fields][7]=MainCategory',
+  'populate[articles][fields][8]=h1_title',
+  'populate[articles][populate][hero_image][fields][0]=url',
+  'populate[articles][populate][hero_image][fields][1]=formats',
+  'populate[articles][populate][category][fields][0]=name',
+  'populate[articles][populate][category][fields][1]=slug',
+].join('&');
+
+// Web Stories: slides को EXCLUDE करें — populate में न डालने पर भी आते हैं
+// Fix: populate[web_stories][fields] explicitly list करो ताकि slides न आएं
+// category = string enum (not array), views field नहीं है web stories में
+const STORIES_POPULATE = [
+  'populate[web_stories][fields][0]=title',
+  'populate[web_stories][fields][1]=slug',
+  'populate[web_stories][fields][2]=publishedAt',
+  'populate[web_stories][fields][3]=language',
+  'populate[web_stories][fields][4]=moderation_status',
+  'populate[web_stories][fields][5]=category',         // string enum: "events","trending" etc.
+  'populate[web_stories][fields][6]=featured',
+  'populate[web_stories][populate][thumbnail][fields][0]=url',
+  'populate[web_stories][populate][thumbnail][fields][1]=formats',
+].join('&');
+
+const FULL_POPULATE = `populate[avatar]=true&${ARTICLES_POPULATE}&${STORIES_POPULATE}`;
+
+// ─── Filtering helpers ────────────────────────────────────────────────────────
+
+function filterArticles(rawArticles = []) {
+  const seen = new Set();
+  return rawArticles.filter(article => {
+    if (seen.has(article.id)) return false;
+    seen.add(article.id);
+    return (
+      article.publishedAt != null &&          // draftAndPublish:true, so check this
+      article.moderation_status === 'published' &&
+      article.language === HINDI_LANG          // exact enum match — no .toLowerCase() needed
+    );
+  });
+}
+
+function filterStories(rawStories = []) {
+  const seen = new Set();
+  return rawStories
+    .filter(story => {
+      if (seen.has(story.id)) return false;
+      seen.add(story.id);
+      return (
+        story.publishedAt != null &&
+        story.moderation_status === 'published' && // schema field name confirmed
+        story.language === HINDI_LANG
+      );
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.publishedAt || b.createdAt || 0) -
+        new Date(a.publishedAt || a.createdAt || 0)
+    );
+}
+
+// Client को सिर्फ ArticleCard जरूरी fields भेजें
+// category is array (manyToMany) — confirmed from real API response
+function stripArticle({
+  id, documentId, title, slug, summary,
+  publishedAt, views, language,
+  moderation_status, MainCategory,
+  hero_image, category,           // category = array, hero_image = flat object
+}) {
+  return {
+    id, documentId, title, slug, summary,
+    publishedAt, views, language,
+    moderation_status, MainCategory,
+    hero_image, category,
+  };
+}
+
+// Client को सिर्फ WebStoryCard जरूरी fields भेजें
+// category = string enum, views नहीं है web stories में, thumbnail = flat object
+function stripStory({
+  id, documentId, title, slug,
+  publishedAt, language, moderation_status,
+  category, featured, thumbnail,
+}) {
+  return {
+    id, documentId, title, slug,
+    publishedAt, language, moderation_status,
+    category, featured, thumbnail,
+  };
+}
+
+// ─── fetchUser ────────────────────────────────────────────────────────────────
+
+async function fetchUser(id, populate) {
+  // 1. username से
+  try {
+    const res = await apiClient.get(
+      `/users?filters[username][$eq]=${encodeURIComponent(id)}&${populate}`
+    );
+    const list = Array.isArray(res.data) ? res.data : [res.data];
+    if (list[0]?.id) return list[0];
+  } catch (e) {
+    console.error('Username fetch failed:', e.message);
+  }
+
+  // 2. numeric id से
+  if (!isNaN(id)) {
+    try {
+      const res = await apiClient.get(`/users/${id}?${populate}`);
+      return res.data || null;
+    } catch (e) {
+      console.error('ID fetch failed:', e.message);
+    }
+  }
+
+  return null;
+}
+
+// ─── generateMetadata ─────────────────────────────────────────────────────────
+
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  
   try {
-    // apiClient का उपयोग करें
-    const userResponse = await apiClient.get(`/users?filters[username][$eq]=${id}&populate[articles][populate]=*`);
-    let user = Array.isArray(userResponse.data) ? userResponse.data[0] : userResponse.data;
-    
-    if (!user && !isNaN(id)) {
-      const userByIdResponse = await apiClient.get(`/users/${id}?populate[articles][populate][hero_image][populate]=*`);
-      user = userByIdResponse.data;
-    }
-    
-    if (!user) return { title: "यूजर नहीं मिला - EntertainIndia" };
+    const user = await fetchUser(id, META_POPULATE);
+    if (!user) return { title: 'यूजर नहीं मिला - EntertainIndia' };
 
-    const bioText = typeof user.bio === "string" 
-      ? user.bio 
-      : user.bio?.[0]?.children?.[0]?.text || "";
-
-    const safeDescription = bioText 
-      ? bioText.substring(0, 160) 
-      : `EntertainIndia पर ${user.username || user.name} की प्रोफाइल`;
+    const rawDesc = user.bio_hindi || user.bio || '';
+    const description = rawDesc
+      ? rawDesc.substring(0, 160)
+      : `EntertainIndia पर ${user.username_hindi || user.username} की प्रोफाइल`;
 
     return {
-      title: `${user.name || user.username} - EntertainIndia`,
-      description: safeDescription,
+      title: `${user.username_hindi || user.username} - EntertainIndia`,
+      description,
       openGraph: {
-        title: user.name || user.username,
-        description: safeDescription,
-        images: [user.avatar?.url || user.profileImage || "/default-avatar.png"],
+        title: user.username_hindi || user.username,
+        description,
+        images: [user.avatar?.url || '/default-avatar.png'],
       },
     };
-  } catch (error) {
-    return { title: "यूजर प्रोफाइल - EntertainIndia" };
+  } catch {
+    return { title: 'यूजर प्रोफाइल - EntertainIndia' };
   }
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function SingleUser({ params }) {
   const { id } = await params;
-  
-  let user = null;
-  let articles = [];
+
+  let user       = null;
+  let articles   = [];
   let webStories = [];
-  
+
   try {
-    // पहला प्रयास: यूजरनेम से यूजर ढूंढें
-    const userResponse = await apiClient.get(
-      `/users?filters[username][$eq]=${id}&populate[avatar]=true&populate[articles][populate]=*`
-    );
-    
-    user = Array.isArray(userResponse.data) ? userResponse.data[0] : userResponse.data;
-    
-    // दूसरा प्रयास: अगर यूजरनेम से नहीं मिला तो आईडी से ढूंढें
-    if (!user && !isNaN(id)) {
-      const userByIdResponse = await apiClient.get(
-        `/users/${id}?populate[avatar]=true&populate[articles][populate]=*`
-      );
-      user = userByIdResponse.data;
-    }
-    
+    user = await fetchUser(id, FULL_POPULATE);
+
     if (user) {
-      // आर्टिकल निकालें
-      let rawArticles = [];
-      
-      // Strapi v4 फॉर्मेट हैंडल करें
-      if (user.articles?.data && Array.isArray(user.articles.data)) {
-        rawArticles = user.articles.data.map(item => ({
-          id: item.id,
-          ...item.attributes,
-          ...item
-        }));
-      } else if (Array.isArray(user.articles)) {
-        rawArticles = user.articles;
-      }
-      
-      // आर्टिकल फ़िल्टर करें: सिर्फ पब्लिश और हिंदी भाषा के
-      articles = rawArticles.filter(article => {
-        // पब्लिश स्टेटस चेक करें
-        const isPublished = article.publishedAt !== null && 
-                           article.publishedAt !== undefined;
-         const isModerated = article.moderation_status === "published";
-        // भाषा चेक करें - अलग-अलग संभावित फ़ील्ड नाम
-        const articleLanguage = article.language || article.lang || '';
-        const isHindi = articleLanguage.toLowerCase() === HINDI_LANG_CODE || 
-                       articleLanguage.toLowerCase() === 'hindi';
-        
-        return isPublished && isHindi && isModerated;
-      });
-      
-      // डुप्लीकेट आर्टिकल हटाएं
-      const uniqueArticleIds = new Set();
-      articles = articles.filter(article => {
-        if (uniqueArticleIds.has(article.id)) {
-          return false;
-        }
-        uniqueArticleIds.add(article.id);
-        return true;
-      });
-      
-      // वेब स्टोरीज फ़ेच करें
-      try {
-        // पहले यूजरनेम से ढूंढें
-        const storiesRes = await webStoriesAPI.getAll({ 
-          author: user.username,
-          pageSize: 100 
-        });
-        
-        webStories = storiesRes.stories || [];
-        
-        // अगर यूजरनेम से नहीं मिला तो यूजर आईडी से ढूंढें
-        if (webStories.length === 0 && user.id) {
-          const storiesByIdRes = await webStoriesAPI.getMyStories(user.id);
-          webStories = storiesByIdRes.stories || [];
-        }
-        
-        // वेब स्टोरीज फ़िल्टर करें: सिर्फ पब्लिश और हिंदी भाषा की
-        webStories = webStories.filter(story => {
-          const isPublished = story.publishedAt !== null && 
-                             story.publishedAt !== undefined;
-           const isModerated = story.moderationStatus === "published";
-          const storyLanguage = story.language || story.lang || '';
-          const isHindi = storyLanguage.toLowerCase() === HINDI_LANG_CODE || 
-                         storyLanguage.toLowerCase() === 'hindi';
-          
-          return isPublished && isHindi && isModerated;
-        });
-        
-        // डुप्लीकेट वेब स्टोरीज हटाएं
-        const uniqueStoryIds = new Set();
-        webStories = webStories.filter(story => {
-          if (uniqueStoryIds.has(story.id)) {
-            return false;
-          }
-          uniqueStoryIds.add(story.id);
-          return true;
-        });
-        
-        // वेब स्टोरीज को डेट के अनुसार सॉर्ट करें (नई से पुरानी)
-        webStories.sort((a, b) => {
-          const dateA = new Date(a.publishDate || a.publishedAt || a.createdAt || 0);
-          const dateB = new Date(b.publishDate || b.publishedAt || b.createdAt || 0);
-          return dateB - dateA;
-        });
-        
-      } catch (storyError) {
-        // साइलेंट फेल - वेब स्टोरीज के बिना भी काम चलेगा
-        console.error("वेब स्टोरीज फ़ेच करने में त्रुटि:", storyError.message);
-        webStories = [];
-      }
-      
-      // सिर्फ फ़िल्टर किए गए आर्टिकल से कुल व्यूज कैलकुलेट करें
-      const totalViews = articles.reduce((sum, article) => sum + (article.views || 0), 0);
-      
-      // यूजर ऑब्जेक्ट में काउंट्स जोड़ें
+      // API response confirmed Strapi v5 flat format:
+      // articles come as plain array of flat objects — NO data[].attributes wrapper
+      const rawArticles = Array.isArray(user.articles)
+        ? user.articles
+        : user.articles?.data
+          ? user.articles.data.map(({ id, attributes }) => ({ id, ...attributes })) // v4 fallback
+          : [];
+
+      articles = filterArticles(rawArticles).map(stripArticle);
+
+      // Same flat format for web_stories
+      const rawStories = Array.isArray(user.web_stories)
+        ? user.web_stories
+        : user.web_stories?.data
+          ? user.web_stories.data.map(({ id, attributes }) => ({ id, ...attributes }))
+          : [];
+
+      webStories = filterStories(rawStories).map(stripStory);
+
+      // Stats
       user.articlesCount = articles.length;
-      user.totalViews = totalViews;
-      
-      // यूजर आईडी सुनिश्चित करें
-      if (!user.id && user.documentId) {
-        user.id = user.documentId;
-      }
+      user.totalViews    = articles.reduce((s, a) => s + (a.views || 0), 0);
+
+      // id normalize
+      if (!user.id && user.documentId) user.id = user.documentId;
+
+      // Serialized payload से heavy/unused relations हटाएं
+      delete user.articles;
+      delete user.web_stories;
+      delete user.posts;
+      delete user.liked_posts;
+      delete user.notifications;
+      delete user.following;
+      delete user.followers;
+      delete user.shows_reviews;
+      delete user.web_series_reviews;
+      delete user.post_comment;
+      delete user.role;
     }
-    
   } catch (error) {
-    // साइलेंट फेल
-    console.error("यूजर डेटा फ़ेच करने में त्रुटि:", error.message);
+    console.error('यूजर डेटा फ़ेच करने में त्रुटि:', error.message);
   }
 
-  if (!user) {
-    notFound();
-  }
+  if (!user) notFound();
 
   return (
     <LayoutWrapper>
-      <SingleUserPage 
-        initialUser={user} 
+      <SingleUserPage
+        initialUser={user}
         initialArticles={articles}
         initialWebStories={webStories}
       />

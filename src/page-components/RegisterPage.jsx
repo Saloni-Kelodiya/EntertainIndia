@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { UserPlus, Mail, Lock, User } from "lucide-react";
 import { Eye, EyeOff,  } from "lucide-react";
 import Link from "next/link";
-import { authAPI } from "../lib/api";
+import { authAPI } from "../lib/api/auth";
 import { useStore } from "../store/useStore";
 
 export default function RegisterPage() {

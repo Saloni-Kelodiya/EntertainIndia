@@ -1,10 +1,11 @@
 import LayoutWrapper from "../../LayoutWrapper";
-import { webSeriesAPI, GenresAPI } from "../../../lib/api";
+import { webSeriesAPI } from "../../../lib/api/web-series";
+import { GenresAPI } from "../../../lib/api/genres";
 import WebSeriesPage from "../../../page-components/WebSeriespage";
 
 const SITE_URL = "https://entertainindia.in";
 
-// ✅ OTT Web Series Listing Page Ke Liye Perfect Schema Generator
+//  OTT Web Series Listing Page Ke Liye Perfect Schema Generator
 function generateWebSeriesListingSchema(webSeries, category) {
   const domain = SITE_URL;
   const listingUrl = `${domain}/ott/web-series`;
@@ -21,7 +22,7 @@ function generateWebSeriesListingSchema(webSeries, category) {
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -133,7 +134,7 @@ function generateWebSeriesListingSchema(webSeries, category) {
   };
 }
 
-// ✅ SEO: Dynamic Metadata Generation
+//  SEO: Dynamic Metadata Generation
 export async function generateMetadata() {
   const seoTitle = `Best OTT Web Series 2026 - Reviews, Ratings & Where to Watch | EntertainIndia`;
   const seoDesc = `Explore the complete list of OTT web series. Get details on ratings, genres, release years, and streaming platforms for all web series.`;
@@ -183,10 +184,10 @@ export async function generateMetadata() {
 }
 
 export default async function WebSeriesListing() {
-  const category = "ott"; // ✅ Fixed: Sirf OTT category
+  const category = "ott"; //  Fixed: Sirf OTT category
 
   try {
-    // ✅ Server-side Parallel Data Fetching
+    //  Server-side Parallel Data Fetching
     const [seriesRes, genresRes] = await Promise.all([
       webSeriesAPI.getAll({
         pageSize: 50,
@@ -199,7 +200,7 @@ export default async function WebSeriesListing() {
     const initialSeries = seriesRes?.data || [];
     const initialGenres = [...new Set(genresRes.map(i => i.name).filter(Boolean))];
 
-    // ✅ Generate Complete Schema
+    //  Generate Complete Schema
     const schemaData = generateWebSeriesListingSchema(initialSeries, category);
 
     return (

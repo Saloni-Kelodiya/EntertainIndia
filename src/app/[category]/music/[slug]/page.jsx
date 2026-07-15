@@ -1,18 +1,18 @@
 import LayoutWrapper from '../../../LayoutWrapper';
 import MusicDetailPage from "../../../../page-components/MusicDetailPage"; // ← Keep this as MusicDetailPage
-import { songsAPI } from "../../../../lib/api";
+import { songsAPI } from "../../../../lib/api/songs";
 import { notFound } from 'next/navigation';
 
 const SITE_URL = "https://entertainindia.in";
 
-// ✅ Helper function to get actual category of song
+//  Helper function to get actual category of song
 const getActualCategory = (song) => {
   if (song?.category?.slug) return song.category.slug.toLowerCase();
   if (song?.categories?.length > 0) return song.categories[0].slug.toLowerCase();
   return 'music';
 };
 
-// ✅ MUSIC DETAIL PAGE - PERFECT SCHEMA GENERATOR
+//  MUSIC DETAIL PAGE - PERFECT SCHEMA GENERATOR
 function generateMusicDetailSchema(song, category, slug) {
   const domain = SITE_URL;
   const songUrl = `${domain}/${category}/music/${slug}`;
@@ -31,7 +31,7 @@ function generateMusicDetailSchema(song, category, slug) {
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -148,7 +148,7 @@ function generateMusicDetailSchema(song, category, slug) {
   };
 }
 
-// ✅ SEO: Enhanced Metadata Generation
+//  SEO: Enhanced Metadata Generation
 export async function generateMetadata({ params }) {
   const { category, slug } = await params;
   const song = await songsAPI.getBySlug(slug);
@@ -203,7 +203,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ MAIN COMPONENT
+//  MAIN COMPONENT
 export default async function MusicDetail({ params }) {
   const { slug, category } = await params;
   
@@ -223,7 +223,7 @@ export default async function MusicDetail({ params }) {
     return notFound();
   }
 
-  // ✅ GENERATE COMPLETE SCHEMA
+  //  GENERATE COMPLETE SCHEMA
   const schemaData = generateMusicDetailSchema(song, category, slug);
 
   return (

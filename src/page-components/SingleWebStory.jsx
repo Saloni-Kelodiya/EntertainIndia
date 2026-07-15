@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
-import { webStoriesAPI } from "../lib/api";
+import { webStoriesAPI } from "../lib/api/web-stories";
 import { getStrapiMedia } from "../lib/constants";
 import {
   X,
@@ -27,7 +27,7 @@ export default function SingleWebStory({ params = {} }) {
   const touchEndX = useRef(0);
   const SLIDE_DURATION = 4000;
 
-  // ✅ Disable scroll while story is open
+  //  Disable scroll while story is open
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -35,7 +35,7 @@ export default function SingleWebStory({ params = {} }) {
     };
   }, []);
 
-  // ✅ Fetch Story
+  //  Fetch Story
   useEffect(() => {
     const fetchStory = async () => {
       setLoading(true);
@@ -57,20 +57,20 @@ export default function SingleWebStory({ params = {} }) {
   const slides = story?.slides || [];
   const relatedStories = story?.relatedStories || [];
 
-  // ✅ Combine slides with related stories as the last slide
+  //  Combine slides with related stories as the last slide
   const allSlides = [...slides];
   if (relatedStories.length > 0) {
     allSlides.push({ isRelatedSlide: true, title: "Related Stories" });
   }
 
-  // ✅ Auto slide
+  //  Auto slide
   useEffect(() => {
     if (!allSlides.length || isPaused) return;
     const timer = setTimeout(nextSlide, SLIDE_DURATION);
     return () => clearTimeout(timer);
   }, [activeIndex, isPaused, allSlides]);
 
-  // ✅ Keyboard Controls
+  //  Keyboard Controls
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "ArrowRight") nextSlide();
@@ -96,7 +96,7 @@ export default function SingleWebStory({ params = {} }) {
     }
   };
 
-  // ✅ Touch Events
+  //  Touch Events
   const onTouchStart = (e) => {
     setIsPaused(true);
     touchStartX.current = e.targetTouches[0].clientX;
@@ -113,7 +113,7 @@ export default function SingleWebStory({ params = {} }) {
     if (diff < -50) prevSlide();
   };
 
-  // ✅ Share
+  //  Share
   const handleShare = async () => {
     if (typeof window === 'undefined') return;
 
@@ -169,7 +169,7 @@ export default function SingleWebStory({ params = {} }) {
           />
         </div>
 
-        {/* 📱 STORY CARD */}
+        {/*  STORY CARD */}
         <div
           className="relative w-full max-w-[380px] sm:max-w-md 
           h-[82vh] sm:h-[85vh] 

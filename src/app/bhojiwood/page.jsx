@@ -1,18 +1,30 @@
 import CategoryPage from '../../page-components/CategoryPage';
-import { articlesAPIServer, moviesAPIServer, categoryAPIServer } from '../../lib/api-server';
-import { articlesAPI ,moviesAPI} from '../../lib/api';
+import {  categoryAPIServer } from '../../lib/api-server';
+import { articlesAPI } from '../../lib/api/articles';
+import { moviesAPI } from '../../lib/api/movies';
 import LayoutWrapper from '../LayoutWrapper';
 
 const SITE_URL = 'https://entertainindia.in';
+const CATEGORY = 'bhojiwood';
 
-// ✅ BHOJIWOOD Ke Liye Perfect Schema Generator
+// ✅ Common article params — generateMetadata aur page component dono same params use karenge
+function getArticleParams(page = 1) {
+  return {
+    category: CATEGORY,
+    page,
+    pageSize: 6,
+    mainCategory: "article",
+    sort: "createdAt:desc",
+  };
+}
+
+// BHOJIWOOD Ke Liye Perfect Schema Generator
 function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categorySlug) {
   const domain = SITE_URL;
   const categoryUrl = `${domain}/bhojiwood`;
-  
+
   const graph = [];
 
-  // 1️⃣ Organization Schema
   graph.push({
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -22,7 +34,7 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -33,7 +45,6 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
     ]
   });
 
-  // 2️⃣ WebSite Schema
   graph.push({
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -43,9 +54,7 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
     "alternateName": "एंटरटेनइंडिया",
     "description": "Entertainment news in Hindi - Bhojiwood, Bollywood, Bhojpuri Cinema updates",
     "inLanguage": "hi-IN",
-    "publisher": {
-      "@id": `${domain}/#organization`
-    },
+    "publisher": { "@id": `${domain}/#organization` },
     "potentialAction": {
       "@type": "SearchAction",
       "target": {
@@ -56,28 +65,16 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
     }
   });
 
-  // 3️⃣ Breadcrumb Schema (Bhojiwood ke liye)
   graph.push({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "@id": `${categoryUrl}#breadcrumb`,
     "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": domain
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Bhojiwood",
-        "item": categoryUrl
-      }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": domain },
+      { "@type": "ListItem", "position": 2, "name": "Bhojiwood", "item": categoryUrl }
     ]
   });
 
-  // 4️⃣ Collection Page Schema
   graph.push({
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -86,13 +83,9 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
     "description": "भोजपुरी सिनेमा (भोजीवुड) की ताज़ा खबरें, नई फिल्मों के रिव्यूज, बॉक्स ऑफिस कलेक्शन और अपने पसंदीदा भोजपुरी सितारों की गॉसिप यहाँ पढ़ें।",
     "url": categoryUrl,
     "inLanguage": "hi-IN",
-    "isPartOf": {
-      "@type": "WebSite",
-      "@id": `${domain}/#website`
-    }
+    "isPartOf": { "@type": "WebSite", "@id": `${domain}/#website` }
   });
 
-  // 5️⃣ Movies List Schema (Bhojpuri Movies)
   if (movies && movies.length > 0) {
     graph.push({
       "@context": "https://schema.org",
@@ -108,14 +101,13 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
           "@type": "Movie",
           "name": item.title,
           "url": `${domain}/bhojiwood/movies/${item.slug}`,
-          "image": item.poster?.url || item.backdrop?.url,
-          "datePublished": item.releaseDate || item.createdAt
+          "image": item.poster?.url || null,
+          "datePublished": item.releaseDate || null
         }
       }))
     });
   }
 
-  // 6️⃣ Articles List Schema (Bhojiwood News)
   if (articles && articles.length > 0) {
     graph.push({
       "@context": "https://schema.org",
@@ -136,38 +128,35 @@ function generateBhojiwoodSchema(categoryData, movies = [], articles = [], categ
           "dateModified": article.updatedAt || article.createdAt,
           "author": {
             "@type": "Person",
-            "name": article.author?.name || article.Authors?.name || "EntertainIndia Team"
+            "name": article.Authors?.name || "EntertainIndia Team",
+            "url": article.Authors?.name
+              ? `${SITE_URL}/author/${article.Authors.name?.toLowerCase().replace(/\s+/g, '-')}`
+              : `${SITE_URL}/about`
           },
           "publisher": {
             "@type": "Organization",
             "name": "EntertainIndia",
-            "logo": {
-              "@type": "ImageObject",
-              "url": `${domain}/logo.png`
-            }
+            "logo": { "@type": "ImageObject", "url": `${domain}/og-logo.png` }
           }
         }
       }))
     });
   }
 
-  return {
-    "@context": "https://schema.org",
-    "@graph": graph
-  };
+  return { "@context": "https://schema.org", "@graph": graph };
 }
 
 export async function generateMetadata() {
   const siteUrl = SITE_URL;
   const categoryUrl = `${siteUrl}/bhojiwood`;
-  const category = 'bhojiwood';
-  
+
   try {
     const [catData, artData] = await Promise.all([
-      categoryAPIServer.getBySlug(category),
-      articlesAPI.getAll({ category, pageSize: 1, sort: 'createdAt:desc' })
+      categoryAPIServer.getBySlug(CATEGORY),
+      // ✅ FIX: getAllLight use kiya, same params jo page component use karega
+      articlesAPI.getAllLight(getArticleParams(1)),
     ]);
-    
+
     const seo = catData?.seo;
     const topArticle = artData?.articles?.[0];
 
@@ -183,11 +172,7 @@ export async function generateMetadata() {
       robots: {
         index: true,
         follow: true,
-        googleBot: {
-          index: true,
-          follow: true,
-          'max-image-preview': 'large',
-        },
+        googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
       },
       openGraph: {
         title,
@@ -206,7 +191,7 @@ export async function generateMetadata() {
       },
     };
   } catch (error) {
-    return { 
+    return {
       title: 'भोजीवुड न्यूज़: भोजपुरी फिल्मों की ताज़ा खबरें | EntertainIndia.in',
       description: 'भोजपुरी सिनेमा की ताजा खबरें, मूवी रिव्यूज और लेटेस्ट अपडेट्स।'
     };
@@ -216,20 +201,19 @@ export async function generateMetadata() {
 export default async function BhojiwoodPage({ searchParams }) {
   const sParams = await searchParams;
   const page = parseInt(sParams.page) || 1;
-  const category = "bhojiwood";
 
   const [categoryData, articleData, movieData] = await Promise.all([
-    categoryAPIServer.getBySlug(category),
-    articlesAPI.getAll({ category, page, pageSize: 6, mainCategory: "article", sort: "createdAt:desc" }),
-    moviesAPI.getAll({ category, pageSize: 20, sort: "releaseDate:desc" })
+    categoryAPIServer.getBySlug(CATEGORY),
+    // ✅ FIX: getAllLight use kiya
+    articlesAPI.getAllLight(getArticleParams(page)),
+    moviesAPI.getAllLight({ category: CATEGORY, pageSize: 20, sort: "releaseDate:desc" }),
   ]);
 
-  // ✅ Use Bhojiwood specific schema, NOT generateCategorySchema
   const schemaData = generateBhojiwoodSchema(
-    categoryData, 
-    movieData?.movies || [],    
-    articleData?.articles || [], 
-    category                    
+    categoryData,
+    movieData?.movies || [],
+    articleData?.articles || [],
+    CATEGORY
   );
 
   return (
@@ -238,14 +222,14 @@ export default async function BhojiwoodPage({ searchParams }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-      
+
       <h1 className="sr-only">
         {categoryData?.seo?.h1 || "भोजीवुड लेटेस्ट न्यूज़, भोजपुरी फिल्में और गॉसिप"}
       </h1>
 
       <LayoutWrapper>
-        <CategoryPage 
-          category={category}
+        <CategoryPage
+          category={CATEGORY}
           categoryData={categoryData}
           initialArticles={articleData?.articles || []}
           initialMovies={movieData?.movies || []}

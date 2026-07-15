@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback, useMemo, useRef, memo } from "react";
+import { useRouter } from "next/navigation";
 import Pagination from "../components/ui/Pagination";
 import { ArticleListSkeleton } from "../components/ui/Skeleton";
 import Sidebar from "../components/layout/Sidebar";
-import { Star, ArrowRight, Search, X, Filter, Newspaper } from "lucide-react";
+import { Star, ArrowRight, X, Filter, Newspaper } from "lucide-react";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,20 +20,30 @@ const CATEGORY_TO_INDUSTRY = {
   ott: "ओटीटी",
   tv: "टीवी",
   tollywood: "टॉलीवुड",
-  bhojiwood: "भोजपुरी ",
-  korean:"कोरियाई"
+  bhojiwood: "भोजपुरी",
+  korean: "कोरियाई",
 };
-/* ===============================
-   CELEBRITY CARD
-================================ */
-function CelebrityCard({ celebrity, serverCategory }) {
-  const name = celebrity.name;
-  const slug = celebrity.slug;
-  const avatar = celebrity.avatar;
 
-  const matchingIndustry = Array.isArray(celebrity.industry)
-    ? celebrity.industry.find((ind) => ind.slug === serverCategory)
-    : null;
+/* ===============================
+   CELEBRITY CARD (memoized)
+================================ */
+const CelebrityCard = memo(function CelebrityCard({ celebrity, serverCategory }) {
+  const { name, slug, avatar } = celebrity;
+
+  const badgeLabel = useMemo(() => {
+    if (Array.isArray(celebrity.industry)) {
+      const found = celebrity.industry.find(
+        (ind) =>
+          ind?.slug?.toLowerCase() === serverCategory?.toLowerCase() ||
+          ind?.name?.toLowerCase() === serverCategory?.toLowerCase()
+      );
+      if (found) return found.name || found.slug;
+    }
+    if (typeof celebrity.industry === "string" && celebrity.industry.trim()) {
+      return celebrity.industry;
+    }
+    return CATEGORY_TO_INDUSTRY[serverCategory] || null;
+  }, [celebrity.industry, serverCategory]);
 
   return (
     <Link
@@ -46,15 +56,15 @@ function CelebrityCard({ celebrity, serverCategory }) {
             src={avatar.url}
             alt={name}
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover object-top group-hover:scale-110 transition duration-500"
+            loading="lazy"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
             <Star className="w-12 h-12 text-gray-400" />
           </div>
         )}
-        
-        {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
@@ -62,36 +72,35 @@ function CelebrityCard({ celebrity, serverCategory }) {
         <h3 className="text-sm font-semibold line-clamp-2 text-gray-900 dark:text-white group-hover:text-pink-600 transition">
           {name}
         </h3>
-        {matchingIndustry && (
+        {badgeLabel && (
           <span className="text-xs text-pink-600 mt-1 inline-block">
-            {matchingIndustry.name}
+            {badgeLabel}
           </span>
         )}
       </div>
     </Link>
   );
-}
+});
 
 /* ===============================
-   ARTICLE CARD FOR MAIN CONTENT
+   ARTICLE CARD (memoized)
 ================================ */
-function ArticleCard({ article }) {
-  // Get the correct image URL
-  const imageUrl =  article?.heroImage?.formats?.medium?.url ||
-     article?.hero_image?.formats?.medium?.url ||
+const ArticleCard = memo(function ArticleCard({ article }) {
+  const imageUrl =
+    article?.heroImage?.formats?.medium?.url ||
+    article?.hero_image?.formats?.medium?.url ||
     article?.heroImage?.formats?.small?.url ||
-    article?.heroImage?.url||
-                   null;
-  
-  // Get the correct slug
+    article?.heroImage?.url ||
+    null;
+
   const articleSlug = article.slug || article.Slug || article.documentId;
-  
-  // Get publication date
-  const publishDate = article.publishedAt || 
-                      article.publish_datetime || 
-                      article.createdAt || 
-                      new Date().toISOString();
-  
+
+  const publishDate =
+    article.publishedAt ||
+    article.publish_datetime ||
+    article.createdAt ||
+    new Date().toISOString();
+
   return (
     <Link href={`/news/${articleSlug}`} className="group block">
       <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700">
@@ -101,7 +110,9 @@ function ArticleCard({ article }) {
               src={imageUrl}
               alt={article.title || "Article"}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover group-hover:scale-110 transition duration-500"
+              loading="lazy"
             />
           </div>
         )}
@@ -117,7 +128,7 @@ function ArticleCard({ article }) {
               {new Date(publishDate).toLocaleDateString('hi-IN', {
                 day: 'numeric',
                 month: 'short',
-                year: 'numeric'
+                year: 'numeric',
               })}
             </span>
             <span className="text-sm text-pink-600 group-hover:text-pink-700 font-medium">
@@ -128,20 +139,17 @@ function ArticleCard({ article }) {
       </div>
     </Link>
   );
-}
+});
 
-// Custom debounce hook for search
+/* ===============================
+   Debounce hook
+================================ */
 function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
   }, [value, delay]);
 
   return debouncedValue;
@@ -161,64 +169,99 @@ export default function CategoryCelebritiesPage({
   initialArticles = [],
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const isInitialMount = useRef(true);
 
   const [celebrities, setCelebrities] = useState(initialCelebrities || []);
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);
-  const [articles, setArticles] = useState(initialArticles || []);
-  
-  // State for filters - initialized from URL params
+
+  const articles = initialArticles || [];
+
   const [search, setSearch] = useState(initialSearch);
   const [profession, setProfession] = useState(initialProfession);
   const [letter, setLetter] = useState(initialLetter);
   const [currentPage, setCurrentPage] = useState(initialPagination?.page || 1);
 
+  // 🔥 NEW: Professions filter bar के "Show more/less" के लिए state
+  const [showAllProfessions, setShowAllProfessions] = useState(false);
+
   const professions = initialProfessions;
   const industry = CATEGORY_TO_INDUSTRY[serverCategory] || "Entertainment";
-  
-  // Debounce search
+
   const debouncedSearch = useDebounce(search, 500);
 
-  // 🔥 FIXED: Fetch celebrities with correct profession filter
+  // 🔥 NEW: Celebrities को Sort करना (industry[0] match करने वाले पहले)
+  const sortedCelebrities = useMemo(() => {
+  if (!celebrities || celebrities.length === 0) return [];
+
+  const matched = [];
+  const unmatched = [];
+
+  celebrities.forEach((celebrity) => {
+    let isMatch = false;
+    const industryData = celebrity.industry;
+
+    if (Array.isArray(industryData) && industryData.length > 0) {
+      const first = industryData[0];
+      if (typeof first === 'string') {
+        isMatch = first.toLowerCase() === serverCategory?.toLowerCase();
+      } else if (first && typeof first === 'object') {
+        isMatch =
+          first.slug?.toLowerCase() === serverCategory?.toLowerCase() ||
+          first.name?.toLowerCase() === serverCategory?.toLowerCase();
+      }
+    }
+
+    if (isMatch) matched.push(celebrity);
+    else unmatched.push(celebrity);
+  });
+
+  // ========== 🔥 यहाँ से Console Logs डाले गए हैं ==========
+  console.log("🏷️ Current Server Category:", serverCategory);
+  
+  console.log("✅ Matched Celebrities (Industry[0] match - ये पहले आएंगे):", 
+    matched.map(c => ({ name: c.name, industry: c.industry }))
+  );
+  
+  console.log("❌ Unmatched Celebrities (बाद में आएंगे):", 
+    unmatched.map(c => ({ name: c.name, industry: c.industry }))
+  );
+  
+  console.log("📋 Final Sorted Order (पूरी लिस्ट):", 
+    [...matched, ...unmatched].map(c => c.name)
+  );
+  // =====================================================
+
+  return [...matched, ...unmatched];
+}, [celebrities, serverCategory]);
+  // 🔥 NEW: Profession Filter Bar के लिए Display List (पहले 5 या सभी)
+  const displayedProfessions = useMemo(() => {
+    if (!professions || professions.length === 0) return [];
+    if (showAllProfessions) return professions;
+    return professions.slice(0, 5); // सिर्फ 5 दिखाओ
+  }, [professions, showAllProfessions]);
+
+  //  Celebrities fetch (API call)
   const fetchCelebrities = useCallback(async (pageNum, prof, srch, ltr) => {
     setLoading(true);
     try {
-      const { celebritiesAPI } = await import("../lib/api");
-      
-      // Build params object
+      const { celebritiesAPI } = await import("../lib/api/celebrities");
+
       const params = {
         industry: serverCategory,
         page: pageNum,
         pageSize: 8,
       };
-      
-      // 🔥 PROFESSION FILTER - सही तरीके से भेजें
-      if (prof && prof !== "" && prof !== "all") {
-        params.profession = prof;
-      }
-      
-      // SEARCH FILTER
-      if (srch && srch !== "") {
-        params.search = srch;
-      }
-      
-      // LETTER FILTER
-      if (ltr && ltr !== "") {
-        params.letter = ltr;
-      }
-      
-    
-      const data = await celebritiesAPI.getAll(params);
-      
+
+      if (prof && prof !== "all") params.profession = prof;
+      if (srch) params.search = srch;
+      if (ltr) params.letter = ltr;
+
+      const data = await celebritiesAPI.getLightListSorted(params); // celebritiesAPI.getLightList ki jagah
       setCelebrities(data?.celebrities || []);
-      setPagination(data?.pagination || { 
-        page: pageNum, 
-        pageSize: 8, 
-        pageCount: 1, 
-        total: 0 
-      });
+      setPagination(
+        data?.pagination || { page: pageNum, pageSize: 8, pageCount: 1, total: 0 }
+      );
     } catch (err) {
       console.error("Fetch error:", err);
       setCelebrities([]);
@@ -228,290 +271,253 @@ export default function CategoryCelebritiesPage({
     }
   }, [serverCategory]);
 
-  // Fetch articles when category changes
-  const fetchArticles = useCallback(async () => {
-    try {
-      const { articlesAPI } = await import("../lib/api");
-      
-      const articlesData = await articlesAPI.getAll({
-        contentType: "celebrity-news",
-        mainCategory: "news",
-        industry: serverCategory,
-        pageSize: 5,
-        sort: "publishedAt:desc",
-      });
-      
-      setArticles(articlesData?.articles || []);
-    } catch (err) {
-      console.error("Error fetching articles:", err);
-      setArticles([]);
-    }
-  }, [serverCategory]);
-
-  // Effect to fetch celebrities when filters change
+  //  Filters change hone par celebrities refetch
   useEffect(() => {
-    // Skip the initial mount since we already have initial data
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
     }
-   
     fetchCelebrities(currentPage, profession, debouncedSearch, letter);
   }, [currentPage, profession, debouncedSearch, letter, fetchCelebrities]);
 
-  // Effect to fetch articles on mount and when category changes
+  //  URL sync
   useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+    if (isInitialMount.current) return;
 
-  // Update URL when filters change
-  useEffect(() => {
-    // Skip the initial mount to avoid URL update on first load
-    if (isInitialMount.current) {
-      return;
-    }
-    
     const params = new URLSearchParams();
     if (currentPage > 1) params.set('page', currentPage);
-    if (profession && profession !== "" && profession !== "all") params.set('profession', profession);
-    if (search && search !== "") params.set('search', search);
-    if (letter && letter !== "") params.set('letter', letter);
-    
+    if (profession && profession !== "all") params.set('profession', profession);
+    if (search) params.set('search', search);
+    if (letter) params.set('letter', letter);
+
     const queryString = params.toString();
     const newUrl = `/${serverCategory}/celebrities${queryString ? `?${queryString}` : ''}`;
     const currentUrl = window.location.pathname + window.location.search;
-    
-    // Only update URL if it's different
+
     if (currentUrl !== newUrl) {
       router.replace(newUrl, { scroll: false });
     }
   }, [currentPage, profession, search, letter, serverCategory, router]);
 
   /* ===============================
-     HANDLERS
+     HANDLERS (memoized)
   =============================== */
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
-  const handleSearch = (value) => {
+  const handleSearch = useCallback((value) => {
     setSearch(value);
-    setLetter(""); // Clear letter filter when searching
-    setCurrentPage(1); // Reset to first page
-  };
+    setLetter("");
+    setCurrentPage(1);
+  }, []);
 
-  // 🔥 FIXED: Profession change handler
-  const handleProfessionChange = (slug) => {
-    console.log("Profession changed to:", slug);
+  const handleProfessionChange = useCallback((slug) => {
     setProfession(slug);
-    setCurrentPage(1); // Reset to first page
-  };
+    setCurrentPage(1);
+  }, []);
 
-  const handleLetterFilter = (ltr) => {
-    console.log("Letter filter clicked:", ltr);
-    // If clicking the same letter, clear it
-    if (letter === ltr) {
-      setLetter("");
-    } else {
-      setLetter(ltr);
-    }
-    setSearch(""); // Clear search when using letter filter
-    setCurrentPage(1); // Reset to first page
-  };
+  const handleLetterFilter = useCallback((ltr) => {
+    setLetter((prev) => (prev === ltr ? "" : ltr));
+    setSearch("");
+    setCurrentPage(1);
+  }, []);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setSearch("");
     setLetter("");
     setProfession("");
     setCurrentPage(1);
-    // Navigate to clean URL without filters
     router.push(`/${serverCategory}/celebrities`);
-  };
+  }, [serverCategory, router]);
 
-  const getActiveFiltersCount = () => {
+  const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (search && search !== "") count++;
-    if (letter && letter !== "") count++;
-    if (profession && profession !== "" && profession !== "all") count++;
+    if (search) count++;
+    if (letter) count++;
+    if (profession && profession !== "all") count++;
     return count;
-  };
+  }, [search, letter, profession]);
+
+  const activeProfessionLabel = useMemo(
+    () => professions.find((p) => p.slug === profession)?.name,
+    [professions, profession]
+  );
 
   /* ===============================
      UI
   =============================== */
   return (
-   <div className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">
+    <div className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">
       <TopCategoryTabs />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-        {/* MAIN */}
         <main className="lg:col-span-8">
-      
-              <WebContentCategory
-                title={`${industry} सेलिब्रिटी`}
-                description="सेलिब्रिटी प्रोफाइल, व्यक्तिगत जीवन और फिल्मोग्राफी"
-                icon={<Star className="w-8 h-8 text-pink-500" />}
-                noPadding
-                onSearch={handleSearch}
-                onLetterFilter={handleLetterFilter}
-                currentLetter={letter}
-              />
+          <WebContentCategory
+            title={`${industry} सेलिब्रिटी`}
+            description="सेलिब्रिटी प्रोफाइल, व्यक्तिगत जीवन और फिल्मोग्राफी"
+            icon={<Star className="w-8 h-8 text-pink-500" />}
+            noPadding
+            onSearch={handleSearch}
+            onLetterFilter={handleLetterFilter}
+            currentLetter={letter}
+          />
 
-              {/* Active Filters */}
-              {getActiveFiltersCount() > 0 && (
-                <div className="mb-4 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Filter className="w-4 h-4 text-pink-600" />
-                    <span className="text-sm text-pink-600 dark:text-pink-400">
-                      सक्रिय फ़िल्टर:
-                    </span>
-                    {letter && (
-                      <span className="text-sm bg-pink-100 dark:bg-pink-900/40 px-2 py-1 rounded-full">
-                        नाम शुरू होता है: {letter.toUpperCase()}
-                      </span>
-                    )}
-                    {search && (
-                      <span className="text-sm bg-pink-100 dark:bg-pink-900/40 px-2 py-1 rounded-full">
-                        खोज: {search}
-                      </span>
-                    )}
-                    {profession && professions.find(p => p.slug === profession) && (
-                      <span className="text-sm bg-pink-100 dark:bg-pink-900/40 px-2 py-1 rounded-full">
-                        {professions.find(p => p.slug === profession)?.name}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleClearFilters}
-                    className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 font-medium"
-                  >
-                    <X className="w-4 h-4" />
-                    सभी हटाएं
-                  </button>
-                </div>
-              )}
-
-              {/* Results Count */}
-              <div className="mb-4 flex justify-between items-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {celebrities.length} में से {pagination?.total || 0} सेलिब्रिटी दिखा रहे हैं
-                </p>
+          {/* Active Filters */}
+          {activeFiltersCount > 0 && (
+            <div className="mb-4 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Filter className="w-4 h-4 text-pink-600" />
+                <span className="text-sm text-pink-600 dark:text-pink-400">
+                  सक्रिय फ़िल्टर:
+                </span>
+                {letter && (
+                  <span className="text-sm bg-pink-100 dark:bg-pink-900/40 px-2 py-1 rounded-full">
+                    नाम शुरू होता है: {letter.toUpperCase()}
+                  </span>
+                )}
+                {search && (
+                  <span className="text-sm bg-pink-100 dark:bg-pink-900/40 px-2 py-1 rounded-full">
+                    खोज: {search}
+                  </span>
+                )}
+                {activeProfessionLabel && (
+                  <span className="text-sm bg-pink-100 dark:bg-pink-900/40 px-2 py-1 rounded-full">
+                    {activeProfessionLabel}
+                  </span>
+                )}
               </div>
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700 font-medium"
+              >
+                <X className="w-4 h-4" />
+                सभी हटाएं
+              </button>
+            </div>
+          )}
 
-              {/* 🔥 FIXED: Profession Filter Bar */}
-              {professions.length > 1 && (
-                <div className="mb-6">
-                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 md:flex-wrap md:overflow-visible">
+          {/* Results Count */}
+          <div className="mb-4 flex justify-between items-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {celebrities.length} में से {pagination?.total || 0} सेलिब्रिटी दिखा रहे हैं
+            </p>
+          </div>
+
+          {/* Profession Filter Bar - 🔥 UPDATED: Show Less/More with button */}
+          {professions.length > 1 && (
+            <div className="mb-6">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 md:flex-wrap md:overflow-visible">
+                <button
+                  onClick={() => handleProfessionChange("")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
+                    ${!profession
+                      ? 'bg-pink-600 text-white shadow-md'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900/30'
+                    }`}
+                >
+                  सभी
+                </button>
+                
+                {displayedProfessions.map((item) => {
+                  const isActive = profession === item.slug;
+                  return (
                     <button
-                      onClick={() => handleProfessionChange("")}
+                      key={item.id || item.slug}
+                      onClick={() => handleProfessionChange(item.slug)}
                       className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
-                        ${!profession || profession === ""
+                        ${isActive
                           ? 'bg-pink-600 text-white shadow-md'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900/30'
-                        }
-                      `}
+                        }`}
                     >
-                      सभी
+                      {item.name}
                     </button>
-                    {professions.map((item) => {
-                      const isActive = profession === item.slug;
-                      return (
-                        <button
-                          key={item.id || item.slug}
-                          onClick={() => handleProfessionChange(item.slug)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0
-                            ${isActive
-                              ? 'bg-pink-600 text-white shadow-md'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900/30'
-                            }
-                          `}
-                        >
-                          {item.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                  );
+                })}
 
-              {/* Celebrities Grid */}
-              {loading ? (
-                <ArticleListSkeleton count={8} />
-              ) : celebrities.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {celebrities.map((c) => (
-                      <CelebrityCard
-                        key={c.id}
-                        celebrity={c}
-                        serverCategory={serverCategory}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Pagination */}
-                  {pagination?.pageCount > 1 && (
-                    <div className="mt-8">
-                      <Pagination
-                        currentPage={currentPage}
-                        totalPages={pagination.pageCount}
-                        onPageChange={handlePageChange}
-                      />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <Star className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    कोई सेलिब्रिटी नहीं मिली
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    कृपया अपने फ़िल्टर या खोज शब्द बदलें
-                  </p>
+                {/* 🔥 NEW: और देखें / कम देखें बटन */}
+                {professions.length > 5 && (
                   <button
-                    onClick={handleClearFilters}
-                    className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
+                    onClick={() => setShowAllProfessions(prev => !prev)}
+                    className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white hover:bg-gray-400 dark:hover:bg-gray-500"
                   >
-                    सभी फ़िल्टर हटाएं
+                    {showAllProfessions ? 'कम देखें' : `+ ${professions.length - 5} और देखें`}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+          )}
 
-              {/* ARTICLES SECTION */}
-              {articles && articles.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-2 mb-6">
-                    <Newspaper className="w-6 h-6 text-pink-600" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                      ताज़ा सेलिब्रिटी समाचार और अपडेट
-                    </h2>
-                  </div>
-                  
-                  {/* Article Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {articles.map((article, index) => (
-                      <ArticleCard key={article.id || article.documentId || index} article={article} />
-                    ))}
-                  </div>
-                  
-                  {/* View All Link */}
-                  <div className="mt-6 text-center">
-                    <Link
-                      href={`/news`}
-                      className="inline-flex items-center gap-2 px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition font-medium"
-                    >
-                      सभी सेलिब्रिटी समाचार देखें
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
+          {/* Celebrities Grid - 🔥 UPDATED: Sorted list use कर रहे हैं */}
+          {loading ? (
+            <ArticleListSkeleton count={8} />
+          ) : sortedCelebrities.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {sortedCelebrities.map((c) => (
+                  <CelebrityCard key={c.id} celebrity={c} serverCategory={serverCategory} />
+                ))}
+              </div>
+
+              {pagination?.pageCount > 1 && (
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={pagination.pageCount}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
-          
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <Star className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                कोई सेलिब्रिटी नहीं मिली
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                कृपया अपने फ़िल्टर या खोज शब्द बदलें
+              </p>
+              <button
+                onClick={handleClearFilters}
+                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
+              >
+                सभी फ़िल्टर हटाएं
+              </button>
+            </div>
+          )}
+
+          {/* ARTICLES SECTION — SSR data only */}
+          {articles.length > 0 && (
+            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 mb-6">
+                <Newspaper className="w-6 h-6 text-pink-600" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  ताज़ा सेलिब्रिटी समाचार और अपडेट
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {articles.map((article, index) => (
+                  <ArticleCard key={article.id || article.documentId || index} article={article} />
+                ))}
+              </div>
+
+              <div className="mt-6 text-center">
+                <Link
+                  href="/news"
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition font-medium"
+                >
+                  सभी सेलिब्रिटी समाचार देखें
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          )}
         </main>
 
-        {/* SIDEBAR */}
         <aside className="lg:col-span-4">
           <Sidebar />
         </aside>

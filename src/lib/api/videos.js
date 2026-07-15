@@ -1,21 +1,22 @@
 import apiClient from './client';
 import qs from "qs";
 import { normalizeCategory } from './categories';
-
+import { normalizeArticle } from './articles';
+import { normalizeMovie } from './movies';
 
 export const normalizeVideo = (video) => {
   if (!video) return null;
 
   const data = video.attributes || video;
   const videoId = data.video_id;
-    // ✅ Convert float to integer
+    //  Convert float to integer
  
 return{
   id: data.id || null,
     documentId: data.documentId || null,
     title: data.title || '',
     videoId: videoId || null,
-    embedUrl: videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null, // ✅ Use nocookie
+    embedUrl: videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null, //  Use nocookie
     thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null,
     duration: data.duration || null,
     description: data.description|| '',
@@ -65,15 +66,15 @@ export const videosAPI = {
   q.append("populate", "*");
   q.append("filters[language][$eq]", "hi");
   
-  /* ✅ SORT — LATEST FIRST */
+  /*  SORT — LATEST FIRST */
   q.append("sort", params.sort || "publishedAt:desc");
 
-  /* ✅ LANGUAGE FILTER */
+  /*  LANGUAGE FILTER */
   if (params.language) {
     q.append("filters[language][$eq]", params.language);
   }
 
-  /* ✅ FILTERS (STRAPI v4 SAFE) */
+  /*  FILTERS (STRAPI v4 SAFE) */
   if (params.filters) {
     Object.entries(params.filters).forEach(([key, value]) => {
       if (typeof value === "object") {
@@ -95,7 +96,7 @@ export const videosAPI = {
     q.append("filters[$or][1][slug][$containsi]", searchTerm);
   }
 
-  /* ✅ VIDEO TYPE FILTER */
+  /*  VIDEO TYPE FILTER */
   if (params.videotype && params.videotype !== "all") {
     q.append("filters[videotype][$eq]", params.videotype);
   }
@@ -112,7 +113,7 @@ export const videosAPI = {
   }
 },
 
-/* ✅ SIMPLE SEARCH METHOD - FIXED FOR VIDEOS */
+/*  SIMPLE SEARCH METHOD - FIXED FOR VIDEOS */
 simpleSearch: async (searchTerm, options = {}) => {
   try {
     const { page = 1, pageSize = 8, videotype } = options;
@@ -132,7 +133,7 @@ simpleSearch: async (searchTerm, options = {}) => {
       q.append("filters[$or][1][slug][$containsi]", term);
     }
 
-    /* ✅ VIDEO TYPE FILTER */
+    /*  VIDEO TYPE FILTER */
     if (videotype && videotype !== 'all') {
       q.append("filters[videotype][$eq]", videotype);
     }
@@ -156,7 +157,7 @@ getWithArticles: async (slug) => {
         related_articles: {
           populate: '*',  // This deeply populates all relations including hero_image
           filters: {
-            moderation_status: { $eq: 'published' }  // ✅ Only fetch published articles
+            moderation_status: { $eq: 'published' }  //  Only fetch published articles
           }
         }
       }
@@ -170,7 +171,7 @@ getWithArticles: async (slug) => {
     const videoData = video.attributes || video;
     let relatedArticles = videoData.related_articles || [];
     
-    // ✅ Additional client-side filter to ensure only published articles
+    //  Additional client-side filter to ensure only published articles
     const publishedArticles = relatedArticles.filter(article => {
       const articleData = article.attributes || article;
       return articleData.moderation_status === 'published';
@@ -196,7 +197,8 @@ getWithArticles: async (slug) => {
       
       return {
         id: articleData.id || article.id,
-        title: articleData.title || '',
+        h1_title: articleData.h1_title || articleData.title,
+        title:articleData.title,
         slug: articleData.slug || '',
         description: articleData.body || '',
         hero_Image: heroImage,

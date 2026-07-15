@@ -1,13 +1,14 @@
 import Fashion from '../../../page-components/FashionPage';
 import LayoutWrapper from '../../LayoutWrapper';
-import { articlesAPI, galleriesAPI } from "../../../lib/api";
+import { articlesAPI} from "../../../lib/api/articles";
+import { galleriesAPI } from '../../../lib/api/galleries';
 
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
 export const fetchCache = 'force-cache';
 
-// ✅ SEO: हिंदी में डायनेमिक मेटाडेटा जनरेट करें
+//  SEO: हिंदी में डायनेमिक मेटाडेटा जनरेट करें
 export async function generateMetadata({ params }) {
   const { category } = await params;
   
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }) {
     title: pageTitle,
     description: pageDesc,
 
-    // ✅ रोबोट्स इंस्ट्रक्शन्स
+    //  रोबोट्स इंस्ट्रक्शन्स
     robots: {
       index: true,
       follow: true,
@@ -47,12 +48,12 @@ export async function generateMetadata({ params }) {
       },
     },
 
-    // ✅ कैनोनिकल URL
+    //  कैनोनिकल URL
     alternates: {
       canonical: pageUrl,
     },
 
-    // ✅ ओपन ग्राफ (सोशल मीडिया शेयरिंग)
+    //  ओपन ग्राफ (सोशल मीडिया शेयरिंग)
     openGraph: {
       title: pageTitle,
       description: pageDesc,
@@ -70,7 +71,7 @@ export async function generateMetadata({ params }) {
       type: 'website',
     },
 
-    // ✅ ट्विटर कार्ड
+    //  ट्विटर कार्ड
     twitter: {
       card: 'summary_large_image',
       title: pageTitle,
@@ -82,7 +83,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ मुख्य पेज कंपोनेंट
+//  मुख्य पेज कंपोनेंट
 export default async function FashionCategoryPage({ params }) {
   const { category } = await params;
   
@@ -97,7 +98,7 @@ export default async function FashionCategoryPage({ params }) {
   }
 
   try {
-    // ✅ कैटेगरी के हिसाब से गैलरी फेच करें
+    //  कैटेगरी के हिसाब से गैलरी फेच करें
     const galleriesRes = await galleriesAPI.getAll({ 
       category: category,
       language: "hi",
@@ -106,8 +107,8 @@ export default async function FashionCategoryPage({ params }) {
       return { galleries: [] };
     });
 
-    // ✅ कैटेगरी के हिसाब से आर्टिकल्स फेच करें
-    const articlesRes = await articlesAPI.getAll({
+    //  कैटेगरी के हिसाब से आर्टिकल्स फेच करें
+    const articlesRes = await articlesAPI.getAllLight({
       category: category,
       related_to: "Fashion",
       language: "hi",
@@ -117,7 +118,7 @@ export default async function FashionCategoryPage({ params }) {
       return { articles: [] };
     });
 
-    // ✅ कैटेगरी के हिसाब से गैलरी फ़िल्टर करें
+    //  कैटेगरी के हिसाब से गैलरी फ़िल्टर करें
     const filteredGalleries = (galleriesRes?.galleries || []).filter(gallery => {
       if (gallery.categories && Array.isArray(gallery.categories)) {
         return gallery.categories.some(cat => 
@@ -128,7 +129,7 @@ export default async function FashionCategoryPage({ params }) {
              gallery.category?.name?.toLowerCase() === category?.toLowerCase();
     });
 
-    // ✅ डायनेमिक ब्रेडक्रंब स्कीमा (हिंदी)
+    //  डायनेमिक ब्रेडक्रंब स्कीमा (हिंदी)
     const breadcrumbLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
@@ -139,7 +140,7 @@ export default async function FashionCategoryPage({ params }) {
       ]
     };
 
-    // ✅ डायनेमिक कलेक्शन स्कीमा (हिंदी)
+    //  डायनेमिक कलेक्शन स्कीमा (हिंदी)
     const collectionLd = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -158,7 +159,7 @@ export default async function FashionCategoryPage({ params }) {
       }
     };
 
-    // ✅ वेबसाइट स्कीमा
+    //  वेबसाइट स्कीमा
     const websiteSchema = {
       "@context": "https://schema.org",
       "@type": "WebSite",
@@ -176,7 +177,7 @@ export default async function FashionCategoryPage({ params }) {
 
     return (
       <LayoutWrapper>
-        {/* ✅ स्कीमा इंजेक्शन */}
+        {/*  स्कीमा इंजेक्शन */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, collectionLd, websiteSchema]) }}

@@ -5,7 +5,7 @@ import { formatDate } from '../../lib/helpers';
 import { getStrapiMedia } from '../../lib/constants';
 import { Eye } from 'lucide-react';
 
-// ✅ Category colors mapping (moved outside to avoid re-creation)
+//  Category colors mapping (moved outside to avoid re-creation)
 const categoryColors = {
   bollywood: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300',
   hollywood: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
@@ -28,7 +28,7 @@ const hindiCategory = {
   tv: "टीवी",
 };
 
-// ✅ Helper function outside component (better performance)
+//  Helper function outside component (better performance)
 const getAuthorName = (article) => {
   const fallback = 'EntertainIndia Team';
   const authors = article.authors;
@@ -49,7 +49,7 @@ const getAuthorName = (article) => {
   return fallback;
 };
 
-// ✅ Separate Image Component with AVIF optimization
+//  Separate Image Component with AVIF optimization
 const OptimizedArticleImage = memo(({ imgUrl, title, category }) => {
   const categoryName = category?.slug || category;
   const colorClass = categoryColors[categoryName] || 'bg-gray-100 text-gray-700';
@@ -70,7 +70,7 @@ const OptimizedArticleImage = memo(({ imgUrl, title, category }) => {
     );
   }
 
-  // ✅ Extract image dimensions for better performance
+  //  Extract image dimensions for better performance
   const imageSizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
   
   return (
@@ -83,7 +83,7 @@ const OptimizedArticleImage = memo(({ imgUrl, title, category }) => {
         className="object-cover transition-transform duration-500 hover:scale-110"
         loading="lazy"
         quality={75}
-        // ✅ Next.js automatically serves AVIF if browser supports
+        //  Next.js automatically serves AVIF if browser supports
         // No need for manual conversion
       />
       {categoryHindiName && (
@@ -97,12 +97,12 @@ const OptimizedArticleImage = memo(({ imgUrl, title, category }) => {
 
 OptimizedArticleImage.displayName = 'OptimizedArticleImage';
 
-// ✅ Main ArticleCard Component with memo
+//  Main ArticleCard Component with memo
 const ArticleCard = memo(({ article, category, featured = false, basePath = "/article" }) => {
   // Early return if no article
   if (!article || !article.slug) return null;
 
-  // ✅ Memoize expensive calculations
+  //  Memoize expensive calculations
   const imgUrl = useMemo(() => {
     return getStrapiMedia(
       article?.heroImage?.formats?.medium?.url ||
@@ -127,7 +127,7 @@ const ArticleCard = memo(({ article, category, featured = false, basePath = "/ar
   const categoryKey = article.category?.slug || category;
   const categoryHindiName = hindiCategory[categoryKey] || article.category?.name || '';
   
-  // ✅ Don't show if no Hindi category name (optional filter)
+  //  Don't show if no Hindi category name (optional filter)
   // if (!categoryHindiName) return null;
 
   return (
@@ -152,19 +152,19 @@ const ArticleCard = memo(({ article, category, featured = false, basePath = "/ar
             </span>
           </div>
 
-          {/* Title - ✅ Improved with better truncation */}
+          {/* Title -  Improved with better truncation */}
           <h3 className="font-bold text-base md:text-lg mb-2 line-clamp-2 text-gray-900 dark:text-gray-100">
             {article.title}
           </h3>
 
-          {/* Summary - ✅ Only show if exists */}
+          {/* Summary -  Only show if exists */}
           {article.summary && (
             <p className="text-sm text-gray-600 dark:text-gray-300 opacity-90 line-clamp-3">
               {article.summary}
             </p>
           )}
 
-          {/* Views - ✅ Only show if > 0 */}
+          {/* Views -  Only show if > 0 */}
           {(article.views > 0) && (
             <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-3">
               <Eye size={14} /> 
@@ -176,7 +176,7 @@ const ArticleCard = memo(({ article, category, featured = false, basePath = "/ar
     </article>
   );
 }, (prevProps, nextProps) => {
-  // ✅ Custom comparison for better memoization
+  //  Custom comparison for better memoization
   return (
     prevProps.article?.id === nextProps.article?.id &&
     prevProps.article?.updatedAt === nextProps.article?.updatedAt &&

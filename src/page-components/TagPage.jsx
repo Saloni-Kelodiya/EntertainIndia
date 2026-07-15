@@ -1,10 +1,9 @@
 'use client';
 
 import ArticleCard from '../components/ui/ArticleCard';
-import { ArticleListSkeleton } from '../components/ui/Skeleton';
 import Link from 'next/link';
 
-export default function TagClientView({ formattedTagName, initialArticles, initialTotal }) {
+export default function TagClientView({ formattedTagName, initialArticles, initialTotal, relatedArticles = [] }) {
   const articles = initialArticles || [];
   const tagCount = initialTotal || articles.length;
 
@@ -75,27 +74,42 @@ export default function TagClientView({ formattedTagName, initialArticles, initi
               )}
             </>
           ) : (
-            <div className="text-center py-16 md:py-24">
-              <div className="max-w-md mx-auto">
-                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-4xl">🔍</span>
+            <div>
+              {/* Message */}
+              <div className="text-center py-8">
+                <div className="max-w-md mx-auto">
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                    इस टैग पर अभी कोई लेख नहीं
+                  </h3>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                  कोई लेख नहीं मिला
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  हमें "{formattedTagName}" टैग वाला कोई लेख नहीं मिला।
-                </p>
-                <Link 
-                  href="/"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700 transition-all duration-200 font-medium"
-                >
-                  सभी लेख देखें
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
               </div>
+
+              {/* Related articles grid */}
+              {relatedArticles.length > 0 && (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+                    🔥 अन्य लेख
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {relatedArticles.map((article) => (
+                      <div key={article.id} className="transform transition-all duration-300 hover:-translate-y-1">
+                        <ArticleCard article={article} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center mt-8">
+                    <Link
+                      href="/"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700 transition-all duration-200 font-medium"
+                    >
+                      सभी लेख देखें
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

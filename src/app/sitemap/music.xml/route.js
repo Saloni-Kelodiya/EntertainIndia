@@ -16,7 +16,7 @@ export async function GET() {
       const queryParams = new URLSearchParams({
         'pagination[page]': page.toString(),
         'pagination[pageSize]': '100',
-        'filters[language][$eq]': 'hi', // ✅ SECURITY 1: STRICT HINDI FILTER
+        'filters[language][$eq]': 'hi', //  SECURITY 1: STRICT HINDI FILTER
         'fields[0]': 'slug',
         'fields[1]': 'title', 
         'fields[2]': 'updatedAt',
@@ -64,7 +64,7 @@ export async function GET() {
         // Clean up category slug
         categorySlug = String(categorySlug).toLowerCase().trim().replace(/\s+/g, '-');
         
-        // ✅ SECURITY 2: Hindi Accepter (Sirf Hindi title aayega)
+        //  SECURITY 2: Hindi Accepter (Sirf Hindi title aayega)
         const hasHindiChars = /[\u0900-\u097F]/.test(title);
         
         // Agar slug hai aur title mein Hindi characters hain, tabhi sitemap mein add karega
@@ -92,7 +92,7 @@ export async function GET() {
 ${allMusic
   .map((music) => {
     const lastmod = new Date(music.date).toISOString();
-    // ✅ URL Format: /category/music/song-name
+    //  URL Format: /category/music/song-name
     return `  <url>
     <loc>${BASE_URL}/${escapeXml(music.category)}/music/${escapeXml(music.slug)}</loc>
     <lastmod>${lastmod}</lastmod>

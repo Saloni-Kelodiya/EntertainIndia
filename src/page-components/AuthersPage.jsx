@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usersAPI } from "../lib/api";
+import { usersAPI } from "../lib/api/users";
 
 export default function AuthorsPage() {
   const [authors, setAuthors] = useState([]);

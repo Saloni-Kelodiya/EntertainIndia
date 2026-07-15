@@ -191,9 +191,9 @@ export default function PhotosPage({
       <div className="border-b border-gray-300 dark:border-pink-700/40 pb-6 mb-8">
         <div className="flex items-center gap-4">
           <Images className="w-9 h-9 text-pink-500" />
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
             फोटो और गैलरी
-          </h1>
+          </h2>
         </div>
         <p className="mt-2 text-gray-600 dark:text-gray-300">
           ताज़ा मनोरंजन तस्वीरें और इवेंट्स

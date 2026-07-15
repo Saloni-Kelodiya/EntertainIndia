@@ -81,7 +81,7 @@ const PlatformIcon = ({ platform }) => {
   );
 };
 
-// ✅ Genre mapping for Hindi display
+//  Genre mapping for Hindi display
 const genreHindiMap = {
   // English to Hindi
   "Action": "एक्शन",

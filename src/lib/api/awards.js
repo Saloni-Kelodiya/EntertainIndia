@@ -21,7 +21,7 @@ const normalizeAwards = (data = []) =>
       industry: getDisplayValue(d.industry),
       year: d.year,
       language:d.language,
-      // ✅ Industry Categories
+      //  Industry Categories
       industryCategories: Array.isArray(d.industry_category)
         ? d.industry_category.map((ind) => {
           const indData = ind.attributes || ind;
@@ -41,7 +41,7 @@ const normalizeAwards = (data = []) =>
         alt: d.image?.data?.attributes?.alternativeText || d.image?.alternativeText || d.title,
       } : null,
 
-      // ✅ Award Categories
+      //  Award Categories
       awardCategories: (d.awardCategories || d.award_categories)?.map((cat) => {
         const cd = cat.attributes || cat;
         return {
@@ -56,7 +56,7 @@ const normalizeAwards = (data = []) =>
               alt: cd.winnerImage?.data?.attributes?.alternativeText || cd.winnerImage?.alternativeText || cd.winnerTitle,
             } : null,
           },
-          // ✅ Nominees List
+          //  Nominees List
           nominees: (cd.NomineesList || cd.nominees_list)?.map((nominee) => {
             const nd = nominee.attributes || nominee;
             return {
@@ -74,7 +74,7 @@ const normalizeAwards = (data = []) =>
     };
   });
 export const AwardsAPI = {
-  // ✅ Get all awards with full population
+  //  Get all awards with full population
   getAll: async (params = {}) => {
     try {
       // Build query string
@@ -138,7 +138,7 @@ export const AwardsAPI = {
     } catch (error) {
       return { data: [], pagination: {} };
     }
-  },// ✅ Get single award by slug
+  },//  Get single award by slug
 getBySlug: async (slug) => {
   try {
     const q = new URLSearchParams();
@@ -168,7 +168,7 @@ getBySlug: async (slug) => {
 }
 ,
 
-  // ✅ Get awards by industry (using industry_category relation)
+  //  Get awards by industry (using industry_category relation)
   getByIndustry: async (industrySlug) => {
     try {
       const q = new URLSearchParams({
@@ -191,7 +191,7 @@ getBySlug: async (slug) => {
     }
   },
 
-  // ✅ Get unique industry categories for filter UI
+  //  Get unique industry categories for filter UI
   getIndustryCategories: async () => {
     try {
       // Fetch all awards first
@@ -241,7 +241,7 @@ getBySlug: async (slug) => {
     }
   },
 
-  // ✅ Get unique years for filter UI
+  //  Get unique years for filter UI
   getYears: async () => {
     try {
       const result = await AwardsAPI.getAll({ pageSize: 100 });

@@ -3,11 +3,11 @@ import SingleVideoPage from '../../../page-components/SingleVideoPage';
 import { videosAPI } from '../../../lib/api';
 import { notFound } from 'next/navigation';
 
-// ✅ फोर्स डायनेमिक रेंडरिंग - कैशिंग से बचने के लिए
+//  फोर्स डायनेमिक रेंडरिंग - कैशिंग से बचने के लिए
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// ✅ SEO के लिए मेटाडेटा जेनरेट करें
+//  SEO के लिए मेटाडेटा जेनरेट करें
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   
@@ -34,12 +34,12 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ मुख्य सर्वर कंपोनेंट
+//  मुख्य सर्वर कंपोनेंट
 export default async function Page({ params }) {
   const { slug } = await params;
   const baseUrl = "https://entertainindia.in";
   
-  // ✅ सर्वर पर सारा डेटा फेच करें
+  //  सर्वर पर सारा डेटा फेच करें
   let video = null;
   let relatedVideos = [];
   let relatedArticles = [];
@@ -59,7 +59,7 @@ export default async function Page({ params }) {
         'articles.hero_image',
         'articles.category'
       ],
-      // ✅ कैश बस्टिंग जोड़ें
+      //  कैश बस्टिंग जोड़ें
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -68,18 +68,18 @@ export default async function Page({ params }) {
     
     video = res?.videos?.[0] || null;
     
-    // ✅ वीडियो नहीं मिला - सबसे पहले यह चेक करें
+    //  वीडियो नहीं मिला - सबसे पहले यह चेक करें
     if (!video) {
       console.log('वीडियो नहीं मिला:', slug);
-      return notFound(); // ✅ यहाँ notFound() कॉल करें
+      return notFound(); //  यहाँ notFound() कॉल करें
     }
     
-    // ✅ 2. अगर related_videos सीधे वीडियो ऑब्जेक्ट में उपलब्ध है
+    //  2. अगर related_videos सीधे वीडियो ऑब्जेक्ट में उपलब्ध है
     if (video?.related_videos && Array.isArray(video.related_videos)) {
       relatedVideos = video.related_videos;
     }
     
-    // ✅ 3. अगर नहीं है, तो कैटेगरी से फेच करें (बैकअप तरीका)
+    //  3. अगर नहीं है, तो कैटेगरी से फेच करें (बैकअप तरीका)
     if (relatedVideos.length === 0 && video?.category?.slug) {
       const relatedRes = await videosAPI.getAll({
         pageSize: 6,
@@ -117,15 +117,15 @@ export default async function Page({ params }) {
     
   } catch (err) {
     console.error("सर्वर फेच त्रुटि:", err);
-    return notFound(); // ✅ त्रुटि होने पर भी 404 दिखाएं
+    return notFound(); //  त्रुटि होने पर भी 404 दिखाएं
   }
 
-  // ✅ अगर यहाँ तक पहुंचे और video null है तो 404 दिखाएं
+  //  अगर यहाँ तक पहुंचे और video null है तो 404 दिखाएं
   if (!video) {
     return notFound();
   }
 
-  // ✅ स्कीमा.ऑर्ग मार्कअप
+  //  स्कीमा.ऑर्ग मार्कअप
   const breadcrumbJson = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

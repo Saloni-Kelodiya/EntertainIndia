@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getStrapiMedia } from "../../lib/constants";
 import { memo } from "react";
 
-// ✅ Memoized Story Card Component
+//  Memoized Story Card Component
 const StoryCard = memo(({ story, isFirst, isLast, meta }) => {
   const imageUrl = story.thumbnail?.url || story.coverImage?.url
     ? getStrapiMedia(story.thumbnail?.url || story.coverImage?.url)
@@ -72,7 +72,7 @@ const StoryCard = memo(({ story, isFirst, isLast, meta }) => {
 StoryCard.displayName = 'StoryCard';
 
 export default function WebStoriesSection({ initialData }) {
-  // ✅ Get stories from initialData
+  //  Get stories from initialData
   const stories = Array.isArray(initialData)
     ? initialData
     : initialData?.stories || [];

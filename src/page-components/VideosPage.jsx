@@ -1,4 +1,4 @@
-// ✅ FIXED: Client Component with better props handling
+//  FIXED: Client Component with better props handling
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -13,18 +13,18 @@ export default function VideosClientPage({
   initialCategories = [],
   initialTotalCount = 0 
 }) {
-  // ✅ State initialization with props
+  //  State initialization with props
   const [videos, setVideos] = useState(initialVideos);
   const [videoTypes] = useState(initialVideoTypes);
   const [categories] = useState(initialCategories);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  // ✅ फ़िल्टर स्टेट्स
+  //  फ़िल्टर स्टेट्स
   const [activeType, setActiveType] = useState("सभी");
   const [activeCategory, setActiveCategory] = useState("सभी");
   
-  // ✅ पेजिनेशन स्टेट
+  //  पेजिनेशन स्टेट
   const [currentPage, setCurrentPage] = useState(1);
   const videosPerPage = 12; // Changed from 10 to 12 for better grid
 
@@ -128,7 +128,7 @@ const hindicategory={
     return categoryColors[categorySlug] || "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300";
   };
 
-  // ✅ Loading State
+  //  Loading State
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">
@@ -140,7 +140,7 @@ const hindicategory={
     );
   }
 
-  // ✅ Error State
+  //  Error State
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">
@@ -289,9 +289,9 @@ const hindicategory={
                         )}
                       </div>
                       <div className="p-3">
-                        <h3 className="text-sm font-semibold line-clamp-2 text-gray-900 dark:text-white">
+                        <h2 className="text-sm font-semibold line-clamp-2 text-gray-900 dark:text-white">
                           {video.title}
-                        </h3>
+                        </h2>
                         {video.publishedAt && (
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {formatDate(video.publishedAt)}

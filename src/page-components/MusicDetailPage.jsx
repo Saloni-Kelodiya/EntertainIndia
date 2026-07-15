@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { songsAPI } from "../lib/api";
+import { songsAPI } from "../lib/api/songs";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
@@ -438,31 +438,35 @@ export default function MusicDetailPage() {
         </div>
 
         {/* विवरण सेक्शन */}
-        {song.body && (
-          <div className="border-t border-gray-100 dark:border-gray-700 p-6 md:p-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span className="text-2xl">📝</span>
-              इस गाने के बारे में
-            </h3>
-            <div className={`prose prose-lg dark:prose-invert max-w-none ${!showFullDesc ? 'line-clamp-6' : ''}`}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {song.body}
-              </ReactMarkdown>
-            </div>
-            {song.body.split('\n').length > 8 && (
-              <button
-                onClick={() => setShowFullDesc(!showFullDesc)}
-                className="mt-4 text-pink-600 dark:text-pink-400 font-medium hover:underline flex items-center gap-1"
-              >
-                {showFullDesc ? (
-                  <>कम दिखाएं <span>↑</span></>
-                ) : (
-                  <>और पढ़ें <span>↓</span></>
-                )}
-              </button>
-            )}
-          </div>
+
+          {song.body && (
+  <div className="border-t border-gray-100 dark:border-gray-700 p-6 md:p-8">
+    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <span className="text-2xl">📝</span>
+      इस गाने के बारे में
+    </h3>
+    <div className={`prose prose-lg dark:prose-invert max-w-none ${!showFullDesc ? 'line-clamp-6' : ''}`}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {song.body}
+      </ReactMarkdown>
+    </div>
+    {/*  Condition based on length */}
+    {song.body.length > 400 && (
+      <button
+        onClick={() => setShowFullDesc(!showFullDesc)}
+        className="mt-4 text-pink-600 dark:text-pink-400 font-medium hover:underline flex items-center gap-1"
+      >
+        {showFullDesc ? (
+          <>कम दिखाएं <span>↑</span></>
+        ) : (
+          <>और पढ़ें <span>↓</span></>
         )}
+      </button>
+    )}
+  </div>
+)}
+         
+    
 
         {/* संबंधित गाने */}
         {song.relatedSongs && song.relatedSongs.length > 0 && (

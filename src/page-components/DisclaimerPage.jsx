@@ -79,9 +79,9 @@ export default function DisclaimerPage() {
           <div className="flex flex-col items-center text-center">
             <div className="flex items-center gap-3 mb-6 flex-wrap justify-center">
               <AlertTriangle className="w-10 h-10 sm:w-12 sm:h-12" />
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight">
+              <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight">
                 अस्वीकरण (Disclaimer)
-              </h1>
+              </div>
             </div>
             <p className="text-xl sm:text-2xl text-pink-100 max-w-3xl mx-auto mb-6 px-4">
               महत्वपूर्ण कानूनी जानकारी

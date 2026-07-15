@@ -1,10 +1,11 @@
 import MusicPage from '../../../page-components/MusicPage';
 import LayoutWrapper from '../../LayoutWrapper';
-import { songsAPI, articlesAPI } from '../../../lib/api';
+import { songsAPI} from '../../../lib/api/songs';
+import { articlesAPI } from '../../../lib/api/articles';
 
 const SITE_URL = "https://entertainindia.in";
 
-// ✅ DYNAMIC MUSIC PAGE SCHEMA GENERATOR
+//  DYNAMIC MUSIC PAGE SCHEMA GENERATOR
 function generateMusicSchema(songs, category, categoryName, page, currentYear) {
   const domain = SITE_URL;
   const listingUrl = `${domain}/${category}/music`;
@@ -21,7 +22,7 @@ function generateMusicSchema(songs, category, categoryName, page, currentYear) {
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -126,7 +127,7 @@ function generateMusicSchema(songs, category, categoryName, page, currentYear) {
   };
 }
 
-// ✅ GET CATEGORY NAME IN HINDI
+//  GET CATEGORY NAME IN HINDI
 function getCategoryNameInHindi(category) {
   const names = {
     'bollywood': 'बॉलीवुड',
@@ -139,7 +140,7 @@ function getCategoryNameInHindi(category) {
   return names[category] || category?.charAt(0).toUpperCase() + category?.slice(1);
 }
 
-// ✅ SEO METADATA - DYNAMIC
+//  SEO METADATA - DYNAMIC
 export async function generateMetadata({ params, searchParams }) {
   const { category } = await params;
   const sParams = await searchParams;
@@ -194,69 +195,67 @@ export async function generateMetadata({ params, searchParams }) {
   };
 }
 
-// ✅ MAIN COMPONENT
+//  MAIN COMPONENT
 export default async function Music({ params, searchParams }) {
-  const { category } = await params; 
+  const { category } = await params;
   const sParams = await searchParams;
   const page = parseInt(sParams.page) || 1;
   const currentYear = new Date().getFullYear();
-  console.log(category, page);
-  let songsData = { songs: [] };
-  let trendingData = [];
-  let articlesData = { articles: [], pagination: {} };
 
   try {
-    const [sData, aData] = await Promise.all([
-      songsAPI.getAll({ category, page, pageSize: 10, populate: '*', sort: "createdAt:desc" }),
-      articlesAPI.getAll({
-        category: 'music',
-        industry: category,
+    // ── 1. डेटा फेच – **ऑप्टिमाइज़्ड getAll** का उपयोग ──
+    const [songsData, articlesData] = await Promise.all([
+      songsAPI.getAll({
+        category,
+        page,
+        pageSize: 12,        // per page songs (12 से ज़्यादा नहीं)
+        sort: "createdAt:desc",
+        language: "hi",      // सिर्फ हिंदी
+      }),
+      articlesAPI.getAllLight({
+        category: category,  // अगर industry फ़ील्ड हो
         page,
         pageSize: 9,
         sort: "createdAt:desc",
-      })
+        moderation_status: "published",
+        related_to: "music",
+      }),
     ]);
-
-    songsData = sData;
-    const allSongs = songsData?.songs || [];
-const trendingSongs = allSongs.filter(song => song.trending === true); // trending true wale
-trendingData = trendingSongs;
-    articlesData = aData;
-    console.log("संगीत पेज डेटा:", {  trendingData});
+    console.log("संगीत डेटा:", songsData, articlesData);
+    const allSongs = songsData.songs || [];
+    // ट्रेंडिंग सोंग्स – जिनमें trending === true
+    const trendingSongs = allSongs.filter(song => song.trending === true);
 
     const categoryName = getCategoryNameInHindi(category);
 
-    // ✅ GENERATE COMPLETE SCHEMA
+    // ── 2. स्कीमा जनरेट करें ──
     const schemaData = generateMusicSchema(
-      songsData?.songs || [], 
-      category, 
-      categoryName, 
-      page, 
+      allSongs,
+      category,
+      categoryName,
+      page,
       currentYear
     );
 
+    // ── 3. रेंडर ──
     return (
       <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
         />
-        
-        <h1 className="sr-only">{categoryName} नवीनतम गाने</h1>
-        
         <LayoutWrapper>
           <MusicPage
-      serverCategory={category}
-      initialSongs={allSongs}
-      initialTrending={trendingSongs}
-      initialArticles={articlesData.articles}
-      initialPagination={articlesData.pagination}
-      initialPage={1}
-    />
+            serverCategory={category}
+            initialSongs={allSongs}
+            initialTrending={trendingSongs}
+            initialArticles={articlesData.articles || []}
+            initialPagination={articlesData.pagination || {}}
+            initialPage={page}
+          />
         </LayoutWrapper>
       </>
     );
-
   } catch (error) {
     console.error("संगीत SEO पेज त्रुटि:", error);
     return (

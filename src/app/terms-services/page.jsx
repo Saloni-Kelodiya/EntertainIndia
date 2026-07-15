@@ -2,7 +2,7 @@ import TermsPage from '../../page-components/TermsPage';
 import LayoutWrapper from '../LayoutWrapper';
 
 export const metadata = {
-  title: 'Terms & Services | EntertainIndia',
+  title: 'Terms & Conditions - User Service Agreement | EntertainIndia',
   description: 'Learn about terms and services at EntertainIndia. Understand our policies and guidelines.',
   keywords: 'terms, services, policies, guidelines',
   alternates: {
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default function TermsServices() {
-  // --- ✅ 1. WebPage Schema (Legal Information) ---
+  // ---  1. WebPage Schema (Legal Information) ---
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -22,12 +22,12 @@ export default function TermsServices() {
       "name": "EntertainIndia",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://entertainindia.in/logo.png"
+        "url": "https://entertainindia.in/og-logo.png"
       }
     }
   };
 
-  // --- ✅ 2. Breadcrumb Schema ---
+  // ---  2. Breadcrumb Schema ---
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -49,7 +49,7 @@ export default function TermsServices() {
 
   return (
     <>
-      {/* ✅ Structured Data Injection */}
+      {/*  Structured Data Injection */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

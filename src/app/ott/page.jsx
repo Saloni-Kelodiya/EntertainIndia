@@ -1,16 +1,17 @@
 import CategoryPage from '../../page-components/CategoryPage';
 import LayoutWrapper from '../LayoutWrapper';
-import { articlesAPI, webSeriesAPI } from '../../lib/api';
+import { webSeriesAPI } from '../../lib/api/web-series';
 import { notFound } from 'next/navigation';
+import { articlesAPI } from '../../lib/api/articles';
 
-// ✅ Force dynamic rendering
+//  Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 const SITE_URL = 'https://entertainindia.in';
 
-// ✅ OTT Page Ke Liye Perfect Schema Generator
+//  OTT Page Ke Liye Perfect Schema Generator
 function generateOttSchema(webSeries = [], articles = [], categorySlug) {
   const domain = SITE_URL;
   const categoryUrl = `${domain}/ott`;
@@ -27,7 +28,7 @@ function generateOttSchema(webSeries = [], articles = [], categorySlug) {
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -146,16 +147,19 @@ function generateOttSchema(webSeries = [], articles = [], categorySlug) {
           "image": article.heroImage?.url,
           "datePublished": article.createdAt,
           "dateModified": article.updatedAt || article.createdAt,
-          "author": {
-            "@type": "Person",
-            "name": article.author?.name || article.Authors?.name || "EntertainIndia Team"
-          },
+            "author": {
+          "@type": "Person",
+          "name": article.Authors?.name || "EntertainIndia Team", // 2. नाम न होने पर 'Missing Author' से बचाएगा
+          "url": article.Authors?.name 
+            ? `${SITE_URL}/author/${article.Authors.name?.toLowerCase().replace(/\s+/g, '-')}` 
+            : `${SITE_URL}/about` // 'Missing URL' की चेतावनी को ठीक करेगा
+        },
           "publisher": {
             "@type": "Organization",
             "name": "EntertainIndia",
             "logo": {
               "@type": "ImageObject",
-              "url": `${domain}/logo.png`
+              "url": `${domain}/og-logo.png`
             }
           }
         }
@@ -169,7 +173,7 @@ function generateOttSchema(webSeries = [], articles = [], categorySlug) {
   };
 }
 
-// ✅ SEO Metadata (Updated with Schema)
+//  SEO Metadata (Updated with Schema)
 export async function generateMetadata() {
   const siteUrl = SITE_URL;
   const category = 'ott';
@@ -206,7 +210,7 @@ export async function generateMetadata() {
   };
 }
 
-// ✅ Main Component with Schema
+//  Main Component with Schema
 export default async function OttPage({ searchParams }) {
   const sParams = await searchParams;
   const page = parseInt(sParams.page) || 1;
@@ -214,25 +218,24 @@ export default async function OttPage({ searchParams }) {
 
   try {
     const [articleData, webSeriesData] = await Promise.all([
-      articlesAPI.getAll({ 
-        category, 
-        page, 
-        pageSize: 12, 
-        mainCategory: "article",
-        sort: 'createdAt:desc'
-      }),
-      webSeriesAPI.getAll({ 
-        category, 
-        pageSize: 20, 
-        sort: "releaseDate:desc", 
-        language: 'hi' 
-      })
-    ]);
+  articlesAPI.getAllLight({
+    category,
+    page,
+    pageSize: 12,
+    mainCategory: "article",
+    sort: "createdAt:desc",
+  }),
+  webSeriesAPI.getAllLight({
+    category,
+    pageSize: 20,
+    sort: "releaseDate:desc",
+    language: "hi",
+  }),
+]);
 
-    const articles = articleData?.articles || [];
-    const webSeries = webSeriesData?.data || [];
-
-    // ✅ Generate OTT Schema
+const articles = articleData?.articles || [];
+const webSeries = webSeriesData || [];
+    //  Generate OTT Schema
     const schemaData = generateOttSchema(webSeries, articles, category);
 
     return (

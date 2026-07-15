@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import ArticlePageServer from '../../../page-components/ArticlePageServer';
 import LayoutWrapper from '../../LayoutWrapper';
-import { articlesAPIServer } from '../../../lib/api-server';
+import { articlesAPI} from '../../../lib/api/articles';
 
 const SITE_URL = 'https://entertainindia.in';
 
@@ -10,13 +10,13 @@ function getCategorySafe(article) {
   return String(article?.mainCategory || article?.MainCategory || '').trim().toLowerCase();
 }
 
-// ✅ PERFECT NEWS SCHEMA GENERATOR - Using createdAt only
+//  PERFECT NEWS SCHEMA GENERATOR - Using createdAt only
 function generateNewsSchema(article, articleUrl) {
   const domain = SITE_URL;
   const imageUrl = article.heroImage?.url || `${domain}/default-news-image.jpg`;
   const authorName = article.Authors?.name || article.Authors?.username || article.author?.name || 'EntertainIndia Team';
   
-  // ✅ FIX: Sirf createdAt use karo, kyunki backend publish date wrong hai
+  //  FIX: Sirf createdAt use karo, kyunki backend publish date wrong hai
   const publishDate = article.createdAt || new Date().toISOString();
   const modifiedDate = article.updatedAt || article.createdAt || publishDate;
 
@@ -30,7 +30,7 @@ function generateNewsSchema(article, articleUrl) {
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -100,9 +100,9 @@ function generateNewsSchema(article, articleUrl) {
     "headline": article.seoTitle || article.title,
     "alternativeHeadline": article.title,
     "description": article.metaDescription || article.summary || article.excerpt,
-    "datePublished": publishDate,  // ✅ Sirf createdAt
-    "dateModified": modifiedDate,   // ✅ createdAt ya updatedAt
-    "dateCreated": publishDate,     // ✅ Sirf createdAt
+    "datePublished": publishDate,  //  Sirf createdAt
+    "dateModified": modifiedDate,   //  createdAt ya updatedAt
+    "dateCreated": publishDate,     //  Sirf createdAt
     "author": {
       "@type": "Person",
       "name": authorName,
@@ -138,7 +138,7 @@ function generateNewsSchema(article, articleUrl) {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const article = await articlesAPIServer.getBySlug(slug);
+  const article = await articlesAPI.getBySlug(slug);
 
   if (!article) return { title: 'Not Found - EntertainIndia' };
 
@@ -155,7 +155,7 @@ export async function generateMetadata({ params }) {
   return {
     title: article.seoTitle || article.title,
     description: article.metaDescription || article.summary,
-    keywords: article.keywords || "entertainment news, bollywood, hollywood, tv news",
+   keywords:  article.keywords || undefined,   // <-- ye line add karo
     alternates: { 
       canonical: articleUrl 
     },
@@ -176,7 +176,7 @@ export async function generateMetadata({ params }) {
       images: [{ url: imageUrl, width: 1200, height: 630 }],
       locale: 'hi_IN',
       type: 'article',
-      publishedTime: article.createdAt,  // ✅ Sirf createdAt
+      publishedTime: article.createdAt,  //  Sirf createdAt
       authors: [authorName],
       section: "News"
     },
@@ -197,7 +197,7 @@ export default async function ArticleSlugPage({ params }) {
 
   // 1. Article Fetch
   try {
-    article = await articlesAPIServer.getBySlug(slug);
+    article = await articlesAPI.getBySlug(slug);
   } catch (error) {
     console.error('Error fetching article:', error);
   }
@@ -213,10 +213,10 @@ export default async function ArticleSlugPage({ params }) {
 
   // 3. LATEST RELATED NEWS FETCH - Sirf createdAt se sort
   try {
-    const relatedData = await articlesAPIServer.getAll({
+    const relatedData = await articlesAPI.getAllLight({
       mainCategory: 'news', 
       pageSize: 20,
-      sort: 'createdAt:desc',  // ✅ Sirf createdAt se sort
+      sort: 'createdAt:desc',  //  Sirf createdAt se sort
     });
 
     const filteredArticles = (relatedData.articles || []).filter(a => {
@@ -224,7 +224,7 @@ export default async function ArticleSlugPage({ params }) {
       return a.slug !== slug && aMainCat === 'news';
     });
 
-    // ✅ createdAt se sorting (backup sort)
+    //  createdAt se sorting (backup sort)
     filteredArticles.sort((a, b) => {
       const dateA = new Date(a.createdAt || 0).getTime();
       const dateB = new Date(b.createdAt || 0).getTime();
@@ -247,7 +247,7 @@ export default async function ArticleSlugPage({ params }) {
     console.error('Error fetching related articles:', err);
   }
 
-  // ✅ Generate NEWS specific schema
+  //  Generate NEWS specific schema
   const schemas = generateNewsSchema(article, articleUrl);
 
   return (

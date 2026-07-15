@@ -1,9 +1,9 @@
-"use client";  // ✅ यह जरूरी है क्योंकि component में client-side interactivity (hover, etc.) है
+"use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { getStrapiMedia } from "../../lib/constants";
 import { formatDate } from "../../lib/helpers";
+import { getResponsiveImageUrl } from "../../lib/api/helper";
+import OptimizedImage from "./OptimizedImage";
 
 const categoryColors = {
   bollywood: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
@@ -25,15 +25,10 @@ const categoryHindiNames = {
   korean: "कोरियाई",
 };
 
-const getImageUrl = (article) => {
-  const img = article?.heroImage || article?.hero_image || article?.image;
-  const rawUrl = img?.formats?.medium?.url || img?.formats?.small?.url || img?.url;
-  return rawUrl ? getStrapiMedia(rawUrl) : null;
-};
-
 export default function FeaturedStories({ articles = [] }) {
   if (!articles || articles.length === 0) return null;
 
+  // Sort by date (newest first)
   const sorted = [...articles].sort((a, b) => {
     const dateA = new Date(a.publishDate || a.createdAt).getTime();
     const dateB = new Date(b.publishDate || b.createdAt).getTime();
@@ -43,70 +38,84 @@ export default function FeaturedStories({ articles = [] }) {
 
   const primary = sorted[0];
   const secondary = sorted.slice(1, 5);
-  const primaryImg = getImageUrl(primary);
+
+  // ⚡ LCP Fix: Desktop और बड़ी स्क्रीन के लिए 'large' यूज़ करें ताकि इमेज स्ट्रेच न हो
+  const primaryImg = getResponsiveImageUrl(primary, "large");
+  const placeholderImg = primaryImg ? getResponsiveImageUrl(primary, "thumbnail") : null;
 
   return (
-    <section className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4 h-fit">
-        <Link href={`/article/${primary?.slug}`} className="relative aspect-[4/3] lg:aspect-[3/2] rounded-2xl overflow-hidden group">
-          {primaryImg ? (
-            <Image 
-              src={primaryImg} 
-              alt={primary?.title || "Featured Image"} 
-              fill 
-              priority={true}
-              fetchPriority="high"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              quality={75}
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center text-4xl">📰</div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 sm:p-6 flex flex-col justify-end h-full">
-            <div className="flex flex-wrap gap-2 mb-2">
+    <section className="w-full px-3 sm:px-4 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3 lg:gap-4 h-fit">
+        
+        {/* Primary Card */}
+        <Link
+          href={`/article/${primary?.slug}`}
+          className="relative block w-full aspect-[16/11] sm:aspect-[3/2] rounded-xl sm:rounded-2xl overflow-hidden group"
+        >
+          <OptimizedImage
+            src={primaryImg}
+            alt={primary?.title || "Featured article"}
+            type="featured"
+            isPriority={true}              
+            fetchPriority="high"           
+            placeholder={placeholderImg ? "blur" : "empty"}
+            blurDataURL={placeholderImg || undefined}
+            // ⚡ LCP Fix: Layout के हिसाब से सही sizes (Desktop पर 1.2fr = ~60vw)
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 60vw"
+            className="transition-transform duration-300 group-hover:scale-103"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 sm:p-6 flex flex-col justify-end h-full">
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
               {primary?.category && (
-                <span className={`px-3 py-1 text-xs font-medium rounded-full ${categoryColors[primary.category.slug] || "bg-muted text-muted-foreground"}`}>
+                <span className={`px-2.5 py-0.5 text-[11px] font-medium rounded-full ${categoryColors[primary.category.slug] || "bg-muted text-muted-foreground"}`}>
                   {categoryHindiNames[primary.category.slug] || primary.category.name}
                 </span>
               )}
             </div>
-            <h3 className="text-xl sm:text-3xl font-bold text-white leading-tight">{primary?.title}</h3>
-            <div className="text-xs text-gray-300 mt-3 flex gap-2 items-center">
-            {primary?.authors?.[0]?.username && (
-               <span className="text-sm font-semibold text-[#EC4899]">
-                 @{primary.authors[0].username}
-               </span>
-             )}
+            <h3 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white leading-tight tracking-tight line-clamp-3 sm:line-clamp-none">
+              {primary?.title}
+            </h3>
+            <div className="text-[11px] sm:text-xs text-gray-300 mt-2 flex gap-2 items-center">
+              {primary?.authors?.[0]?.username && (
+                <span className="text-sm font-semibold text-[#EC4899]">
+                  @{primary.authors[0].username}
+                </span>
+              )}
               <span>•</span>
               <span>{formatDate(primary?.publishDate, "relative")}</span>
             </div>
           </div>
         </Link>
 
-        <div className="lg:h-full flex flex-col gap-3">
+        {/* Secondary Cards – lazy loaded */}
+        <div className="flex flex-col gap-2.5 sm:gap-3 mt-1 lg:mt-0">
           {secondary.map((article) => {
-            const imgUrl = getImageUrl(article);
+            const imgUrl = getResponsiveImageUrl(article, "thumbnail");
             return (
-              <Link key={article.id} href={`/article/${article.slug}`} className="flex gap-4 px-2 py-2 rounded-xl bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 hover:shadow-lg border border-gray-200 dark:border-white/10">
-                <div className="relative w-28 h-20 rounded-lg overflow-hidden shrink-0">
-                  <Image 
-                    src={imgUrl || "/placeholder.jpg"} 
-                    alt={article.title} 
-                    fill 
-                    className="object-cover" 
+              <Link
+                key={article.id}
+                href={`/article/${article.slug}`}
+                className="flex gap-3 p-2 rounded-xl bg-white dark:bg-gray-900 touch-manipulation hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all border border-gray-100 dark:border-white/5 active:scale-[0.99]"
+              >
+                <div className="relative w-24 h-18 sm:w-28 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100 dark:bg-gray-800">
+                  <OptimizedImage
+                    src={imgUrl}
+                    alt={article.title || "Article thumbnail"}
+                    type="thumbnail"
                     loading="lazy"
-                    decoding="async"
+                    sizes="(max-width: 640px) 96px, 112px"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
                   {article.category && (
-                    <span className={`inline-block mb-1 px-2 py-0.5 text-xs font-medium rounded-full ${categoryColors[article.category.slug] || "bg-muted text-muted-foreground"}`}>
+                    <span className={`inline-block w-fit mb-1 px-2 py-0.5 text-[10px] font-medium rounded-full ${categoryColors[article.category.slug] || "bg-muted text-muted-foreground"}`}>
                       {categoryHindiNames[article.category.slug] || article.category.name}
                     </span>
                   )}
-                  <h4 className="font-semibold text-slate-900 dark:text-white text-sm leading-tight line-clamp-2">{article.title}</h4>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex gap-2 items-center">
+                  <h4 className="font-medium sm:font-semibold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-snug line-clamp-2">
+                    {article.title}
+                  </h4>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 flex gap-2 items-center">
                     <span>{formatDate(article.publishDate || article.createdAt, "relative")}</span>
                   </div>
                 </div>

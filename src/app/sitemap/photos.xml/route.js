@@ -16,7 +16,7 @@ export async function GET() {
     let hasMore = true;
 
     while (hasMore) {
-      // ✅ Proper Query Parameters with Hindi Filter
+      //  Proper Query Parameters with Hindi Filter
       const queryParams = new URLSearchParams({
         'pagination[page]': page.toString(),
         'pagination[pageSize]': pageSize.toString(),
@@ -58,7 +58,7 @@ export async function GET() {
         // 🛑 Hindi Characters Check (Brahmastra)
         const hasHindiChars = /[\u0900-\u097F]/.test(title);
         
-        // ✅ Agar slug hai aur title mein HINDI hai, tabhi add hoga
+        //  Agar slug hai aur title mein HINDI hai, tabhi add hoga
         if (slug && slug.trim() !== '' && hasHindiChars) {
           allGalleries.push({
             slug: slug.trim(),
@@ -77,7 +77,7 @@ export async function GET() {
       if (page > 50) break; // 5000 galleries max safety limit
     }
 
-    // ✅ FINAL SORTING: Latest First (Newest update top par)
+    //  FINAL SORTING: Latest First (Newest update top par)
     allGalleries.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
     // Generate XML

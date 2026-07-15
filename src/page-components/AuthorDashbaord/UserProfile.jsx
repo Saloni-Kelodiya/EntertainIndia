@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useStore } from "../../store/useStore";
 import { User2, RefreshCcw, CheckCircle, Mail, Shield, Calendar, LogOut } from "lucide-react";
 import Image from "next/image";
-import { authAPI } from "../../lib/api"; // Path check kar lijiye ga
+import { authAPI } from "../../lib/api/auth"; // Path check kar lijiye ga
 
 const UserProfile = () => {
   const { user, setUser, logout } = useStore();

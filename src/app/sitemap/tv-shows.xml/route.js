@@ -4,7 +4,7 @@
 
 // ⚠️ Adjust this import path to match where lib/api.js actually sits
 // relative to app/tv-shows.xml/route.js in your project
-import { tvShowsAPI } from "../../../lib/api";
+import { tvShowsAPI } from "../../../lib/api/tv-shows";
 
 const BASE_URL = "https://entertainindia.in";
 const CATEGORY = "tv";

@@ -22,7 +22,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import Script from "next/script";
 
-// ✅ Browser ID Generate / Get karo
+//  Browser ID Generate / Get karo
 function getBrowserId() {
   if (typeof window === "undefined") return null;
   let id = localStorage.getItem("browser_id");
@@ -35,7 +35,7 @@ function getBrowserId() {
   return id;
 }
 
-// ✅ View track karne ke liye API call
+//  View track karne ke liye API call
 async function trackArticleView(articleId, browserId) {
   try {
     const apiUrl = process.env.STRAPI_BACKEND_URL || "http://13.201.143.7:1337";
@@ -59,7 +59,7 @@ export default function ArticlePageServer({ article, related = [] }) {
   const [viewTracked, setViewTracked] = useState(false);
   const [currentViews, setCurrentViews] = useState(article?.views || 0);
 
-  // ✅ View tracking useEffect
+  //  View tracking useEffect
   useEffect(() => {
     if (!viewTracked && article?.id) {
       const browserId = getBrowserId();
@@ -76,7 +76,7 @@ export default function ArticlePageServer({ article, related = [] }) {
     }
   }, [article?.id, viewTracked]);
 
-  // ✅ YOUTUBE, TWITTER & INSTAGRAM RELOAD FIX (unchanged)
+  //  YOUTUBE, TWITTER & INSTAGRAM RELOAD FIX (unchanged)
   useEffect(() => {
     const reloadEmbeds = () => {
       try {
@@ -90,7 +90,7 @@ export default function ArticlePageServer({ article, related = [] }) {
     return () => clearTimeout(timer);
   }, [article?.id, article?.body]);
 
-  // ✅ Memoized markdown components for performance
+  //  Memoized markdown components for performance
   const markdownComponents = useMemo(
     () => ({
       h5: ({ node, ...props }) => (
@@ -252,7 +252,7 @@ export default function ArticlePageServer({ article, related = [] }) {
 
   return (
     <>
-      {/* ✅ EMBED SCRIPTS - now lazyOnload for better performance */}
+      {/*  EMBED SCRIPTS - now lazyOnload for better performance */}
       <Script
         src="https://www.instagram.com/embed.js"
         strategy="lazyOnload"
@@ -303,7 +303,7 @@ export default function ArticlePageServer({ article, related = [] }) {
             <header className="mb-4">
               <div className="mb-6 px-4 pt-4">
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 dark:text-gray-50 leading-tight">
-                  {article.title}
+                  {article.h1_title}
                 </h1>
               </div>
 
@@ -417,7 +417,7 @@ export default function ArticlePageServer({ article, related = [] }) {
                     fill
                     sizes="(max-width: 768px) 100vw, 100vw"
                     className="object-cover rounded-2xl"
-                    priority={true} // ✅ LCP boost
+                    priority={true} //  LCP boost
                     unoptimized={false}
                   />
                 </div>
@@ -441,7 +441,7 @@ export default function ArticlePageServer({ article, related = [] }) {
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeRaw]}
-                  components={markdownComponents} // ✅ memoized
+                  components={markdownComponents} //  memoized
                 >
                   {article.body}
                 </ReactMarkdown>

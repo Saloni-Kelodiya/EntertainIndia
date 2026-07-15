@@ -30,7 +30,6 @@ const CATEGORY_ICONS = {
   Bhojiwood: Film,
 };
 
-// 📌 हिंदी में दिखाने के लिए कैटेगरी मैपिंग
 const CATEGORY_HINDI = {
   All: 'सभी',
   Bollywood: 'बॉलीवुड',
@@ -38,7 +37,7 @@ const CATEGORY_HINDI = {
   OTT: 'ओटीटी',
   TV: 'टीवी',
   Tollywood: 'टॉलीवुड',
-  Bhojiwood: 'भोजपुरी सिनेमा'
+  Bhojiwood: 'भोजपुरी सिनेमा',
 };
 
 const PLATFORM_ICONS = {
@@ -49,10 +48,9 @@ const PLATFORM_ICONS = {
   JioHotstar: MonitorPlay,
   SonyLIV: MonitorPlay,
   Zee5: MonitorPlay,
-  Stage: MonitorPlay
+  Stage: MonitorPlay,
 };
 
-// 📌 हिंदी में दिखाने के लिए प्लेटफॉर्म मैपिंग
 const PLATFORM_HINDI = {
   all: 'सभी प्लेटफॉर्म',
   Netflix: 'नेटफ्लिक्स',
@@ -61,36 +59,44 @@ const PLATFORM_HINDI = {
   JioHotstar: 'जियोहॉटस्टार',
   SonyLIV: 'सोनीलिव',
   Zee5: 'ज़ी5',
-  Stage: 'स्टेज'
+  Stage: 'स्टेज',
 };
 
-const CATEGORIES = ['All', 'Bollywood', 'Hollywood', 'OTT', 'TV', "Tollywood", "Bhojiwood"];
+const CATEGORIES = ['All', 'Bollywood', 'Hollywood', 'OTT', 'TV', 'Tollywood', 'Bhojiwood'];
 
 const PLATFORMS = [
   { label: 'सभी प्लेटफॉर्म', value: 'all', color: 'bg-gray-600' },
   { label: 'नेटफ्लिक्स', value: 'Netflix', color: 'bg-red-600' },
-  { label: 'अमेज़न प्राइम', value: 'Prime', color: 'bg-blue-600' },
-  { label: "ज़ी5", value: "Zee5", color: 'bg-orange-600' },
+ { label: 'अमेज़न प्राइम', value: 'Amazon Prime', color: 'bg-blue-600' },
+  { label: 'ज़ी5', value: 'Zee5', color: 'bg-orange-600' },
   { label: 'जियोहॉटस्टार', value: 'JioHotstar', color: 'bg-pink-600' },
   { label: 'सोनीलिव', value: 'SonyLIV', color: 'bg-purple-600' },
-  { label: 'स्टेज', value: 'Stage', color: 'bg-green-600' }
+  { label: 'स्टेज', value: 'Stage', color: 'bg-green-600' },
 ];
+
+const GENRES_VISIBLE_LIMIT = 15;
+
+// ─── हेल्पर: केस-इंसेंसिटिव हिंदी नाम ───────────────
+const getHindiName = (map, key) => {
+  if (!key) return key;
+  const trimmed = key.trim();
+  if (map[trimmed]) return map[trimmed];
+  const lower = trimmed.toLowerCase();
+  const foundKey = Object.keys(map).find(k => k.toLowerCase() === lower);
+  return foundKey ? map[foundKey] : trimmed;
+};
 
 const getPlatformColor = (platformName) => {
   const platformColors = {
-    'Netflix': 'bg-red-600',
-    'Prime': 'bg-blue-600',
-    'Zee5': 'bg-orange-600',
-    'JioHotstar': 'bg-pink-600',
-    'SonyLIV': 'bg-purple-600',
-    'Stage': 'bg-green-600'
+    Netflix: 'bg-red-600',
+    Prime: 'bg-blue-600',
+    Zee5: 'bg-orange-600',
+    JioHotstar: 'bg-pink-600',
+    SonyLIV: 'bg-purple-600',
+    Stage: 'bg-green-600',
   };
-  return platformColors[platformName?.trim()] || 'bg-gray-600';
-};
-
-// 📌 प्लेटफॉर्म का हिंदी नाम लाने के लिए
-const getPlatformHindiName = (platformValue) => {
-  return PLATFORM_HINDI[platformValue] || platformValue;
+  const key = platformName?.trim();
+  return platformColors[key] || 'bg-gray-600';
 };
 
 const Badge = ({ children, className = 'bg-gray-600', icon: Icon = null }) => {
@@ -104,64 +110,66 @@ const Badge = ({ children, className = 'bg-gray-600', icon: Icon = null }) => {
   );
 };
 
+// ─── आर्टिकल कार्ड ─────────────────────────────────────
 const ArticleCard = ({ article }) => {
-  const imageUrl = article?.heroImage?.formats?.medium?.url ||
-     article?.hero_image?.formats?.medium?.url ||
+  const imageUrl =
+    article?.heroImage?.formats?.medium?.url ||
+    article?.hero_image?.formats?.medium?.url ||
     article?.heroImage?.formats?.small?.url ||
-    article?.heroImage?.url || null;
-  
-  const publishDate = article?.publishedAt || 
-                      article?.publish_datetime || 
-                      article?.createdAt || 
-                      new Date().toISOString();
-  
+    article?.heroImage?.url ||
+    null;
+
+  const publishDate =
+    article?.publishedAt ||
+    article?.publish_datetime ||
+    article?.createdAt ||
+    new Date().toISOString();
+
   const formattedDate = new Date(publishDate).toLocaleDateString('hi-IN', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   });
-  
+
+  // ✅ कैटेगरी का हिंदी नाम – केस-इंसेंसिटिव
   const getCategoryName = () => {
+    let categoryValue = null;
     if (Array.isArray(article.category) && article.category.length > 0) {
-      const categoryValue = article.category[0].name;
-      // 📌 कैटेगरी का हिंदी नाम लौटाएं
-      return CATEGORY_HINDI[categoryValue] || categoryValue;
+      categoryValue = article.category[0].name;
+    } else if (article.category?.name) {
+      categoryValue = article.category.name;
     }
-    const categoryValue = article.category?.name;
-    return CATEGORY_HINDI[categoryValue] || categoryValue;
+    return categoryValue ? getHindiName(CATEGORY_HINDI, categoryValue) : null;
   };
-  
-  // ✅ FIXED GENRES FUNCTION
+
+  // ✅ जेनर निकालें
   const getGenres = () => {
     if (Array.isArray(article.genres) && article.genres.length > 0) {
       return article.genres.filter(g => g && g.name);
     }
-    
     if (article.genres?.data && Array.isArray(article.genres.data)) {
       return article.genres.data.map(g => ({
         id: g.id,
         name: g.attributes?.name || g.name,
-        slug: g.attributes?.slug || g.slug
+        slug: g.attributes?.slug || g.slug,
       })).filter(g => g.name);
     }
-    
     if (Array.isArray(article.tags) && article.tags.length > 0) {
       return article.tags.filter(t => t && t.name);
     }
-    
     if (article.tags?.data && Array.isArray(article.tags.data)) {
       return article.tags.data.map(t => ({
         id: t.id,
         name: t.attributes?.name || t.name,
-        slug: t.attributes?.slug || t.slug
+        slug: t.attributes?.slug || t.slug,
       })).filter(t => t.name);
     }
-    
     return [];
   };
-  
+
   const genres = getGenres();
-  
+  const categoryName = getCategoryName();
+
   return (
     <Link
       href={`/article/${article.slug}`}
@@ -171,7 +179,7 @@ const ArticleCard = ({ article }) => {
         {imageUrl ? (
           <Image
             src={imageUrl}
-            alt={article.title || "Article"}
+            alt={article.title || 'Article'}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -184,12 +192,8 @@ const ArticleCard = ({ article }) => {
         )}
 
         <div className="absolute top-2 left-2 right-2 flex flex-wrap gap-2 z-10">
-          {getCategoryName() && (
-            <Badge className="bg-red-600">
-              {getCategoryName()}
-            </Badge>
-          )}
-          
+          {categoryName && <Badge className="bg-red-600">{categoryName}</Badge>}
+
           {article.watching_platform?.slice(0, 2).map((platform, idx) => {
             const platformName = platform.platform?.trim();
             return (
@@ -198,15 +202,13 @@ const ArticleCard = ({ article }) => {
                 className={getPlatformColor(platformName)}
                 icon={MonitorPlay}
               >
-                {getPlatformHindiName(platformName)} {/* 📌 हिंदी में प्लेटफॉर्म */}
+                {getHindiName(PLATFORM_HINDI, platformName)}
               </Badge>
             );
           })}
-          
+
           {article.watching_platform?.length > 2 && (
-            <Badge className="bg-gray-600">
-              +{article.watching_platform.length - 2}
-            </Badge>
+            <Badge className="bg-gray-600">+{article.watching_platform.length - 2}</Badge>
           )}
         </div>
       </div>
@@ -216,13 +218,11 @@ const ArticleCard = ({ article }) => {
           <div className="flex flex-wrap gap-2">
             {genres.slice(0, 2).map((genre, idx) => (
               <Badge key={genre.id || idx} className="bg-purple-600" icon={Tag}>
-                {genre.name} {/* 📌 जेनर का नाम जैसा है वैसा (बैकएंड से आता है) */}
+                {genre.name}
               </Badge>
             ))}
             {genres.length > 2 && (
-              <Badge className="bg-purple-600">
-                +{genres.length - 2}
-              </Badge>
+              <Badge className="bg-purple-600">+{genres.length - 2}</Badge>
             )}
           </div>
         )}
@@ -230,11 +230,11 @@ const ArticleCard = ({ article }) => {
         <h3 className="text-base font-bold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-600 transition">
           {article.title}
         </h3>
-        
+
         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-          {article.bio || article.summary || article.excerpt || "नवीनतम अपडेट, समीक्षाएं और सिफारिशें प्राप्त करें..."}
+          {article.bio || article.summary || article.excerpt || 'नवीनतम अपडेट, समीक्षाएं और सिफारिशें प्राप्त करें...'}
         </p>
-        
+
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500">
             <Calendar size={12} />
@@ -250,41 +250,46 @@ const ArticleCard = ({ article }) => {
   );
 };
 
-// Constants
-const GENRES_VISIBLE_LIMIT = 15; // Only show 15 genres initially
+// ─── फ़िल्टर रो कंपोनेंट ───────────────────────────────
+function FilterRow({ title, children }) {
+  return (
+    <div className="mb-6">
+      <h4 className="mb-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+        {title}
+      </h4>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </div>
+  );
+}
 
+// ─── मुख्य कंपोनेंट ──────────────────────────────────────
 export default function WhatToWatchClient({
   initialArticles,
   initialGenres,
   serverCategory,
-  serverPlatform="all"
+  serverPlatform = 'all',
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const [articles, setArticles] = useState(initialArticles);
   const [isLoading, setIsLoading] = useState(false);
-  const [showAllGenres, setShowAllGenres] = useState(false); // 👈 New state for see more
-  
+  const [showAllGenres, setShowAllGenres] = useState(false);
+
   const formatCategory = (cat) => {
     if (!cat || cat === '') return 'All';
     return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
   };
 
-  // Get visible genres based on showAll state
   const visibleGenres = useMemo(() => {
     if (!initialGenres || initialGenres.length === 0) return [];
-    
-    if (showAllGenres) {
-      return initialGenres;
-    }
+    if (showAllGenres) return initialGenres;
     return initialGenres.slice(0, GENRES_VISIBLE_LIMIT);
   }, [showAllGenres, initialGenres]);
 
   const hasMoreGenres = initialGenres?.length > GENRES_VISIBLE_LIMIT;
   const hiddenGenresCount = initialGenres?.length - GENRES_VISIBLE_LIMIT;
 
-  // Sync category from URL
   const getCategoryFromUrl = () => {
     const pathSegments = pathname.split('/').filter(Boolean);
     if (pathSegments.length === 2 && pathSegments[1] === 'what-to-watch') {
@@ -299,16 +304,14 @@ export default function WhatToWatchClient({
     }
     return getCategoryFromUrl();
   });
-  
+
   const [platform, setPlatform] = useState(serverPlatform || 'all');
   const [selectedGenres, setSelectedGenres] = useState([]);
 
-  // Update articles when initialArticles changes
   useEffect(() => {
     setArticles(initialArticles);
   }, [initialArticles]);
 
-  // Sync category when URL changes
   useEffect(() => {
     const categoryFromUrl = getCategoryFromUrl();
     if (categoryFromUrl !== category) {
@@ -323,23 +326,20 @@ export default function WhatToWatchClient({
   const isMainPage = pathname === '/what-to-watch';
   const hasActiveFilters = category !== 'All' || platform !== 'all' || selectedGenres.length > 0;
 
-  // Filter articles (client-side)
   const filteredArticles = articles.filter(article => {
     // Category filter
     if (category !== 'All') {
       let articleCategoryName = null;
-      
       if (Array.isArray(article.category) && article.category.length > 0) {
         articleCategoryName = article.category[0]?.name;
       } else if (article.category?.name) {
         articleCategoryName = article.category.name;
       }
-      
       if (articleCategoryName?.toLowerCase() !== category.toLowerCase()) {
         return false;
       }
     }
-    
+
     // Platform filter
     if (platform !== 'all') {
       const hasPlatform = article.watching_platform?.some(
@@ -347,26 +347,26 @@ export default function WhatToWatchClient({
       );
       if (!hasPlatform) return false;
     }
-    
+
     // Genre filter
     if (selectedGenres.length > 0) {
       const articleGenres = article.genres?.map(g => g.slug) || [];
       const hasMatchingGenre = selectedGenres.some(g => articleGenres.includes(g));
       if (!hasMatchingGenre) return false;
     }
-    
+
     return true;
   });
 
   const clearAllFilters = () => {
     setPlatform('all');
     setSelectedGenres([]);
-    setShowAllGenres(false); // Reset see more state
+    setShowAllGenres(false);
     router.push('/what-to-watch');
   };
 
   const handleCategoryChange = (newCategory) => {
-    setShowAllGenres(false); // Reset see more when category changes
+    setShowAllGenres(false);
     if (newCategory !== 'All') {
       router.push(`/${newCategory.toLowerCase()}/what-to-watch`);
     } else {
@@ -378,15 +378,13 @@ export default function WhatToWatchClient({
     setPlatform(newPlatform);
   };
 
-  // Toggle see more genres
   const toggleSeeMoreGenres = () => {
     setShowAllGenres(!showAllGenres);
   };
 
-  // 📌 कैटेगरी का हिंदी नाम दिखाने के लिए
   const getDisplayCategory = () => {
     if (category === 'All') return 'सभी';
-    return CATEGORY_HINDI[category] || category;
+    return getHindiName(CATEGORY_HINDI, category);
   };
 
   return (
@@ -405,7 +403,7 @@ export default function WhatToWatchClient({
           </div>
         </div>
       </div>
-      
+
       {/* FILTERS SECTION */}
       <div className="mb-10 space-y-6">
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm">
@@ -413,7 +411,6 @@ export default function WhatToWatchClient({
             <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
               फ़िल्टर
             </h3>
-            
             {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
@@ -425,13 +422,12 @@ export default function WhatToWatchClient({
             )}
           </div>
 
-          {/* CATEGORY FILTER - हिंदी में दिखेगा */}
+          {/* CATEGORY */}
           <FilterRow title="श्रेणी">
             {CATEGORIES.map((c) => {
               const Icon = CATEGORY_ICONS[c] || Film;
               const isActive = category?.toLowerCase() === c.toLowerCase();
-              const hindiLabel = CATEGORY_HINDI[c] || c;
-              
+              const hindiLabel = getHindiName(CATEGORY_HINDI, c);
               return (
                 <button
                   key={c}
@@ -443,18 +439,17 @@ export default function WhatToWatchClient({
                     }`}
                 >
                   <Icon size={14} />
-                  {hindiLabel} {/* 📌 हिंदी में दिखेगा */}
+                  {hindiLabel}
                 </button>
               );
             })}
           </FilterRow>
 
-          {/* PLATFORM FILTER - हिंदी में दिखेगा */}
+          {/* PLATFORM */}
           <FilterRow title="स्ट्रीमिंग प्लेटफॉर्म">
             {PLATFORMS.map((p) => {
               const Icon = PLATFORM_ICONS[p.value] || MonitorPlay;
               const isActive = platform === p.value;
-
               return (
                 <button
                   key={p.value}
@@ -466,21 +461,18 @@ export default function WhatToWatchClient({
                     }`}
                 >
                   <Icon size={14} />
-                  {p.label} {/* 📌 पहले से ही हिंदी में है */}
+                  {p.label}
                 </button>
               );
             })}
           </FilterRow>
 
-          {/* GENRES FILTER */}
-          {/* GENRES FILTER - WITH SEE MORE BUTTON */}
+          {/* GENRES */}
           <FilterRow title="शैलियाँ">
             <div className="flex flex-wrap gap-2">
-              {/* Visible Genres */}
               {visibleGenres.map((g) => {
-                const genreKey = g.slug || g.name; 
+                const genreKey = g.slug || g.name;
                 const active = selectedGenres.includes(genreKey);
-
                 return (
                   <button
                     key={g.id || genreKey}
@@ -500,8 +492,7 @@ export default function WhatToWatchClient({
                   </button>
                 );
               })}
-              
-              {/* SEE MORE / SEE LESS BUTTON */}
+
               {hasMoreGenres && (
                 <button
                   onClick={toggleSeeMoreGenres}
@@ -509,13 +500,11 @@ export default function WhatToWatchClient({
                 >
                   {showAllGenres ? (
                     <>
-                      <ChevronUp size={14} />
-                      कम दिखाएं
+                      <ChevronUp size={14} /> कम दिखाएं
                     </>
                   ) : (
                     <>
-                      <ChevronDown size={14} />
-                      और देखें ({hiddenGenresCount})
+                      <ChevronDown size={14} /> और देखें ({hiddenGenresCount})
                     </>
                   )}
                 </button>
@@ -523,31 +512,40 @@ export default function WhatToWatchClient({
             </div>
           </FilterRow>
 
-          {/* Active Filters Summary - हिंदी में */}
+          {/* Active Filters Summary */}
           {hasActiveFilters && (
             <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
               <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                 सक्रिय फ़िल्टर:
               </span>
-              
+
               {category !== 'All' && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                  श्रेणी: {CATEGORY_HINDI[category] || category}
-                  <button onClick={() => handleCategoryChange('All')} className="ml-1 hover:text-red-900">×</button>
+                  श्रेणी: {getHindiName(CATEGORY_HINDI, category)}
+                  <button
+                    onClick={() => handleCategoryChange('All')}
+                    className="ml-1 hover:text-red-900"
+                  >
+                    ×
+                  </button>
                 </span>
               )}
-              
+
               {platform !== 'all' && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                   प्लेटफॉर्म: {PLATFORMS.find(p => p.value === platform)?.label}
-                  <button onClick={() => setPlatform('all')} className="ml-1 hover:text-blue-900">×</button>
+                  <button onClick={() => setPlatform('all')} className="ml-1 hover:text-blue-900">
+                    ×
+                  </button>
                 </span>
               )}
-              
+
               {selectedGenres.length > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                   शैलियाँ: {selectedGenres.length} चयनित
-                  <button onClick={() => setSelectedGenres([])} className="ml-1 hover:text-purple-900">×</button>
+                  <button onClick={() => setSelectedGenres([])} className="ml-1 hover:text-purple-900">
+                    ×
+                  </button>
                 </span>
               )}
             </div>
@@ -555,7 +553,7 @@ export default function WhatToWatchClient({
         </div>
       </div>
 
-      {/* Results Count - हिंदी में */}
+      {/* Results Count */}
       <div className="mb-6 flex justify-between items-center">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {filteredArticles.length} में से {articles.length} सुझाव दिख रहे हैं
@@ -577,7 +575,7 @@ export default function WhatToWatchClient({
         </section>
       )}
 
-      {/* No articles found - हिंदी में */}
+      {/* No results */}
       {filteredArticles.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <div className="flex justify-center mb-4">
@@ -598,16 +596,5 @@ export default function WhatToWatchClient({
         </div>
       )}
     </main>
-  );
-}
-
-function FilterRow({ title, children }) {
-  return (
-    <div className="mb-6">
-      <h4 className="mb-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-        {title}
-      </h4>
-      <div className="flex flex-wrap gap-2">{children}</div>
-    </div>
   );
 }

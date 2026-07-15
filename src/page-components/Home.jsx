@@ -4,13 +4,15 @@ import FeaturedArticle from "../components/ui/FeaturedArticle";
 import TrandingNow from "../components/ui/TrandingNow";
 import LatestNewsSection from '../components/ui/LatestNewsSection';
 import CelebrityNewsSection from '../components/ui/CelebrityNewsSection';
-import ViralNewsSection from '../components/ui/ViralNewsSection';
-import LatestArticlesSection from '../components/ui/LatestArticlesSection';
-import ExploreCategories from '../components/ui/ExploreCategories';
-import CelebrityPhotosSection from '../components/ui/CelebrityPhotosSection';
-import CelebrityProfileSection from '../components/ui/CelebrityProfileSection';
-import WebStoriesSection from '../components/ui/WebStoriesSection';
 import { Star, Newspaper, Flame, PlayCircle, Zap } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const ViralNewsSection = dynamic(() => import('../components/ui/ViralNewsSection'));
+const LatestArticlesSection = dynamic(() => import('../components/ui/LatestArticlesSection'));
+const ExploreCategories = dynamic(() => import('../components/ui/ExploreCategories'));
+const WebStoriesSection = dynamic(() => import('../components/ui/WebStoriesSection'));
+const CelebrityPhotosSection = dynamic(() => import('../components/ui/CelebrityPhotosSection'));
+const CelebrityProfileSection = dynamic(() => import('../components/ui/CelebrityProfileSection'));
 
 // No "use client" – यह अब Server Component है
 // No useState, useEffect, mounted – सब हटा दिया गया है
@@ -41,7 +43,7 @@ export default function Home({ initialData }) {
       <section className='bg-[#f6f6f6] rounded-2xl dark:bg-gray-800'>
         <div className="px-2 py-4">
           <SectionHeader title="फीचर्ड स्टोरीज" icon={Star} />
-          <FeaturedArticle articles={latestFeatured} priority={true} />
+          <FeaturedArticle articles={latestFeatured} priority={true} fetchPriority="high" />
         </div>
       </section>
 

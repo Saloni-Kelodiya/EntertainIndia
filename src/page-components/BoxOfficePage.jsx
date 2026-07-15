@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { TrendingUp } from "lucide-react";
 
-import { moviesAPI } from "../lib/api";
+import { moviesAPI } from "../lib/api/movies";
 import { getStrapiMedia } from "../lib/constants";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 
@@ -15,6 +16,9 @@ export default function BoxOfficePage({
   initialPage = 1,
   serverCategory,
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [movies, setMovies] = useState(initialMovies);
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);
@@ -61,10 +65,22 @@ export default function BoxOfficePage({
     return Array.from({ length: pagination.pageCount }, (_, i) => i + 1);
   }, [pagination]);
 
-  const handlePageChange = useCallback((newPage) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  //  FIX: URL ab bhi update hoga, page state ke saath
+  const handlePageChange = useCallback(
+    (newPage) => {
+      setPage(newPage);
+
+      // pathname already category-specific hai (e.g. /bollywood/box-office)
+      const newUrl =
+        newPage > 1 ? `${pathname}?page=${newPage}` : pathname;
+
+      //  scroll:false kyunki hum manually scrollTo kar rahe hain
+      router.push(newUrl, { scroll: false });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [pathname, router]
+  );
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">

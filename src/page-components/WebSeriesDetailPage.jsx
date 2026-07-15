@@ -155,7 +155,7 @@ export default function WebseriesDetailClient({ slug, initialData, ServerCategor
   const [similar, setSimilar] = useState(initialData.similar);
   const [seasons, setSeasons] = useState(initialData.seasons);
   const [reviews, setReviews] = useState(initialData.webseries?.reviews || []);
-
+  const [selectedSeason, setSelectedSeason] = useState(null);
   // यूजर और रिव्यू स्टेट्स
   const [user, setUser] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
@@ -420,9 +420,9 @@ const getYouTubeThumbnail = (videoId) => `https://img.youtube.com/vi/${videoId}/
 
       {/* All Details Below Poster - Full Width */}
       <div className="w-full">
-        <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white text-center mb-2">
+        <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white text-center mb-2">
           {webseries?.title}
-        </h1>
+        </div>
         
         <div className="text-center mb-3">
           <div className="inline-block bg-purple-500 text-white text-xs px-3 py-1 rounded-md font-bold uppercase tracking-wide">
@@ -940,98 +940,125 @@ const getYouTubeThumbnail = (videoId) => `https://img.youtube.com/vi/${videoId}/
         )}
 
         {/* कलाकार अनुभाग */}
-        {cast.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <Users className="text-gray-900 dark:text-white" size={22} />
-              मुख्य कलाकार
-            </h3>
+       {cast.length > 0 && (() => {
+  // Extract unique seasons
+  const allSeasons = [];
+  cast.forEach(role => {
+    (role.seasons || []).forEach(season => {
+      if (!allSeasons.find(s => s.id === season.id)) {
+        allSeasons.push(season);
+      }
+    });
+  });
+  allSeasons.sort((a, b) => a.number - b.number);
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-[#f6f6f6] p-5 rounded-2xl dark:bg-gray-800">
-              {(showFullCast ? cast : cast.slice(0, 6)).map((role, i) => {
-                const avatarUrl = safeImageUrl(
-  role?.avatar?.url ||
-  role?.Avatar?.url ||
-  role?.celebrity?.avatar?.url
-);
+  const filteredCast = selectedSeason
+    ? cast.filter(role => (role.seasons || []).some(s => s.id === selectedSeason))
+    : cast;
 
-                const characterName = role.characterName || "अभिनेता";
-                const actorName = role.name || "कलाकार सदस्य";
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
+      <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+        <Users className="text-gray-900 dark:text-white" size={22} />
+        मुख्य कलाकार
+      </h3>
 
-                return (
-                  <div key={i} className="group">
-                    <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-300 dark:border-neutral-700 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                      <div className="mb-2">
-                        {role.celebrity ? (
-                          <Link href={`/celebrities/${role.celebrity.slug}`} className="block">
-                            {avatarUrl ? (
-                              <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-pink-300">
-                                <Image
-                                  src={avatarUrl}
-                                  alt={characterName}
-                                  fill
-                                  sizes="64px"
-                                  className="object-cover group-hover:scale-110 transition-transform"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
-                                <User size={26} className="text-gray-500" />
-                              </div>
-                            )}
-                          </Link>
-                        ) : (
-                          avatarUrl ? (
-                            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-pink-300">
-                              <Image
-                                src={avatarUrl}
-                                alt={characterName}
-                                fill
-                                sizes="64px"
-                                className="object-cover group-hover:scale-110 transition-transform"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
-                              <User size={26} className="text-gray-500" />
-                            </div>
-                          )
-                        )}
-                      </div>
-                      <div className="text-center">
-                        <span className="font-semibold text-[13px] text-gray-900 dark:text-white block line-clamp-2">
-                          {characterName}
-                        </span>
-                        {role.celebrity?.slug ? (
-                          <Link href={`/celebrities/${role.celebrity.slug}`} className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 hover:text-pink-500 block">
-                            {actorName}
-                          </Link>
-                        ) : (
-                          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                            {actorName}
-                          </div>
-                        )}
-                      </div>
+      {/* Season Tabs */}
+      {allSeasons.length > 1 && (
+        <div className="flex gap-2 flex-wrap mb-5">
+          <button
+            onClick={() => setSelectedSeason(null)}
+            className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
+              selectedSeason === null
+                ? "bg-pink-500 text-white border-pink-500"
+                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-neutral-600 hover:border-pink-400"
+            }`}
+          >
+            सभी
+          </button>
+          {allSeasons.map(season => (
+            <button
+              key={season.id}
+              onClick={() => setSelectedSeason(season.id)}
+              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
+                selectedSeason === season.id
+                  ? "bg-pink-500 text-white border-pink-500"
+                  : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-neutral-600 hover:border-pink-400"
+              }`}
+            >
+              Season {season.number}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-[#f6f6f6] p-5 rounded-2xl dark:bg-gray-800">
+        {(showFullCast ? filteredCast : filteredCast.slice(0, 6)).map((role, i) => {
+          const avatarUrl = safeImageUrl(
+            role?.avatar?.url ||
+            role?.Avatar?.url ||
+            role?.celebrity?.avatar?.url
+          );
+          const characterName = role.characterName || "अभिनेता";
+          const actorName = role.name || "कलाकार सदस्य";
+
+          return (
+            <div key={i} className="group">
+              <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-300 dark:border-neutral-700 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <div className="mb-2">
+                  {role.celebrity ? (
+                    <Link href={`/celebrities/${role.celebrity.slug}`} className="block">
+                      {avatarUrl ? (
+                        <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-pink-300">
+                          <Image src={avatarUrl} alt={characterName} fill sizes="64px" className="object-cover group-hover:scale-110 transition-transform" />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
+                          <User size={26} className="text-gray-500" />
+                        </div>
+                      )}
+                    </Link>
+                  ) : avatarUrl ? (
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 dark:border-neutral-700 group-hover:border-pink-300">
+                      <Image src={avatarUrl} alt={characterName} fill sizes="64px" className="object-cover group-hover:scale-110 transition-transform" />
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {cast.length > 6 && (
-              <div className="mt-5 text-center">
-                <button
-                  onClick={() => setShowFullCast(!showFullCast)}
-                  className="text-[12px] font-semibold text-pink-500 hover:underline"
-                >
-                  {showFullCast
-                    ? "कम कलाकार देखें"
-                    : `और कलाकार देखें (${cast.length})`}
-                </button>
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center">
+                      <User size={26} className="text-gray-500" />
+                    </div>
+                  )}
+                </div>
+                <div className="text-center">
+                  <span className="font-semibold text-[13px] text-gray-900 dark:text-white block line-clamp-2">
+                    {characterName}
+                  </span>
+                  {role.celebrity?.slug ? (
+                    <Link href={`/celebrities/${role.celebrity.slug}`} className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 hover:text-pink-500 block">
+                      {actorName}
+                    </Link>
+                  ) : (
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{actorName}</div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          );
+        })}
+      </div>
+
+      {filteredCast.length > 6 && (
+        <div className="mt-5 text-center">
+          <button
+            onClick={() => setShowFullCast(!showFullCast)}
+            className="text-[12px] font-semibold text-pink-500 hover:underline"
+          >
+            {showFullCast ? "कम कलाकार देखें" : `और कलाकार देखें (${filteredCast.length})`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+})()}
 
         {/* क्रू अनुभाग */}
         {crew.length > 0 && (
@@ -1295,14 +1322,14 @@ const getYouTubeThumbnail = (videoId) => `https://img.youtube.com/vi/${videoId}/
                     </span>
                   </div>
 
-                  <textarea
-                    value={reviewForm.comment}
-                    onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                    placeholder="इस वेब सीरीज के बारे में अपने विचार साझा करें..."
-                    rows={3}
-                    className="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 outline-none focus:border-pink-500 transition"
-                    requipink
-                  />
+                 <textarea
+  value={reviewForm.comment}
+  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+  placeholder="इस वेब सीरीज के बारे में अपने विचार साझा करें..."
+  rows={3}
+  className="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 outline-none focus:border-pink-500 transition"
+   requipink="true"
+/>
 
                   <button
                     type="submit"

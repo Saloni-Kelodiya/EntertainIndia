@@ -1,11 +1,12 @@
 import CategoryPage from '../../page-components/CategoryPage';
 import LayoutWrapper from '../LayoutWrapper';
 import { categoryAPIServer } from '../../lib/api-server';
-import { articlesAPI, moviesAPI } from "../../lib/api"
+import { articlesAPI} from "../../lib/api/articles";
+import {moviesAPI} from "../../lib/api/movies";
 
 const SITE_URL = 'https://entertainindia.in';
 
-// ✅ HOLLYWOOD Ke Liye Perfect Schema Generator
+//  HOLLYWOOD Ke Liye Perfect Schema Generator
 function generateHollywoodSchema(categoryData, movies = [], articles = [], categorySlug) {
   const domain = SITE_URL;
   const categoryUrl = `${domain}/hollywood`;
@@ -22,7 +23,7 @@ function generateHollywoodSchema(categoryData, movies = [], articles = [], categ
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -134,16 +135,19 @@ function generateHollywoodSchema(categoryData, movies = [], articles = [], categ
           "image": article.heroImage?.url,
           "datePublished": article.createdAt,
           "dateModified": article.updatedAt || article.createdAt,
-          "author": {
-            "@type": "Person",
-            "name": article.author?.name || article.Authors?.name || "EntertainIndia Team"
-          },
+         "author": {
+          "@type": "Person",
+          "name": article.Authors?.name || "EntertainIndia Team", // 2. नाम न होने पर 'Missing Author' से बचाएगा
+          "url": article.Authors?.name 
+            ? `${SITE_URL}/author/${article.Authors.name?.toLowerCase().replace(/\s+/g, '-')}` 
+            : `${SITE_URL}/about` // 'Missing URL' की चेतावनी को ठीक करेगा
+        },
           "publisher": {
             "@type": "Organization",
             "name": "EntertainIndia",
             "logo": {
               "@type": "ImageObject",
-              "url": `${domain}/logo.png`
+              "url": `${domain}/og-logo.png`
             }
           }
         }
@@ -157,7 +161,7 @@ function generateHollywoodSchema(categoryData, movies = [], articles = [], categ
   };
 }
 
-// ✅ FIX 1: Separate viewport export (ADD THIS)
+//  FIX 1: Separate viewport export (ADD THIS)
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -165,7 +169,7 @@ export const viewport = {
   userScalable: true,
 };
 
-// ✅ FIX 2: Remove viewport from generateMetadata
+//  FIX 2: Remove viewport from generateMetadata
 export async function generateMetadata() {
   const siteUrl = SITE_URL;
   const categoryUrl = `${siteUrl}/hollywood`;
@@ -174,7 +178,7 @@ export async function generateMetadata() {
   try {
     const [categoryData, artData] = await Promise.all([
       categoryAPIServer.getBySlug(category),
-      articlesAPI.getAll({ category, pageSize: 1, sort: 'createdAt:desc' })
+      articlesAPI.getAllLight({ category, pageSize: 1, sort: 'createdAt:desc' })
     ]);
 
     const seo = categoryData?.seo;
@@ -240,11 +244,11 @@ export default async function HollywoodPage({ searchParams }) {
 
   const [categoryData, articleData, movieData] = await Promise.all([
     categoryAPIServer.getBySlug(category),
-    articlesAPI.getAll({ category, page, pageSize: 6, mainCategory: "article", sort: "createdAt:desc" }),
-    moviesAPI.getAll({ category, pageSize: 20, sort: "releaseDate:desc" })
+    articlesAPI.getAllLight({ category, page, pageSize: 6, mainCategory: "article", sort: "createdAt:desc" }),
+    moviesAPI.getAllLight({ category, pageSize: 20, sort: "releaseDate:desc" })
   ]);
 
-  // ✅ Use Hollywood specific schema
+  //  Use Hollywood specific schema
   const schemaData = generateHollywoodSchema(
     categoryData, 
     movieData?.movies || [],    

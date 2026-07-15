@@ -16,7 +16,7 @@ export async function GET() {
       const queryParams = new URLSearchParams({
         'pagination[page]': page.toString(),
         'pagination[pageSize]': '100',
-        'filters[language][$eq]': 'hi', // ✅ Sirf Hindi language filter
+        'filters[language][$eq]': 'hi', //  Sirf Hindi language filter
         'populate': '*',
         'sort[0]': 'updatedAt:desc',
         'publicationState': 'live'
@@ -39,7 +39,7 @@ export async function GET() {
         break;
       }
 
-      // ✅ Hindi character filter HATAYA - sirf slug check
+      //  Hindi character filter HATAYA - sirf slug check
       awards.forEach(item => {
         const attrs = item.attributes || item;
         const slug = attrs.slug;
@@ -61,7 +61,7 @@ export async function GET() {
 
         const categorySlug = String(rawCategory).toLowerCase().trim().replace(/\s+/g, '-');
         
-        // ✅ Sirf slug check - Hindi character validation HATAYA
+        //  Sirf slug check - Hindi character validation HATAYA
         if (slug && slug.trim() !== '') {
           allAwards.push({
             slug: slug.trim(),

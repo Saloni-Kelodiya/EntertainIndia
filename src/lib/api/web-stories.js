@@ -22,6 +22,7 @@ export const normalizeWebStory = (story) => {
   return {
     id: story.id,
     title: data.title,
+    keywords:data.meta_keywords,
     slug: data.slug,
     moderationStatus: data.moderation_status || "pending",
     heroText: data.heroText || "",
@@ -35,8 +36,8 @@ export const normalizeWebStory = (story) => {
     publishedAt: data.publishedAt,
     trandingRank: data.trandingRank,
      trending:data.trending,
-language: data.language, // ✅ language field भी normalize करें
-    // ✅ THUMBNAIL
+language: data.language, //  language field भी normalize करें
+    //  THUMBNAIL
     thumbnail: thumbnailUrl
       ? {
         url: thumbnailUrl.startsWith("http")
@@ -45,7 +46,7 @@ language: data.language, // ✅ language field भी normalize करें
       }
       : null,
 
-    // ✅ SLIDES (STRAPI v4 SAFE)
+    //  SLIDES (STRAPI v4 SAFE)
     slides:
       data.slides?.map((slide) => {
         // Handle slide image - check multiple possible structures
@@ -76,7 +77,7 @@ language: data.language, // ✅ language field भी normalize करें
         };
       }) || [],
 
-    // ✅ RELATED WEB STORIES
+    //  RELATED WEB STORIES
     relatedStories:
       (data.related_stories?.data || data.related_stories || [])
         .map((item) => {
@@ -98,8 +99,76 @@ language: data.language, // ✅ language field भी normalize करें
         .filter(Boolean),
   };
 };
+export const normalizeLightWebSeries = (item) => {
+  if (!item) return null;
 
+  // Extract poster image (thumbnail)
+  const poster = item.poster || item.thumbnail || item.coverImage;
+  const imageUrl = poster?.url || poster?.formats?.thumbnail?.url || null;
+
+  return {
+    id: item.id,
+    documentId: item.documentId,
+    slug: item.slug,
+    title: item.title || '',
+    // Map to `thumbnail` to match your StoryCard component
+    thumbnail: imageUrl ? { url: imageUrl } : null,
+    // Also keep `poster` if needed
+    poster: imageUrl ? { url: imageUrl } : null,
+    // Minimal metadata (optional)
+    releaseDate: item.releaseDate,
+    // Include if you need pagination meta
+    _meta: { createdAt: item.createdAt },
+  };
+};
 export const webStoriesAPI = {
+ getLightList: async (params = {}) => {
+  const q = new URLSearchParams({
+    'pagination[page]': params.page || 1,
+    'pagination[pageSize]': params.pageSize || 12,
+    'sort[0]': params.sort || 'publishedAt:desc', // ⚠️ releaseDate doesn't exist on web-stories, see note below
+    'populate[thumbnail][populate]': '*',
+    'filters[language][$eq]': 'hi',
+  });
+
+  if (params.trending === 'true') {
+    q.append('filters[trending][$eq]', true);
+  }
+
+  if (params.category) {
+    q.append('filters[category][$eq]', params.category);
+  }
+
+  // 🔍 DEBUG: log exactly what's being sent
+  console.log('🔍 [getLightList] URL:', `/web-stories?${q.toString()}`);
+  console.log('🔍 [getLightList] params received:', params);
+
+  try {
+    const res = await apiClient.get(`/web-stories?${q.toString()}`);
+    const data = res?.data?.data || [];
+    const pagination = res?.data?.meta?.pagination || {}; // ⚠️ was res?.data?.pagination — wrong path, see note below
+    const lightData = data.map(normalizeLightWebSeries).filter(Boolean);
+
+    console.log('✅ [getLightList] success, items:', lightData.length);
+
+    return {
+      data: lightData,
+      pagination,
+      stories: lightData,
+      meta: { pagination },
+    };
+  } catch (error) {
+    // 🔍 FULL DEBUG OUTPUT
+    console.error('❌ [getLightList] Request failed');
+    console.error('❌ status:', error?.response?.status);
+    console.error('❌ statusText:', error?.response?.statusText);
+    console.error('❌ Strapi error body:', JSON.stringify(error?.response?.data, null, 2));
+    console.error('❌ request URL was:', error?.config?.url);
+    console.error('❌ full axios error message:', error?.message);
+
+    return { data: [], stories: [], pagination: {}, meta: { pagination: {} } };
+  }
+},
   async getAll({
     page = 1,
     pageSize = 20,
@@ -107,7 +176,7 @@ export const webStoriesAPI = {
   } = {}) {
     try { 
        q.append('filters[language][$eq]', "hi");
-       /* ✅ LANGUAGE FILTER - यह सबसे important है */
+       /*  LANGUAGE FILTER - यह सबसे important है */
     if (params.language) {
       q.append("filters[language][$eq]", params.language);
     }
@@ -121,7 +190,7 @@ export const webStoriesAPI = {
           },
 
           filters: {
-            // ✅ YE ADD KARNA ZAROORI HAI
+            //  YE ADD KARNA ZAROORI HAI
             moderation_status: { $eq: "published" },
             publishedAt: { $notNull: true }
           },
@@ -160,7 +229,7 @@ export const webStoriesAPI = {
           slides: { populate: "*" },
           related_stories: {
             populate: ["thumbnail"],
-            filters: { moderation_status: { $eq: "published" } } // ✅ Related bhi published hon
+            filters: { moderation_status: { $eq: "published" } } //  Related bhi published hon
 
           },
 

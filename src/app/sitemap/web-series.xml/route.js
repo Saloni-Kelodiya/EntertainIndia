@@ -4,7 +4,7 @@
 
 // ⚠️ Adjust this import path to match where lib/api.js actually sits
 // relative to app/web-series.xml/route.js in your project
-import { webSeriesAPI } from "../../../lib/api";
+import { webSeriesAPI } from "../../../lib/api/web-series";
 
 const BASE_URL = "https://entertainindia.in";
 const CATEGORY = "ott";

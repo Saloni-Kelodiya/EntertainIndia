@@ -8,12 +8,12 @@ const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    // ✅ Cache control headers
+    //  Cache control headers
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0',
   },
-  // ✅ Important: Disable caching
+  //  Important: Disable caching
   withCredentials: false, // Set to true if you need cookies
 });
 
@@ -233,9 +233,9 @@ const getPrimaryCategory = (category) => {
     featured: data.featured,
     sponsored: data.sponsored,
     sponsorMeta: data.sponsor_meta,
-    language: data.language, // ✅ language field भी normalize करें
+    language: data.language, //  language field भी normalize करें
 
-    // ✅ THIS WAS BREAKING
+    //  THIS WAS BREAKING
     watching_platform: Array.isArray(data.watching_platform)
   ? data.watching_platform.map((item) => ({
       platform: item?.platform || '',
@@ -293,7 +293,7 @@ export const articlesAPI = {
     q.append("filters[moderation_status][$eq]", "published");
     q.append("sort[0]", "createdAt:desc");
     
-    // ✅ SIRF YAHI FIELDS POPULATE KARO - Home page ke liye bas itna kaafi hai
+    //  SIRF YAHI FIELDS POPULATE KARO - Home page ke liye bas itna kaafi hai
    q.append("populate[hero_image]", "true");
 q.append("populate[category]", "true");
 q.append("populate[Authors][fields][0]", "username");
@@ -341,7 +341,7 @@ q.append("populate[Authors][fields][0]", "username");
       const data = res?.data?.data || [];
       const pagination = res?.data?.meta?.pagination || {};
       
-      // ✅ Sirf home page wali fields normalize karo
+      //  Sirf home page wali fields normalize karo
       const lightArticles = data.map(article => normalizeArticle(article));
       
       return { articles: lightArticles, pagination };
@@ -356,16 +356,16 @@ q.append("populate[Authors][fields][0]", "username");
       "pagination[pageSize]": params.pageSize || 12,
     });
     
-    // ✅ Only sort by createdAt:desc (latest first)
+    //  Only sort by createdAt:desc (latest first)
     q.append("sort[0]", "createdAt:desc");
     
-    // ✅ Language filter
+    //  Language filter
     q.append("filters[language][$eq]", "hi");
     
-    // ✅ Only published articles
+    //  Only published articles
     q.append("filters[moderation_status][$eq]", "published");
 
-    // ✅ Explicitly populate critical fields
+    //  Explicitly populate critical fields
     q.append("populate[0]", "hero_image");
     q.append("populate[1]", "category");
     q.append("populate[2]", "Authors");
@@ -535,7 +535,7 @@ if (params.tag) {
   // Clean the tag (remove # if present)
   const cleanTag = params.tag.replace(/^#/, '').toLowerCase();
   
-  // ✅ $containsi ki jagah $eq use karein taaki strictly wahi slug match ho
+  //  $containsi ki jagah $eq use karein taaki strictly wahi slug match ho
   q.append("filters[tags][slug][$eq]", cleanTag);
 }
 
@@ -543,7 +543,7 @@ if (params.tag) {
 if (params.tags && params.tags.length > 0) {
   params.tags.forEach((tag, idx) => {
     const cleanTag = tag.replace(/^#/, '').toLowerCase();
-    // ✅ Yahan bhi strict matching apply hogi
+    //  Yahan bhi strict matching apply hogi
     q.append(`filters[tags][slug][$in][${idx}]`, cleanTag);
   });
 }
@@ -576,7 +576,7 @@ if (params.tags && params.tags.length > 0) {
     }
   },
 
-  // ✅ DEDICATED LATEST NEWS FETCHER
+  //  DEDICATED LATEST NEWS FETCHER
   async getLatestNews(params = {}) {
     return articlesAPI.getAll({
       ...params,
@@ -585,7 +585,7 @@ if (params.tags && params.tags.length > 0) {
     });
   },
 
-  // ✅ DEDICATED CELEBRITY NEWS FETCHER
+  //  DEDICATED CELEBRITY NEWS FETCHER
   async getCelebrityNews(params = {}) {
     return articlesAPI.getAll({
       ...params,
@@ -593,7 +593,7 @@ if (params.tags && params.tags.length > 0) {
     });
   },
 
-  // ✅ DEDICATED VIRAL NEWS FETCHER
+  //  DEDICATED VIRAL NEWS FETCHER
   async getViralNews(params = {}) {
     return articlesAPI.getAll({
       ...params,
@@ -601,7 +601,7 @@ if (params.tags && params.tags.length > 0) {
     });
   },
 
-  // ✅ DEDICATED OTT ARTICLES FETCHER
+  //  DEDICATED OTT ARTICLES FETCHER
   async getOTTArticles(params = {}) {
     return articlesAPI.getAll({
       ...params,
@@ -609,7 +609,7 @@ if (params.tags && params.tags.length > 0) {
     });
   },
 
-  // ✅ DEDICATED TV ARTICLES FETCHER
+  //  DEDICATED TV ARTICLES FETCHER
   async getTVArticles(params = {}) {
     return articlesAPI.getAll({
       ...params,
@@ -642,7 +642,7 @@ if (params.tags && params.tags.length > 0) {
       queryParams.append('filters[trending][$eq]', 'true');
       queryParams.append('filters[moderation_status][$eq]', 'published');
       queryParams.append('filters[language][$eq]', 'hi');
-      queryParams.append('sort', 'createdAt:desc'); // ✅ Changed to createdAt
+      queryParams.append('sort', 'createdAt:desc'); //  Changed to createdAt
       
       const pageSize = 15;
       queryParams.append('pagination[pageSize]', pageSize);
@@ -668,7 +668,7 @@ if (params.tags && params.tags.length > 0) {
     }
   },
   
-  // ✅ DEDICATED MY ARTICLES FETCHER (For Dashboard)
+  //  DEDICATED MY ARTICLES FETCHER (For Dashboard)
   async getMyArticles(userId, params = {}) {
     const token = localStorage.getItem("token");
     const q = new URLSearchParams({
@@ -677,7 +677,7 @@ if (params.tags && params.tags.length > 0) {
     });
 
     q.append("filters[Authors][id][$eq]", userId);
-    q.append("sort[0]", "createdAt:desc"); // ✅ Changed to createdAt
+    q.append("sort[0]", "createdAt:desc"); //  Changed to createdAt
     q.append("filters[language][$eq]", "hi");
     q.append("populate[0]", "hero_image");
     q.append("populate[1]", "category");
@@ -733,7 +733,7 @@ if (params.tags && params.tags.length > 0) {
     queryParams.append('populate[1]', 'category');
     queryParams.append('populate[2]', 'Authors');
     queryParams.append("filters[language][$eq]", "hi");
-    queryParams.append('sort', 'createdAt:desc'); // ✅ Changed to createdAt
+    queryParams.append('sort', 'createdAt:desc'); //  Changed to createdAt
 
     return apiClient
       .get(`/articles?${queryParams.toString()}`)
@@ -755,7 +755,7 @@ if (params.tags && params.tags.length > 0) {
           category: true,
           Authors: { populate: '*' },
         },
-        sort: ['createdAt:desc'], // ✅ Changed to createdAt
+        sort: ['createdAt:desc'], //  Changed to createdAt
       }, { encodeValuesOnly: true });
 
       const res = await apiClient.get(`/articles?${query}`);
@@ -1276,7 +1276,7 @@ export const normalizeMovie = (movie) => {
     industry: getDisplayValue(data.industry),
     // Meta
     rating: getDisplayValue(data.rating),
-    language: data.language, // ✅ language field भी normalize करें
+    language: data.language, //  language field भी normalize करें
     duration: data.duration || "",
     releaseDate: data.releaseDate || null,
     year: data.releaseDate ? new Date(data.releaseDate).getFullYear() : null,
@@ -1320,7 +1320,7 @@ export const normalizeMovie = (movie) => {
       };
     })(),
 
-    // ✅ Categories (ARRAY)
+    //  Categories (ARRAY)
     categories: Array.isArray(data.categories)
       ? data.categories.map(cat => ({
         id: cat.id,
@@ -1376,7 +1376,7 @@ export const normalizeMovie = (movie) => {
         slug: a.slug || '',
         summary: a.summary || '',
         excerpt: a.summary || '',
-        mainCategory:a.MainCategory||'',
+        MainCategory:a.MainCategory,
         body: a.body || '',
         publishedAt: a.createdAt|| a.publishedAt,
         views: a.views ?? 0,
@@ -1387,7 +1387,7 @@ export const normalizeMovie = (movie) => {
       }))
       : [],
 
-   // ✅ FIXED SIMILAR MOVIES
+   //  FIXED SIMILAR MOVIES
     similarMovies: (() => {
       // Check multiple possible paths
       let similarData = data.similarMovies || movie.similarMovies || [];
@@ -1410,7 +1410,7 @@ export const normalizeMovie = (movie) => {
           duration: m.duration || "",
          category: (() => {
   const cat = m.category?.data?.attributes || m.category;
-  return cat?.name || "";
+ return (cat?.slug || cat?.name || "").toLowerCase();
 })(),
           poster: m.poster ? getImageUrl(m.poster) : null,
           backdrop: m.backdrop ? getImageUrl(m.backdrop) : null,
@@ -1449,10 +1449,7 @@ export const normalizeMovie = (movie) => {
               rating: movieData.rating?.title || movieData.rating || "",
               year: movieData.releaseDate ? new Date(movieData.releaseDate).getFullYear() : null,
               duration: movieData.duration || "",
-              category: (() => {
-  const cat = (m.attributes || m).category?.data?.attributes || (m.attributes || m).category;
-  return cat?.name || "";
-})(),
+              category: movieData.category,
               poster: movieData.poster ? getImageUrl(movieData.poster) : null,
               backdrop: movieData.backdrop ? getImageUrl(movieData.backdrop) : null,
             };
@@ -1502,9 +1499,10 @@ crew: Array.isArray(data?.data?.[0]?.crewMembers)
     publishedAt: data.publishedAt,
   };
 };
+
 export const moviesAPI = {
   // Get all movies
-  getAllLight: async (params = {}) => {
+ getAllLight: async (params = {}) => {
     let finalSort = params.sort || 'releaseDate:desc';
   
     const queryObj = {
@@ -1513,7 +1511,7 @@ export const moviesAPI = {
         pageSize: params.pageSize || 12,
       },
       sort: finalSort,
-      // ✅ SIRF POSTER POPULATE KARO - Baaki kuch nahi chahiye
+      //  SIRF POSTER POPULATE KARO - Baaki kuch nahi chahiye
       populate: ['poster','category'],
       filters: {
         language: { $eq: "hi" },
@@ -1531,12 +1529,12 @@ if (params.filters?.trending) {
       queryObj.filters.title = { $containsi: params.search.trim() };
     }
   
-    // ✅ CATEGORY filter
+    //  CATEGORY filter
     if (params.category && params.category !== 'all') {
       queryObj.filters.category = { slug: { $eq: params.category } };
     }
   
-    // ✅ GENRE filter
+    //  GENRE filter
     if (params.genre && params.genre !== 'All' && params.genre !== 'all') {
       queryObj.filters.genres = { name: { $eq: params.genre } };
     }
@@ -1648,7 +1646,7 @@ getCompleteMovieDetails: async (slug) => {
       sort: finalSort,
       populate: ['genres', 'poster', 'backdrop', 'boxOffice', 'languages', 'age_rating', 'rating', 'release_year', 'category'],
       filters: {
-        // ✅ FORCE ENGLISH LANGUAGE FILTER
+        //  FORCE ENGLISH LANGUAGE FILTER
         language: { $eq: "hi" }
       }
     };
@@ -1662,12 +1660,12 @@ getCompleteMovieDetails: async (slug) => {
       q.append("filters[$and][1][$or][2][slug][$containsi]", params.search);
     }
   
-    // ✅ RELEASE TYPE filter
+    //  RELEASE TYPE filter
     if (params.releaseType) {
       queryObj.filters.releaseType = { $eq: params.releaseType };
     }
   
-    // ✅ ADDITIONAL FILTERS
+    //  ADDITIONAL FILTERS
     if (params.filters) {
       if (params.filters.genre && params.filters.genre !== "All") {
         queryObj.filters.genres = { name: { $containsi: params.filters.genre } };
@@ -1683,12 +1681,12 @@ getCompleteMovieDetails: async (slug) => {
       }
     }
   
-    // ✅ CATEGORY filter only (INDUSTRY logic REMOVED)
+    //  CATEGORY filter only (INDUSTRY logic REMOVED)
     if (params.category && params.category !== 'all') {
       queryObj.filters.category = { slug: { $eq: params.category } };
     }
   
-    // ✅ GENRE filter (Specific)
+    //  GENRE filter (Specific)
     if (params.genre && params.genre !== 'All' && params.genre !== 'all') {
       queryObj.filters.genres = { ...queryObj.filters.genres, name: { $eq: params.genre } };
     }
@@ -1707,7 +1705,7 @@ getCompleteMovieDetails: async (slug) => {
     }
   },
   
-  // ✅ SIMPLE SEARCH METHOD - सबसे सुरक्षित और तेज़
+  //  SIMPLE SEARCH METHOD - सबसे सुरक्षित और तेज़
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8, category } = options;
@@ -1752,7 +1750,7 @@ getCompleteMovieDetails: async (slug) => {
     }
   },
 
-  // ✅ NEW: Get movies by movieType
+  //  NEW: Get movies by movieType
   getByMovieType: async (movieType, params = {}) => {
     try {
       const queryObj = {
@@ -1797,10 +1795,10 @@ getCompleteMovieDetails: async (slug) => {
          'crewMembers.photo',
          'languages',
          'articles.hero_image',
-         'similarMovies',  // ✅ Add this
-         'similarMovies.poster',  // ✅ Add this for poster
-         'similarMovies.backdrop',  // ✅ Optional
-         'similarMovies.category',   // ✅ ADD THIS
+         'similarMovies',  //  Add this
+         'similarMovies.poster',  //  Add this for poster
+         'similarMovies.backdrop',  //  Optional
+         'similarMovies.category',   //  ADD THIS
          'award',
          'where_to_watch',
          'cast.celebrities_profile.Avatar'
@@ -1955,7 +1953,7 @@ getBySlugWithArticles: async (slug) => {
 
 export const movieReviewsAPI = {
 
-  // ✅ Create review
+  //  Create review
   create: async (movieId, review) => {
     // Note: We bypass token in the interceptor for this endpoint
     const res = await apiClient.post('/movie-reviews', {
@@ -1971,7 +1969,7 @@ export const movieReviewsAPI = {
     return res.data;
   },
 
-  // ✅ Get reviews of a movie
+  //  Get reviews of a movie
   getByMovie: async (movieId) => {
     const query = qs.stringify({
       filters: {
@@ -1984,7 +1982,7 @@ export const movieReviewsAPI = {
     return res.data?.data || [];
   },
 
-  // ✅ Delete review
+  //  Delete review
   delete: async (reviewDocumentId) => {
     try {
       if (!reviewDocumentId) {
@@ -1999,7 +1997,7 @@ export const movieReviewsAPI = {
   }
 };
 
-// ✅ GENRE NORMALIZER
+//  GENRE NORMALIZER
 export const normalizeGenre = (genre) => {
   if (!genre) return null;
   const data = genre.attributes || genre;
@@ -2010,11 +2008,11 @@ export const normalizeGenre = (genre) => {
   };
 };
 
-// ✅ GENRE API
+//  GENRE API
 export const genresAPI = {
   getAll: async () => {
     const q = new URLSearchParams({
-      'pagination[pageSize]': 100, // ✅ VERY IMPORTANT
+      'pagination[pageSize]': 100, //  VERY IMPORTANT
       sort: 'name:asc',
     });
     const res = await apiClient.get(`/genres?${q.toString()}`);
@@ -2030,8 +2028,8 @@ export const normalizeTag = (tag) => {
   
   return {
     id: tag.id,
-    name: data.name || tag.name,  // ✅ name सही से लें
-    slug: data.slug || tag.slug,  // ✅ slug सही से लें
+    name: data.name || tag.name,  //  name सही से लें
+    slug: data.slug || tag.slug,  //  slug सही से लें
   };
 };
 export const tagsAPI = {
@@ -2107,14 +2105,14 @@ export const normalizeGallery = (gallery) => {
     topSearchRank: data.topSearchRank || 0,
     updatedAt: data.updatedAt,
     publishedAt: data.publishedAt,
-language: data.language, // ✅ language field भी normalize करें
+language: data.language, //  language field भी normalize करें
     fashionCategory: data.fashionCategory || data.category || "PHOTOSHOOTS",
     celebrity_name: data.celebrity_name || data.celebrity || data.artist || "",
     event: data.event || data.Event || data.event_name || data.eventName || "",
     location: data.location || data.Location || data.place || data.Place || "",
     event_date: data.event_date || data.eventDate || data.date || data.Date || "",
     
-    // ✅ FIXED FOR YOUR FLAT API STRUCTURE
+    //  FIXED FOR YOUR FLAT API STRUCTURE
     image: data.image ? normalizeMedia(data.image) : null,
  categories: Array.isArray(data.categories)
       ? data.categories.map((cat) => ({
@@ -2123,7 +2121,7 @@ language: data.language, // ✅ language field भी normalize करें
         slug: cat.slug,
       }))
       : [],
-    // ✅ PHOTOS ARRAY SAFE
+    //  PHOTOS ARRAY SAFE
     photos:
       data.photos?.map((p) => ({
         id: p.id,
@@ -2134,17 +2132,17 @@ language: data.language, // ✅ language field भी normalize करें
   };
 };
 export const galleriesAPI = {
-  // ✅ GET ALL GALLERIES (ONLY HINDI)
+  //  GET ALL GALLERIES (ONLY HINDI)
   getAll: async (params = {}) => {
     try {
       const q = new URLSearchParams();
       
-      // 1. ✅ SORT BY CREATED AT (Latest First)
+      // 1.  SORT BY CREATED AT (Latest First)
       // Agar aap chahte hain ki latest publish hui galleries upar aayein toh 'publishedAt:desc' rehne dein
       // Lekin 'createdAt:desc' sabse accurate "Latest First" result deta hai.
       q.append('sort', 'createdAt:desc'); 
       
-      // ✅ FORCE ENGLISH LANGUAGE FILTER
+      //  FORCE ENGLISH LANGUAGE FILTER
       q.append("filters[language][$eq]", "hi");
       
       if (params.language) {
@@ -2159,7 +2157,7 @@ export const galleriesAPI = {
         q.append('filters[title][$containsi]', params.search.trim());
       }
 
-      // ✅ POPULATE
+      //  POPULATE
       q.append('populate[categories]', 'true');
       q.append('populate[photos][populate]', 'image');
       q.append('populate', 'image');
@@ -2173,7 +2171,7 @@ export const galleriesAPI = {
       console.error("Error fetching galleries:", error);
       return { galleries: [] };
     }},
-  // ✅ GET BY SLUG (ONLY HINDI)
+  //  GET BY SLUG (ONLY HINDI)
   getBySlug: async (slug) => {
     try {
       const res = await apiClient.get(
@@ -2188,7 +2186,7 @@ export const galleriesAPI = {
     }
   },
 
-  // ✅ RELATED GALLERIES (ONLY HINDI)
+  //  RELATED GALLERIES (ONLY HINDI)
   getRelated: async (slug, limit = 6) => {
     try {
       const res = await apiClient.get(
@@ -2207,14 +2205,14 @@ export const normalizeVideo = (video) => {
 
   const data = video.attributes || video;
   const videoId = data.video_id;
-    // ✅ Convert float to integer
+    //  Convert float to integer
  
 return{
   id: data.id || null,
     documentId: data.documentId || null,
     title: data.title || '',
     videoId: videoId || null,
-    embedUrl: videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null, // ✅ Use nocookie
+    embedUrl: videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null, //  Use nocookie
     thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null,
     duration: data.duration || null,
     description: data.description|| '',
@@ -2264,15 +2262,15 @@ export const videosAPI = {
   q.append("populate", "*");
   q.append("filters[language][$eq]", "hi");
   
-  /* ✅ SORT — LATEST FIRST */
+  /*  SORT — LATEST FIRST */
   q.append("sort", params.sort || "publishedAt:desc");
 
-  /* ✅ LANGUAGE FILTER */
+  /*  LANGUAGE FILTER */
   if (params.language) {
     q.append("filters[language][$eq]", params.language);
   }
 
-  /* ✅ FILTERS (STRAPI v4 SAFE) */
+  /*  FILTERS (STRAPI v4 SAFE) */
   if (params.filters) {
     Object.entries(params.filters).forEach(([key, value]) => {
       if (typeof value === "object") {
@@ -2294,7 +2292,7 @@ export const videosAPI = {
     q.append("filters[$or][1][slug][$containsi]", searchTerm);
   }
 
-  /* ✅ VIDEO TYPE FILTER */
+  /*  VIDEO TYPE FILTER */
   if (params.videotype && params.videotype !== "all") {
     q.append("filters[videotype][$eq]", params.videotype);
   }
@@ -2311,7 +2309,7 @@ export const videosAPI = {
   }
 },
 
-/* ✅ SIMPLE SEARCH METHOD - FIXED FOR VIDEOS */
+/*  SIMPLE SEARCH METHOD - FIXED FOR VIDEOS */
 simpleSearch: async (searchTerm, options = {}) => {
   try {
     const { page = 1, pageSize = 8, videotype } = options;
@@ -2331,7 +2329,7 @@ simpleSearch: async (searchTerm, options = {}) => {
       q.append("filters[$or][1][slug][$containsi]", term);
     }
 
-    /* ✅ VIDEO TYPE FILTER */
+    /*  VIDEO TYPE FILTER */
     if (videotype && videotype !== 'all') {
       q.append("filters[videotype][$eq]", videotype);
     }
@@ -2355,7 +2353,7 @@ getWithArticles: async (slug) => {
         related_articles: {
           populate: '*',  // This deeply populates all relations including hero_image
           filters: {
-            moderation_status: { $eq: 'published' }  // ✅ Only fetch published articles
+            moderation_status: { $eq: 'published' }  //  Only fetch published articles
           }
         }
       }
@@ -2369,7 +2367,7 @@ getWithArticles: async (slug) => {
     const videoData = video.attributes || video;
     let relatedArticles = videoData.related_articles || [];
     
-    // ✅ Additional client-side filter to ensure only published articles
+    //  Additional client-side filter to ensure only published articles
     const publishedArticles = relatedArticles.filter(article => {
       const articleData = article.attributes || article;
       return articleData.moderation_status === 'published';
@@ -2445,190 +2443,189 @@ getWithMovies: async (slug) => {
     return item ? normalizeMovie(item) : null;
 },
 };
-
 export const normalizeUser = (user) => {
   if (!user) return null;
 
-  // Strapi v5 Users are FLAT (no .attributes wrapper like collection types)
+  // Strapi v5 Users are FLAT (no .attributes wrapper)
   const data = user.attributes || user;
 
   let avatarRaw = null;
   if (data.avatar) {
-    if (data.avatar.data?.attributes) {
-      // Nested v4 format
-      avatarRaw = data.avatar.data.attributes;
-    } else if (data.avatar.attributes) {
-      // Direct populate format
-      avatarRaw = data.avatar.attributes;
-    } else {
-      // Flat v5 format (your sample data)
-      avatarRaw = data.avatar;
-    }
+    if (data.avatar.data?.attributes) avatarRaw = data.avatar.data.attributes;
+    else if (data.avatar.attributes)  avatarRaw = data.avatar.attributes;
+    else                               avatarRaw = data.avatar;
   }
 
-  return {
-    id: user.id || user.documentId,
-    documentId: user.documentId || null,
-    name: (() => {
-      const raw = data.name || data.username || 'Anonymous';
-      const lower = raw.toLowerCase().replace(/\s/g, "");
-      return (lower === "entertainindiateam" || lower === "entertainindiaofficial")
-        ? "EntertainIndia Team"
-        : raw;
-    })(),
-    username: (() => {
-      const raw = data.username || data.name || '';
-      const lower = raw.toLowerCase().replace(/\s/g, "");
-      const slugify = (str) => str?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      return (lower === "entertainindiateam" || lower === "entertainindiaofficial")
-        ? "entertainindiateam"
-        : slugify(raw);
-    })(),
-    bio: data.bio || null,
-    confirmed: data.confirmed || false,
-    blocked: data.blocked || false,
-    provider: data.provider || 'local',
+  const isTeamAccount = (raw = '') => {
+    const lower = raw.toLowerCase().replace(/\s/g, '');
+    return lower === 'entertainindiateam' || lower === 'entertainindiaofficial';
+  };
 
-    // Dates
-    createdAt: data.createdAt || user.createdAt,
-    updatedAt: data.updatedAt || user.updatedAt,
+  const slugify = (str) =>
+    str?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
+
+  const rawName = data.name || data.username || 'Anonymous';
+  const rawUsername = data.username || data.name || '';
+
+  return {
+    id:         user.id || user.documentId,
+    documentId: user.documentId || null,
+
+    name:     isTeamAccount(rawName) ? 'EntertainIndia Team' : rawName,
+    username: isTeamAccount(rawUsername) ? 'entertainindiateam' : slugify(rawUsername),
+
+    // Hindi fields (from schema)
+    username_hindi: data.username_hindi || null,
+    bio_hindi:      data.bio_hindi || null,
+    bio:            data.bio || null,
+
+    confirmed:  data.confirmed || false,
+    blocked:    data.blocked || false,
+    provider:   data.provider || 'local',
+
+    createdAt:   data.createdAt  || user.createdAt,
+    updatedAt:   data.updatedAt  || user.updatedAt,
     publishedAt: data.publishedAt || user.publishedAt,
 
-    // Role - Map "Writer" to "Author" as per user request
     role: (() => {
       const r = data.role?.name || data.role || 'Author';
       return r.toLowerCase() === 'writer' ? 'Author' : r;
     })(),
 
-    // Avatar (normalized media)
-    avatar: avatarRaw ? normalizeMedia({ attributes: avatarRaw, id: avatarRaw.id }) : null,
+    avatar: avatarRaw
+      ? normalizeMedia({ attributes: avatarRaw, id: avatarRaw.id })
+      : null,
 
-    // Articles Stats
-    articlesCount: Array.isArray(data.articles) ? data.articles.length : (data.articles?.data?.length || 0),
-    totalViews: (Array.isArray(data.articles) ? data.articles : (data.articles?.data || [])).reduce((sum, art) => {
-      const artData = art.attributes || art;
-      return sum + (artData.views || 0);
-    }, 0),
+    profileImage: avatarRaw
+      ? normalizeMedia({ attributes: avatarRaw }).url
+      : null,
 
-    // Social links (if you add them later)
+    // ─── Stats ────────────────────────────────────────────────────────────
+    // Articles directly user.articles se aate hain (populate kiye hain)
+    // Filtering: sirf published + moderation_status=published + language=hi
+    ...computeUserStats(data.articles),
+
     socialLinks: data.social_links || null,
-
-    // Full profile picture URL (convenience)
-    profileImage: avatarRaw ? normalizeMedia({ attributes: avatarRaw }).url : null,
   };
 };
 
+// ─── Stats helper ──────────────────────────────────────────────────────────
+// articles = flat array (Strapi v5) ya {data:[]} (v4)
+function computeUserStats(articles) {
+  // Normalize to flat array
+  const list = Array.isArray(articles)
+    ? articles
+    : Array.isArray(articles?.data)
+    ? articles.data.map(({ id, attributes }) => ({ id, ...attributes }))
+    : [];
+
+  if (list.length === 0) return { articlesCount: 0, totalViews: 0 };
+
+  // Sirf hindi + published + moderated articles count karein
+  const filtered = list.filter(a =>
+    a.publishedAt != null &&
+    a.moderation_status === 'published' &&
+    a.language === 'hi'
+  );
+
+  const totalViews = filtered.reduce((sum, a) => sum + (Number(a.views) || 0), 0);
+
+  return {
+    articlesCount: filtered.length,
+    totalViews,
+  };
+}
+
+// ─── usersAPI ──────────────────────────────────────────────────────────────
 export const usersAPI = {
-  // ✅ getAll - Matches your API perfectly
+
+  // getAll: avatar + role + articles stats (views sorting ke liye)
   getAll: async (params = {}) => {
-    // 1. Fetch Users
     const query = qs.stringify({
       populate: {
         avatar: true,
-        role: true
+        role:   true,
+        // Sirf 4 fields — full article nahi, sirf stats ke liye
+        articles: {
+          fields: ['views', 'publishedAt', 'moderation_status', 'language'],
+        },
       },
-      publicationState: 'live',
       pagination: { limit: 100 },
-      filters: params.username ? { username: { $eq: params.username } } : undefined,
+      filters: params.username
+        ? { username: { $eq: params.username } }
+        : undefined,
     }, { encodeValuesOnly: true });
 
     try {
-      const usersRes = await apiClient.get(`/users?${query}`);
-      const rawUsers = Array.isArray(usersRes?.data) ? usersRes.data : (usersRes?.data?.data || []);
+      const res = await apiClient.get(`/users?${query}`);
+      const rawUsers = Array.isArray(res?.data)
+        ? res.data
+        : (res?.data?.data || []);
 
-      // 2. Fetch all recent articles to aggregate stats
-      // Since Strapi /users doesn't populate articles in bulk, we fetch them separately
-      const articlesRes = await articlesAPI.getAll({ pageSize: 500 });
-      const allArticles = articlesRes.articles || [];
-
-      // Create a map of stats per author username
-      const statsMap = {};
-      allArticles.forEach(art => {
-        // Articles API uses "Authors" field (normalized by normalizeArticle)
-        const authors = art.Authors || art.author;
-        const authorList = Array.isArray(authors) ? authors : (authors ? [authors] : []);
-
-        authorList.forEach(a => {
-          const uname = a.username;
-          if (uname) {
-            if (!statsMap[uname]) statsMap[uname] = { count: 0, views: 0 };
-            statsMap[uname].count += 1;
-            statsMap[uname].views += (Number(art.views) || 0);
-          }
-        });
-
-        // If no authors found, attribute to the team
-        if (authorList.length === 0) {
-          const teamUname = "entertainindiateam";
-          if (!statsMap[teamUname]) statsMap[teamUname] = { count: 0, views: 0 };
-          statsMap[teamUname].count += 1;
-          statsMap[teamUname].views += (Number(art.views) || 0);
-        }
-      });
-
-      // 3. Normalize users and merge stats
-      const normalizedUsers = rawUsers.map(u => {
-        const normalized = normalizeUser(u);
-        const stats = statsMap[normalized.username];
-        if (stats) {
-          normalized.articlesCount = stats.count;
-          normalized.totalViews = stats.views;
-        }
-        return normalized;
-      });
-
-     
+      const users = rawUsers.map(normalizeUser);
 
       return {
-        users: normalizedUsers,
-        pagination: usersRes?.data?.meta?.pagination || usersRes?.meta?.pagination || {},
+        users,
+        pagination: res?.data?.meta?.pagination || res?.meta?.pagination || {},
       };
     } catch (error) {
-      console.error("[usersAPI.getAll] Error:", error.message);
+      console.error('[usersAPI.getAll] Error:', error.message);
       return { users: [], pagination: {} };
     }
   },
 
-  // ✅ getById - Uses /users/{id} route (WORKS!)
+  // getById: avatar + articles (for SingleUser page stats)
   getById: async (id) => {
+    if (!id) return null;
     try {
-      if (!id) return null;
-      const res = await apiClient.get(`/users/${id}?populate=avatar`);
-
-      // ✅ Handle Strapi single user response
-      const userData = res?.data || null;
-      return userData ? normalizeUser(userData) : null;
+      const res = await apiClient.get(
+        `/users/${id}?populate[avatar]=true&populate[articles][fields][0]=views&populate[articles][fields][1]=publishedAt&populate[articles][fields][2]=moderation_status&populate[articles][fields][3]=language`
+      );
+      return res?.data ? normalizeUser(res.data) : null;
     } catch (error) {
+      console.error('[usersAPI.getById] Error:', error.message);
       return null;
     }
   },
 
-  // ✅ getByUsername - Filter by username
+  // getByUsername: username se dhundo, stats ke liye articles bhi populate
   getByUsername: async (username) => {
+    if (!username) return null;
     try {
-      if (!username) return null;
+      const query = qs.stringify({
+        filters:  { username: { $eq: username } },
+        populate: {
+          avatar:   true,
+          articles: {
+            fields: ['views', 'publishedAt', 'moderation_status', 'language'],
+          },
+        },
+      }, { encodeValuesOnly: true });
 
-      // Use getAll to leverage its robust population and stats aggregation logic
-      const res = await usersAPI.getAll({ username });
+      const res = await apiClient.get(`/users?${query}`);
+      const list = Array.isArray(res?.data) ? res.data : [];
 
-      // If exact username search fails and it's for the team, try a broader search
-      if ((!res.users || res.users.length === 0) && username === "entertainindiateam") {
-        // This is a bit recursive but since we're calling getAll with no params it will fetch everything
-        const allUsers = await usersAPI.getAll();
-        return allUsers.users?.find(u => {
-          const lower = u.name.toLowerCase().replace(/\s/g, "");
-          return lower === "entertainindiateam" || lower === "entertainindiaofficial";
-        }) || null;
+      if (list.length > 0) return normalizeUser(list[0]);
+
+      // Team account fallback
+      if (username === 'entertainindiateam') {
+        const allRes = await apiClient.get(
+          `/users?populate[avatar]=true&pagination[limit]=100`
+        );
+        const all = Array.isArray(allRes?.data) ? allRes.data : [];
+        const team = all.find(u => {
+          const lower = (u.username || '').toLowerCase().replace(/\s/g, '');
+          return lower === 'entertainindiateam' || lower === 'entertainindiaofficial';
+        });
+        return team ? normalizeUser(team) : null;
       }
 
-      return res.users?.[0] || null;
+      return null;
     } catch (error) {
+      console.error('[usersAPI.getByUsername] Error:', error.message);
       return null;
     }
   },
-  
-  
-  
 };
 
 export const normalizeWebStory = (story) => {
@@ -2664,8 +2661,8 @@ export const normalizeWebStory = (story) => {
     publishedAt: data.publishedAt,
     trandingRank: data.trandingRank,
      trending:data.trending,
-language: data.language, // ✅ language field भी normalize करें
-    // ✅ THUMBNAIL
+language: data.language, //  language field भी normalize करें
+    //  THUMBNAIL
     thumbnail: thumbnailUrl
       ? {
         url: thumbnailUrl.startsWith("http")
@@ -2674,7 +2671,7 @@ language: data.language, // ✅ language field भी normalize करें
       }
       : null,
 
-    // ✅ SLIDES (STRAPI v4 SAFE)
+    //  SLIDES (STRAPI v4 SAFE)
     slides:
       data.slides?.map((slide) => {
         // Handle slide image - check multiple possible structures
@@ -2705,7 +2702,7 @@ language: data.language, // ✅ language field भी normalize करें
         };
       }) || [],
 
-    // ✅ RELATED WEB STORIES
+    //  RELATED WEB STORIES
     relatedStories:
       (data.related_stories?.data || data.related_stories || [])
         .map((item) => {
@@ -2736,7 +2733,7 @@ export const webStoriesAPI = {
   } = {}) {
     try { 
        q.append('filters[language][$eq]', "hi");
-       /* ✅ LANGUAGE FILTER - यह सबसे important है */
+       /*  LANGUAGE FILTER - यह सबसे important है */
     if (params.language) {
       q.append("filters[language][$eq]", params.language);
     }
@@ -2750,7 +2747,7 @@ export const webStoriesAPI = {
           },
 
           filters: {
-            // ✅ YE ADD KARNA ZAROORI HAI
+            //  YE ADD KARNA ZAROORI HAI
             moderation_status: { $eq: "published" },
             publishedAt: { $notNull: true }
           },
@@ -2789,7 +2786,7 @@ export const webStoriesAPI = {
           slides: { populate: "*" },
           related_stories: {
             populate: ["thumbnail"],
-            filters: { moderation_status: { $eq: "published" } } // ✅ Related bhi published hon
+            filters: { moderation_status: { $eq: "published" } } //  Related bhi published hon
 
           },
 
@@ -2913,36 +2910,87 @@ export const webStoriesAPI = {
 
 export const normalizeComment = (comment) => {
   if (!comment) return null;
+  
+  // Strapi v4 aur v5 dono ke data structure ko handle karega
   const data = comment.attributes || comment;
+  const userData = data.user?.data?.attributes || data.user?.attributes || data.user || {};
+  
   return {
     id: comment.id,
-    userName: data.user_name,
+    documentId: comment.documentId || data.documentId,
+    userName: data.user_name || userData.username || "Anonymous", // aapke Strapi field ke hisaab se
     message: data.message,
     moderationStatus: data.moderation_status,
     createdAt: data.createdAt,
+    user: data.user ? {
+      id: data.user?.data?.id || data.user?.id || userData.id,
+      username: userData.username || userData.name,
+      email: userData.email,
+      avatar: userData.avatar
+    } : null
   };
 };
 
 export const commentsAPI = {
-  getByArticle: (articleId) => {
-    return apiClient
-      .get(
-        // 👈 articleId ko dynamic kiya ($eq]=${articleId})
-        `/comments?filters[article][id][$eq]=${articleId}&filters[moderation_status][$eq]=approved&populate=*`
-      )
-      .then((res) => res.data.data.map(normalizeComment));
+  
+  getByArticle: async (articleId) => {
+    try {
+      const query = qs.stringify({
+        filters: {
+          // ✅ ROBUST FILTER: ID ya DocumentId dono ko support karega
+          $or: [
+            { article: { documentId: { $eq: articleId } } },
+            { article: { id: { $eq: articleId } } }
+          ]
+        },
+        // 🔥 FIX 1: Drafts aur Published dono comments fetch karega!
+        publicationState: 'preview', 
+        populate: ['user', 'user.avatar'], 
+        sort: ['createdAt:desc']
+      }, { encodeValuesOnly: true });
+
+      // 🔥 FIX 2: &t=${Date.now()} lagane se browser hamesha naya data layega, purana cache use nahi karega!
+      const res = await apiClient.get(`/comments?${query}&t=${Date.now()}`);
+      
+      return (res.data?.data || []).map(normalizeComment);
+    } catch (error) {
+      console.error("Comments fetch error:", error);
+      return [];
+    }
   },
 
-  create: (commentData) => {
-    // commentData ab upar wala payload receive karega
-    return apiClient
-      .post('/comments', { data: commentData })
-      .then((res) => normalizeComment(res.data.data));
+  create: async (commentData) => {
+    try {
+      const res = await apiClient.post('/comments', { data: commentData });
+      return normalizeComment(res.data.data);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  update: async (commentDocId, updatedData) => {
+    try {
+      const res = await apiClient.put(`/comments/${commentDocId}`, { data: updatedData });
+      return normalizeComment(res.data.data);
+    } catch (error) {
+      console.error("Comment update error:", error);
+      throw error;
+    }
+  },
+
+  delete: async (commentDocId) => {
+    try {
+      const res = await apiClient.delete(`/comments/${commentDocId}`);
+      return res.data;
+    } catch (error) {
+      console.error("Comment delete error:", error);
+      throw error;
+    }
   },
 };
 
 export const normalizeProfession = (professions) => {
-  // ✅ FIX: Check professions parameter, not genres
+  //  FIX: Check professions parameter, not genres
   if (!professions || !Array.isArray(professions)) return [];
 
   return professions.map((profession) => {
@@ -2952,8 +3000,8 @@ export const normalizeProfession = (professions) => {
     
     return {
       id: profession.id || data.id,
-      name: hindiName, // ✅ हिंदी नाम
-      originalName: originalName, // ✅ मूल नाम (अगर जरूरत हो)
+      name: hindiName, //  हिंदी नाम
+      originalName: originalName, //  मूल नाम (अगर जरूरत हो)
       slug: data.slug || originalName?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
     };
   });
@@ -3124,8 +3172,8 @@ export const normalizeCelebrity = (celebrity) => {
     total_webseries: data.total_webseries || 0,
     language: data.language,
      trending:data.trending,
-    // ✅ PROFESSIONS
- // ✅ PROFESSIONS - WITH HINDI TRANSLATION
+    //  PROFESSIONS
+ //  PROFESSIONS - WITH HINDI TRANSLATION
     professions: Array.isArray(data.professions)
       ? data.professions.map((p) => {
           const prof = p.attributes ?? p;
@@ -3135,8 +3183,8 @@ export const normalizeCelebrity = (celebrity) => {
           return {
             id: p.id,
             documentId: prof.documentId,
-            name: hindiName, // ✅ हिंदी नाम
-            originalName: originalName, // ✅ मूल नाम (अगर जरूरत हो)
+            name: hindiName, //  हिंदी नाम
+            originalName: originalName, //  मूल नाम (अगर जरूरत हो)
             slug: originalName
               .toLowerCase()
               .replace(/\s+/g, '-')
@@ -3145,7 +3193,7 @@ export const normalizeCelebrity = (celebrity) => {
         })
       : [],
     
-    // ✅ AVATAR
+    //  AVATAR
    avatar: data.Avatar ? {
       id: data.Avatar.id,
       url: data.Avatar.url || data.Avatar.formats?.large?.url || null,
@@ -3176,7 +3224,7 @@ export const normalizeCelebrity = (celebrity) => {
       }))
       : [],
 
-    // ✅ MOVIES
+    //  MOVIES
     movies: Array.isArray(data.movies)
       ? data.movies.map((movie) => ({
         id: movie.id,
@@ -3269,7 +3317,7 @@ export const normalizeCelebrity = (celebrity) => {
     personalLife: data.personalLife || null,
     familyDetails: data.familyDetails || null,
 
-   // ✅ FIXED GALLERIES - Added slug extraction
+   //  FIXED GALLERIES - Added slug extraction
       galleries: Array.isArray(data.galleries)
         ? data.galleries.map((g) => {
             // Get gallery data (handle both Strapi v4 and v5)
@@ -3320,13 +3368,13 @@ export const normalizeCelebrity = (celebrity) => {
             return {
               id: g.id,
               title: galleryData.title || '',
-              slug: gallerySlug, // ✅ NOW SLUG WILL BE INCLUDED
+              slug: gallerySlug, //  NOW SLUG WILL BE INCLUDED
               photos: photos,
             };
           })
         : [],
     
-    // ✅ Industry
+    //  Industry
     industry: Array.isArray(data.industry)
       ? data.industry.map((cat) => ({
         id: cat.id,
@@ -3356,7 +3404,7 @@ export const celebritiesAPI = {
       if (params.search && params.search.trim().length > 0) {
         const searchTerm = params.search.trim();
         
-        // ✅ सही फील्ड नाम - अपने Strapi schema के अनुसार adjust करें
+        //  सही फील्ड नाम - अपने Strapi schema के अनुसार adjust करें
         q.append('filters[$or][0][name][$containsi]', searchTerm);
         q.append('filters[$or][1][Slug][$containsi]', searchTerm);
         // अगर Bio फील्ड है तो use करें, नहीं तो हटा दें
@@ -3369,7 +3417,7 @@ export const celebritiesAPI = {
 if (params.letter && params.letter !== '') {
   const letterValue = params.letter.toUpperCase();
   
-  // ✅ CORRECT: Use $or for multiple field search
+  //  CORRECT: Use $or for multiple field search
   q.append('filters[$or][0][name][$startsWith]', letterValue);
   q.append('filters[$or][1][Slug][$startsWith]', letterValue);
   
@@ -3580,7 +3628,7 @@ getDetailedProfile: async (slug) => {
     // Populate articles + hero image
     q.set('populate[articles][populate][hero_image][populate]', '*');
 
-    // ✅ Only published articles
+    //  Only published articles
     q.set('populate[articles][filters][moderation_status][$eq]', 'published');
     
     const queryString = q.toString();
@@ -3852,7 +3900,7 @@ export const pollAPI = {
   },
 };
 
-// ✅ NEW: REVIEWS API (For separate movie-reviews collection)
+//  NEW: REVIEWS API (For separate movie-reviews collection)
 export const reviewsAPI = {
   getByMovie: async (movieId) => {
     try {
@@ -3995,15 +4043,15 @@ export const normalizeSong = (song) => {
     language: data.song_language || data.song_Language || '',
     label: data.label || '',
     trandingRank: data.trandingRank || null,
-    Language: data.language, // ✅ language field भी normalize करें
+    Language: data.language, //  language field भी normalize करें
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
     publishedAt: data.publishedAt,
 topSearchRank:data.topSearchRank,
-    // ✅ Thumbnail
+    //  Thumbnail
     thumbnail: data.thumbnail ? normalizeMedia(data.thumbnail) : null,
 
-    // ✅ Categories
+    //  Categories
     categories: Array.isArray(data.categories)
       ? data.categories.map(cat => ({
         id: cat.id,
@@ -4020,7 +4068,7 @@ topSearchRank:data.topSearchRank,
       }))
       : [],
 
-    // ✅ Platforms
+    //  Platforms
     platforms: (() => {
       const platformData = data.Platform || data.platforms || data.platform;
       if (!platformData) return [];
@@ -4046,7 +4094,7 @@ topSearchRank:data.topSearchRank,
 
 
 
-    // ✅ IMPORTANT: Song Artists - Repeatable Component
+    //  IMPORTANT: Song Artists - Repeatable Component
     song_artists: Array.isArray(data.song_artists)
       ? data.song_artists.map((item) => {
         // CASE 1: Profile exists (profile_Notexist = false)
@@ -4082,7 +4130,7 @@ topSearchRank:data.topSearchRank,
       })
       : [],
 
-    // ✅ Helper: Get all artist names as comma-separated string (for display)
+    //  Helper: Get all artist names as comma-separated string (for display)
     artistNames: (() => {
       if (!Array.isArray(data.song_artists)) return '';
 
@@ -4096,7 +4144,7 @@ topSearchRank:data.topSearchRank,
         .join(', ');
     })(),
 
-    // ✅ Helper: Get all clickable artists (for linking)
+    //  Helper: Get all clickable artists (for linking)
     clickableArtists: (() => {
       if (!Array.isArray(data.song_artists)) return [];
 
@@ -4107,7 +4155,7 @@ topSearchRank:data.topSearchRank,
           slug: item.artist_profile.Slug || item.artist_profile.slug,
         }));
     })(),
-    // ✅ Related Songs
+    //  Related Songs
     relatedSongs: Array.isArray(data.relatedSongs)
       ? data.relatedSongs.map(normalizeSong)
       : [],
@@ -4125,7 +4173,7 @@ export const songsAPI = {
                 $eq: categorySlug
               }
             },
-            // ✅ FORCE HINDI LANGUAGE FILTER
+            //  FORCE HINDI LANGUAGE FILTER
             language: { $eq: params.language || "hi" }
           },
           populate: {
@@ -4154,57 +4202,84 @@ export const songsAPI = {
     }
   },
   
-  getAll: async (params = {}) => {
+  // ─── songsAPI.getAll – सिर्फ ज़रूरी फ़ील्ड और संबंध ───
+getAll: async (params = {}) => {
   try {
-    const queryObj = {
-      populate: {
-        thumbnail: true,
-        categories: true,
-        music_genres: true,
-        Platform: true,              // if you need platform info
-        song_artists: true,
-        song_singer: true,
-        song_language: true,
-      },
-      filters: {},
-      sort: params.sort || ["createdAt:desc"],
-      pagination: {
-        page: params.page || 1,
-        pageSize: params.pageSize || 12,
-      },
+    const {
+      category,
+      page = 1,
+      pageSize = 12,
+      sort = ["createdAt:desc"],
+      language = "hi",
+      search,
+    } = params;
+
+    // ── 1. फ़िल्टर बिल्ड करें ──
+    const filters = {
+      language: { $eq: language },
     };
 
-    // Language filter (default to Hindi, but allow 'all' to skip)
-    if (params.language && params.language !== 'all') {
-      queryObj.filters.language = { $eq: params.language };
-    } else if (!params.language) {
-      queryObj.filters.language = { $eq: "hi" }; // default
-    }
-
-    // Category filter – FIXED: add to filters, not to undefined 'q'
-    if (params.category && params.category !== "all") {
-      queryObj.filters.categories = {
-        slug: { $containsi: params.category }
+    // कैटेगरी फ़िल्टर
+    if (category && category !== "all") {
+      filters.categories = {
+        slug: { $eq: category },
       };
     }
 
-    // Search filter
-    if (params.search && params.search.trim().length > 1) {
-      const searchTerm = params.search.trim();
-      queryObj.filters.$or = [
-        { title: { $containsi: searchTerm } },
-        { slug: { $containsi: searchTerm } },
-        { album: { $containsi: searchTerm } },
-        { body: { $containsi: searchTerm } },
-        { song_artists: { artist_name: { $containsi: searchTerm } } }
+    // सर्च फ़िल्टर (अगर मौजूद हो)
+    if (search && search.trim().length > 1) {
+      filters.$or = [
+        { title: { $containsi: search.trim() } },
+        { album: { $containsi: search.trim() } },
+        { song_artists: { artist_name: { $containsi: search.trim() } } },
       ];
     }
 
+    // ── 2. क्वेरी ऑब्जेक्ट – **केवल ज़रूरी फ़ील्ड** ──
+    const queryObj = {
+      filters,
+      // ✅ केवल यही फ़ील्ड चाहिए (UI में दिखने वाले)
+      fields: [
+        "id", "documentId", "title", "slug", "trending",
+        "duration", "album", "releaseDate", "createdAt",
+        "updatedAt", "publishedAt"
+      ],
+      // ✅ सिर्फ ज़रूरी संबंध (thumbnail, categories, genres, artists)
+      populate: {
+        thumbnail: {
+          fields: ["url", "formats"]
+        },
+        categories: {
+          fields: ["id", "name", "slug"]
+        },
+        music_genres: {
+          fields: ["id", "name", "slug"]
+        },
+        song_artists: {
+          fields: ["id", "profile_Notexist", "artist_name"],
+          populate: {
+            artist_profile: {
+              fields: ["id", "name", "Slug"]
+            }
+          }
+        }
+      },
+      sort,
+      pagination: {
+        page,
+        pageSize,
+      },
+    };
+
+    // ── 3. स्ट्रिंगिफाई और फेच ──
     const query = qs.stringify(queryObj, { encodeValuesOnly: true });
     const res = await apiClient.get(`/songs?${query}`);
 
+    // ── 4. नॉर्मलाइज़ करें ──
+    const songs = (res.data?.data || []).map(normalizeSong);
+
     return {
-      songs: (res.data?.data || []).map(normalizeSong),
+      songs,
       pagination: res.data?.meta?.pagination || {},
     };
   } catch (error) {
@@ -4213,7 +4288,7 @@ export const songsAPI = {
   }
 },
   
-  // ✅ SIMPLE SEARCH METHOD - FIXED: Use term variable properly
+  //  SIMPLE SEARCH METHOD - FIXED: Use term variable properly
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8, language = "hi" } = options;
@@ -4236,11 +4311,11 @@ export const songsAPI = {
         queryObj.filters.$or = [
           { title: { $containsi: term } },
           { slug: { $containsi: term } },
-          { lead_artist_name: { $containsi: term } }, // ✅ FIXED
+          { lead_artist_name: { $containsi: term } }, //  FIXED
           { album: { $containsi: term } },
           {
             song_artists: {
-              artist_name: { $containsi: term } // ✅ nested artist search
+              artist_name: { $containsi: term } //  nested artist search
             }
           }
         ];
@@ -4259,42 +4334,81 @@ export const songsAPI = {
     }
   },
   
-  getBySlug: async (slug) => {
-    try {
-      const queryObj = {
-        filters: {
-          slug: { $eq: slug },
-          // ✅ FORCE HINDI LANGUAGE FILTER
-          language: { $eq: "hi" }
+
+getBySlug: async (slug, options = {}) => {
+  try {
+    const { includeRelated = true, relatedLimit = 6 } = options;
+
+    // ── 1. Build the query object ──
+    const queryObj = {
+      filters: {
+        slug: { $eq: slug },
+        // Force Hindi – change if needed
+        language: { $eq: "hi" }
+      },
+      // ── Only fetch these fields (reduces bandwidth) ──
+      fields: [
+        "id", "documentId", "title", "slug", "body", "trending",
+        "metadescription", "releaseDate", "duration", "album",
+        "song_language","createdAt", "updatedAt", "publishedAt"
+        
+      ],
+      populate: {
+        // ── Thumbnail: only url + formats (no metadata) ──
+        thumbnail: {
+          fields: ["url", "formats"]
         },
-        populate: {
-          thumbnail: true,
-          categories: true,
-          music_genres: true,
-          Platform: true,
-          song_artists: {
-            populate: {
-              artist_profile: {
-                populate: "*"
-              }
+        // ── Categories: only id, name, slug ──
+        categories: {
+          fields: ["id", "name", "slug"]
+        },
+        // ── Genres: only id, name, slug ──
+        music_genres: {
+          fields: ["id", "name", "slug"]
+        },
+        // ── Platforms: only name, url, icon ──
+        Platform: {
+          fields: ["name", "url", "icon"]
+        },
+        // ── Song Artists: with profile (only needed fields) ──
+        song_artists: {
+          populate: {
+            artist_profile: {
+              fields: ["id", "name", "Slug", "Avatar"] // Avatar.url will be in the response
             }
           }
-        },
+        }
+      }
+    };
+
+    // ── 2. Optionally include related songs ──
+    if (includeRelated) {
+      queryObj.populate.relatedSongs = {
+        limit: relatedLimit,
+        fields: ["id", "title", "slug"],
+        populate: {
+          thumbnail: {
+            fields: ["url", "formats"]
+          }
+        }
       };
-      
-      const query = qs.stringify(queryObj, { encodeValuesOnly: true });
-
-      const res = await apiClient.get(`/songs?${query}`);
-
-      const song = res.data?.data?.[0];
-      if (!song) return null;
-
-      return normalizeSong(song);
-    } catch (error) {
-      console.error("Error fetching song by slug:", error);
-      return null;
     }
-  },
+
+    // ── 3. Stringify and fetch ──
+    const query = qs.stringify(queryObj, { encodeValuesOnly: true });
+    const res = await apiClient.get(`/songs?${query}`);
+
+    const song = res.data?.data?.[0];
+    if (!song) return null;
+
+    // ── 4. Normalize using your existing function ──
+    // (which already handles relatedSongs if present)
+    return normalizeSong(song);
+  } catch (error) {
+    console.error("Error fetching song by slug:", error);
+    return null;
+  }
+},
 
   getTrending: async (limit = 10) => {
     try {
@@ -4303,7 +4417,7 @@ export const songsAPI = {
           music_genres: {
             slug: { $eq: "trending" }
           },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: "hi" }
         },
         populate: {
@@ -4336,7 +4450,7 @@ export const songsAPI = {
             { artist: { $containsi: artistName } },
             { song_artists: { artist_name: { $containsi: artistName } } }
           ],
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: params.language || "hi" }
         },
         sort: ["release_date:desc"],
@@ -4368,7 +4482,7 @@ export const songsAPI = {
           music_genres: {
             slug: { $eq: genreSlug }
           },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: params.language || "hi" }
         },
         populate: {
@@ -4402,7 +4516,7 @@ export const songsAPI = {
       const queryObj = {
         filters: {
           id: { $ne: songId },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: "hi" }
         },
         pagination: {
@@ -4423,7 +4537,7 @@ export const songsAPI = {
     }
   },
 
-  // ✅ SEARCH METHOD - पूरी तरह से फिक्स्ड
+  //  SEARCH METHOD - पूरी तरह से फिक्स्ड
   search: async (searchTerm, params = {}) => {
     try {
       if (!searchTerm || searchTerm.trim().length < 2) {
@@ -4441,7 +4555,7 @@ export const songsAPI = {
             { album: { $containsi: trimmedTerm } },
             { description: { $containsi: trimmedTerm } }
           ],
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: params.language || "hi" }
         },
         pagination: {
@@ -4541,7 +4655,7 @@ const normalizeAwards = (data = []) =>
       industry: getDisplayValue(d.industry),
       year: d.year,
       language:d.language,
-      // ✅ Industry Categories
+      //  Industry Categories
       industryCategories: Array.isArray(d.industry_category)
         ? d.industry_category.map((ind) => {
           const indData = ind.attributes || ind;
@@ -4561,7 +4675,7 @@ const normalizeAwards = (data = []) =>
         alt: d.image?.data?.attributes?.alternativeText || d.image?.alternativeText || d.title,
       } : null,
 
-      // ✅ Award Categories
+      //  Award Categories
       awardCategories: (d.awardCategories || d.award_categories)?.map((cat) => {
         const cd = cat.attributes || cat;
         return {
@@ -4576,7 +4690,7 @@ const normalizeAwards = (data = []) =>
               alt: cd.winnerImage?.data?.attributes?.alternativeText || cd.winnerImage?.alternativeText || cd.winnerTitle,
             } : null,
           },
-          // ✅ Nominees List
+          //  Nominees List
           nominees: (cd.NomineesList || cd.nominees_list)?.map((nominee) => {
             const nd = nominee.attributes || nominee;
             return {
@@ -4594,7 +4708,7 @@ const normalizeAwards = (data = []) =>
     };
   });
 export const AwardsAPI = {
-  // ✅ Get all awards with full population
+  //  Get all awards with full population
   getAll: async (params = {}) => {
     try {
       // Build query string
@@ -4658,7 +4772,7 @@ export const AwardsAPI = {
     } catch (error) {
       return { data: [], pagination: {} };
     }
-  },// ✅ Get single award by slug
+  },//  Get single award by slug
 getBySlug: async (slug) => {
   try {
     const q = new URLSearchParams();
@@ -4688,7 +4802,7 @@ getBySlug: async (slug) => {
 }
 ,
 
-  // ✅ Get awards by industry (using industry_category relation)
+  //  Get awards by industry (using industry_category relation)
   getByIndustry: async (industrySlug) => {
     try {
       const q = new URLSearchParams({
@@ -4711,7 +4825,7 @@ getBySlug: async (slug) => {
     }
   },
 
-  // ✅ Get unique industry categories for filter UI
+  //  Get unique industry categories for filter UI
   getIndustryCategories: async () => {
     try {
       // Fetch all awards first
@@ -4761,7 +4875,7 @@ getBySlug: async (slug) => {
     }
   },
 
-  // ✅ Get unique years for filter UI
+  //  Get unique years for filter UI
   getYears: async () => {
     try {
       const result = await AwardsAPI.getAll({ pageSize: 100 });
@@ -4847,7 +4961,7 @@ const normalizeImage = (img) => {
   return null;
 };
 
-  // ✅ FIXED: Cast normalizer - use normalizeImage consistently
+  //  FIXED: Cast normalizer - use normalizeImage consistently
   const normalizeCast = (castItems) => {
   if (!Array.isArray(castItems)) return [];
 
@@ -4860,6 +4974,7 @@ const normalizeImage = (img) => {
     return {
       id: item.id,
       characterName: item.characterName,
+      seasons:item.seasons,
       celebrity: celebrity
         ? {
             id: celebrity.id,
@@ -4874,7 +4989,7 @@ const normalizeImage = (img) => {
     };
   });
 };
-  // ✅ FIXED: Crew normalizer
+  //  FIXED: Crew normalizer
   const normalizeCrew = (crewItems) => {
     if (!Array.isArray(crewItems)) return [];
 
@@ -4914,7 +5029,7 @@ const normalizeImage = (img) => {
     });
   };
 
-  // ✅ FIXED: Awards normalizer
+  //  FIXED: Awards normalizer
   const normalizeAwards = (awardItems) => {
     if (!Array.isArray(awardItems)) return [];
 
@@ -4978,7 +5093,7 @@ const normalizeImage = (img) => {
     country: item.country || '',
     age_rating: item.age_rating || '',
     seasonNumber: item.seasonNumber ?? null,
-   language: item.language, // ✅ language field भी normalize करें
+   language: item.language, //  language field भी normalize करें
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     publishedAt: item.publishedAt,
@@ -4997,7 +5112,7 @@ const normalizeImage = (img) => {
       }))
       : [],
 
-    // ✅ Genres with Hindi mapping
+    //  Genres with Hindi mapping
     genres: Array.isArray(item.genres)
       ? item.genres.map((g) => ({
         id: g.id,
@@ -5011,7 +5126,7 @@ const normalizeImage = (img) => {
     rating: item.rating || null,
 
     // Languages
-   // ✅ Languages with Hindi mapping
+   //  Languages with Hindi mapping
     languages: Array.isArray(item.languages)
       ? item.languages.map((l) => ({
         id: l.id,
@@ -5076,7 +5191,7 @@ const normalizeImage = (img) => {
             country: ws.country,
             seasons: ws.seasonNumber,
             age_rating: ws.age_rating,
-            poster: ws.poster ? normalizeImage(ws.poster) : null, // ✅ FIXED: Use normalizeImage
+            poster: ws.poster ? normalizeImage(ws.poster) : null, //  FIXED: Use normalizeImage
           }));
         })
         .filter(Boolean)
@@ -5114,7 +5229,7 @@ seasons: Array.isArray(item.series_seasons)
 
 
 export const webSeriesAPI = {
-  // ✅ GetAll method restored and fixed
+  //  GetAll method restored and fixed
   getAll: async (params = {}) => {
     const q = new URLSearchParams({
       "pagination[page]": params.page || 1,
@@ -5122,7 +5237,7 @@ export const webSeriesAPI = {
     });
     q.append("filters[language][$eq]", "hi");
     q.append("sort[0]", params.sort || "releaseDate:desc");
-   // ✅ FORCE ENGLISH LANGUAGE FILTER
+   //  FORCE ENGLISH LANGUAGE FILTER
     
     // Explicitly populate relations and media for listing and filtering
     // ⚠️ DO NOT populate scalar fields like 'age_rating' or 'seasons' to avoid 400 error
@@ -5178,7 +5293,7 @@ export const webSeriesAPI = {
     }
   },
 
-  // ✅ Simple Search Method for Web Series
+  //  Simple Search Method for Web Series
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8 } = options;
@@ -5228,8 +5343,9 @@ export const webSeriesAPI = {
             }
           },
           web_series_awards: { populate: '*' },
-         cast: {
+          cast: {
   populate: {
+    seasons: true,
     celebrities_profiles: {
       populate: {
         Avatar: {
@@ -5337,7 +5453,7 @@ export const webSeriesAPI = {
           populate: {
             related_web_series: {
               populate: {
-                poster: { // ✅ Make sure to populate poster
+                poster: { //  Make sure to populate poster
                   fields: ['url', 'formats']
                 }
               }
@@ -5623,7 +5739,7 @@ export const webSeriesReviewsAPI = {
 
       const response = await apiClient.delete(`/web-series-reviews/${reviewDocumentId}`);
 
-      console.log("✅ Review deleted successfully");
+      console.log(" Review deleted successfully");
       return response.data;
     } catch (error) {
       console.error("❌ Delete review error:", error.response?.data || error.message);
@@ -5649,7 +5765,7 @@ export const webSeriesReviewsAPI = {
 
       const res = await apiClient.put(`/web-series-reviews/${reviewDocumentId}`, payload);
 
-      console.log("✅ Review updated successfully:", res.data);
+      console.log(" Review updated successfully:", res.data);
       return res.data;
     } catch (error) {
       console.error("❌ Update review failed:", error.response?.data || error.message);
@@ -5801,6 +5917,7 @@ const normalizeCast = (castItems) => {
     return {
       id: item.id,
       characterName: item.characterName,
+      seasons:item.seasons,
       celebrity: celebrity
         ? {
             id: celebrity.id,
@@ -6016,7 +6133,7 @@ const normalizeCast = (castItems) => {
   };
 };
 export const tvShowsAPI = {
-   // ✅ Fixed GetAll method
+   //  Fixed GetAll method
   getAll: async (params = {}) => {
     try {
       const q = new URLSearchParams();
@@ -6077,7 +6194,7 @@ export const tvShowsAPI = {
     }
   },
 
-  // ✅ Fixed Simple Search Method
+  //  Fixed Simple Search Method
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8, language = "hi" } = options;
@@ -6085,7 +6202,7 @@ export const tvShowsAPI = {
       const q = new URLSearchParams();
       q.append("pagination[page]", page);
       q.append("pagination[pageSize]", pageSize);
-      // ✅ FIXED: Use correct field name
+      //  FIXED: Use correct field name
       q.append("sort[0]", "realeaseDate:desc");
       q.append("populate", "*");
       q.append("filters[language][$eq]", language);
@@ -6109,7 +6226,7 @@ export const tvShowsAPI = {
       return { data: [], pagination: {} };
     }
   },
-  // ✅ Get by slug with full population
+  //  Get by slug with full population
   getBySlug: async (slug) => {
     const q = qs.stringify({
       filters: { 
@@ -6125,8 +6242,9 @@ export const tvShowsAPI = {
         shows_seasons: { populate: '*' },
         watchingPlatform: { populate: '*' },
         tv_show_awards: { populate: '*' },
-        cast: {
+       cast: {
   populate: {
+    seasons: true,
     celebrities_profiles: {
       populate: {
         Avatar: {
@@ -6204,7 +6322,7 @@ export const tvShowsAPI = {
     }
   },
 
-  // ✅ Get by slug with cast only
+  //  Get by slug with cast only
   getBySlugWithCast: async (slug) => {
     const q = qs.stringify({
       filters: { slug: { $eq: slug } },
@@ -6230,7 +6348,7 @@ export const tvShowsAPI = {
     }
   },
 
-  // ✅ Get by slug with crew only
+  //  Get by slug with crew only
   getBySlugWithCrew: async (slug) => {
     const q = qs.stringify({
       filters: { slug: { $eq: slug } },
@@ -6257,7 +6375,7 @@ export const tvShowsAPI = {
     }
   },
 
-  // ✅ Get by slug with similar shows
+  //  Get by slug with similar shows
   getBySlugWithSimilar: async (slug) => {
     const q = qs.stringify({
       filters: { slug: { $eq: slug } },
@@ -6279,7 +6397,7 @@ export const tvShowsAPI = {
     }
   },
 
-  // ✅ Get by slug with articles
+  //  Get by slug with articles
   getBySlugWithArticles: async (slug) => {
     const q = qs.stringify({
       filters: { 
@@ -6307,16 +6425,17 @@ export const tvShowsAPI = {
 };
 
 export const tvShowReviewsAPI = {
-  // Get reviews by TV show ID
   async getByShowId(showId) {
     try {
       const q = qs.stringify({
-        filters: { tv_show: { id: { $eq: showId } } },
+        // 🔥 MAGIC FIX: 'id' की जगह 'documentId' कर दिया है!
+        filters: { tv_show: { documentId: { $eq: showId } } }, 
         populate: ["user", "tv_show"],
         sort: ["createdAt:desc"]
       }, { encodeValuesOnly: true });
 
-      const res = await apiClient.get(`/shows-reviews?${q}`);
+      // Cache बस्टर लगा दिया ताकि हमेशा ताज़ा कमेंट्स आएं
+      const res = await apiClient.get(`/shows-reviews?${q}&t=${Date.now()}`);
 
       return (res.data?.data || []).map(item => ({
         id: item.id,
@@ -6424,7 +6543,7 @@ export const tvShowReviewsAPI = {
 
       const res = await apiClient.post("/shows-reviews", payload);
 
-      console.log("✅ Review created successfully:", res.data);
+      console.log(" Review created successfully:", res.data);
       return res.data;
     } catch (error) {
       console.error("❌ Create review failed:", error.response?.data || error.message);

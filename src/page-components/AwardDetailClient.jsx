@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Calendar, Trophy, MapPin, Users, ChevronRight, Image as ImageIcon, ArrowLeft, MessageSquare } from "lucide-react";
-import { articlesAPI, AwardsAPI } from "../lib/api";
+import { articlesAPI} from "../lib/api/articles";
+import {AwardsAPI} from "../lib/api/awards"
 
 export default function AwardDetailClient({ award }) {
   const router = useRouter();
@@ -26,12 +27,12 @@ export default function AwardDetailClient({ award }) {
         });
         setHighlightArticles(articlesRes.articles || []);
 
-        // ✅ FIX: AwardsAPI.getAll returns { data, pagination }
+        //  FIX: AwardsAPI.getAll returns { data, pagination }
         const awardsRes = await AwardsAPI.getAll({
           pageSize: 10 // Get more awards for filtering
         });
         
-        // ✅ Extract the data array from the response
+        //  Extract the data array from the response
         const awardsList = awardsRes.data || [];
         
         // Filter out the current award and take top 3

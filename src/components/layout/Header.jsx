@@ -20,7 +20,7 @@ import Instagram from "lucide-react/dist/esm/icons/instagram";
 import Twitter from "lucide-react/dist/esm/icons/twitter";
 import Youtube from "lucide-react/dist/esm/icons/youtube";
 import Facebook from "lucide-react/dist/esm/icons/facebook";
-import EllipsisVertical from "lucide-react/dist/esm/icons/ellipsis-vertical"; // ✅ Ekdum sahi
+import EllipsisVertical from "lucide-react/dist/esm/icons/ellipsis-vertical"; //  Ekdum sahi
 import LogOut from "lucide-react/dist/esm/icons/log-out";
 
 // Isi tarah baaki ke icons ko bhi unke naam ke mutabik small letters me likh kar...
@@ -33,7 +33,7 @@ import { useStore } from "../../store/useStore";
 import { CATEGORIES } from "../../lib/constants";
 import { debounce } from "../../lib/helpers";
 import TrendingTicker from "./TrendingTicker";
-import { articlesAPI } from "../../lib/api";
+import { articlesAPI } from "../../lib/api/articles";
 
 // Dynamic Import for MenuSidebar (Bundle Size Optimization)
 const MenuSidebar = dynamic(() => import("./MenuSidebar"), { ssr: false });
@@ -109,7 +109,7 @@ export default function Header({ theme, setTheme }) {
         return;
       }
       try {
-        const data = await articlesAPI.getAll({ search: query, pageSize: 5 });
+        const data = await articlesAPI.getAllLight({ search: query, pageSize: 5 });
         setSuggestions(data.articles || []);
         setShowSuggestions(true);
       } catch (error) {

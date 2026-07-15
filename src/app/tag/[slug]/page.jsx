@@ -1,43 +1,15 @@
-import { articlesAPI, tagsAPI } from '../../../lib/api'; // Paths sahi se check karlein
+// ... existing imports
+import { articlesAPI, tagsAPI } from '../../../lib/api';
 import TagClientView from '../../../page-components/TagPage';
 import LayoutWrapper from '../../LayoutWrapper';
 import { notFound } from 'next/navigation';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://entertainindia.in').replace(/\/$/, '');
 
-// ✅ STEP 1: Server Side Metadata & Canonical Injector
 export async function generateMetadata({ params }) {
-  const resolvedParams = await params;
-  const slug = resolvedParams.slug;
-  
-  if (!slug) return {};
-
-  try {
-    const tagData = await tagsAPI.getBySlug(slug);
-    
-    // STRICT CHECK: Agar tagData ya uska name missing hai toh valid title fallback dein ya blank chodein
-    if (!tagData || !tagData.name) {
-      return { title: 'टैग समाचार - एंटरटेनइंडिया' };
-    }
-
-    const tagName = tagData.name;
-
-    return {
-      title: `#${tagName} - एंटरटेनइंडिया`,
-      description: `एंटरटेनइंडिया पर ${tagName} के बारे में नवीनतम लेख, समाचार और ताज़ा ख़बरें पढ़ें।`,
-      alternates: {
-        canonical: `${BASE_URL}/tag/${slug}`, // 👈 Google duplicate issue pure fix!
-      },
-    };
-  } catch (err) {
-    console.error("Metadata error:", err);
-    return {
-      title: 'टैग समाचार - एंटरटेनइंडिया',
-    };
-  }
+  // ... unchanged
 }
 
-// ✅ STEP 2: Main Server Component
 export default async function TagSlugPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
@@ -47,34 +19,46 @@ export default async function TagSlugPage({ params }) {
   }
 
   try {
-    // Parallelly tags data aur articles data server par hi fetch hoga
-    const [tagData, articlesData] = await Promise.all([
-      tagsAPI.getBySlug(slug),
-      articlesAPI.getAll({ tag: slug, pageSize: 24 })
-    ]);
+    // 1. Fetch tag data
+    const tagData = await tagsAPI.getBySlug(slug);
 
-    // STRICT CHECK: Agar backend se tag delete ho chuka hai YA tag ka proper 'name' hi nahi mila, toh direct 404 show karo
-    if (!tagData || !tagData.name ||!tagData.slug) {
-      notFound(); 
+    // If tag doesn't exist → 404
+    if (!tagData || !tagData.name || !tagData.slug) {
+      notFound();
     }
 
-    // Ab guaranteed hai ki displayTagName strictly tag name hi hoga
-    const displayTagName = tagData.name; 
+    // 2. Fetch articles for this tag
+    const articlesData = await articlesAPI.getAll({ tag: slug, pageSize: 24 });
+
     const initialArticles = articlesData?.articles || [];
     const totalCount = articlesData?.pagination?.total || initialArticles.length;
 
+    let relatedArticles = [];
+
+    // 3. If no articles found, fetch fallback articles (latest or trending)
+    if (initialArticles.length === 0) {
+      // Option A: Fetch latest 6 articles (no tag filter)
+      const latestData = await articlesAPI.getAll({ pageSize: 6, sort: 'newest' });
+      relatedArticles = latestData?.articles || [];
+
+      // Option B (more relevant): Fetch articles from related tags
+      // (if your API supports filtering by multiple tags or you have a recommendation endpoint)
+      // const relatedData = await articlesAPI.getRelatedByTag(slug, { pageSize: 6 });
+      // relatedArticles = relatedData?.articles || [];
+    }
+
     return (
       <LayoutWrapper>
-        <TagClientView 
-          formattedTagName={displayTagName}
+        <TagClientView
+          formattedTagName={tagData.name}
           initialArticles={initialArticles}
           initialTotal={totalCount}
+          relatedArticles={relatedArticles}   // 👈 new prop
         />
       </LayoutWrapper>
     );
-
   } catch (error) {
-    console.error("Server Side Fetching Error for Tags:", error);
+    console.error('Server Side Fetching Error for Tags:', error);
     notFound();
   }
 }

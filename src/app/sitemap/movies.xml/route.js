@@ -19,7 +19,7 @@ export async function GET() {
         'pagination[page]': page.toString(),
         'pagination[pageSize]': pageSize.toString(),
         'filters[language][$eq]': 'hi', // 🔥 STRICT HINDI FILTER
-        'populate[0]': 'category', // ✅ POPULATE CATEGORY
+        'populate[0]': 'category', //  POPULATE CATEGORY
         'fields[0]': 'slug',
         'fields[1]': 'title',
         'fields[2]': 'updatedAt',
@@ -90,7 +90,7 @@ export async function GET() {
       if (page > 50) break; // Safety limit
     }
 
-    // ✅ FINAL SORTING: Latest First
+    //  FINAL SORTING: Latest First
     allMovies.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Generate XML

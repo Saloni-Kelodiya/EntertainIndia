@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Calendar, Clock, ChevronRight, Filter, ChevronDown, TvIcon, ExternalLink } from "lucide-react";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 
-// ✅ Genre mapping for Hindi display
+//  Genre mapping for Hindi display
 const genreHindiMap = {
   // English to Hindi
   "Action": "एक्शन",
@@ -58,7 +58,7 @@ const genreHindiMap = {
   "एक्शन": "एक्शन",
   "युद्ध": "युद्ध",
 };
-// ✅ Language Mapping Function - English to Hindi
+//  Language Mapping Function - English to Hindi
 export const getHindiLanguageName = (englishName) => {
   const languageMap = {
     // Indian Languages

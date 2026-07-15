@@ -7,7 +7,8 @@ import CreateArticleModal from "./CreateArticleModal;";
 import { useRouter } from "next/navigation";
 import CreateWebStoryModal from "./CreateWebStoryModal";
 import { useStore } from "../../store/useStore";
-import { articlesAPI, webStoriesAPI } from "../../lib/api";
+import { articlesAPI} from "../../lib/api/articles";
+import  {webStoriesAPI } from "../../lib/api/web-stories";
 import { FileText, CheckCircle, Clock, Edit3, RefreshCw, Eye, TrendingUp, BarChart3 } from "lucide-react";
 
 const AuthorDashboard = () => {

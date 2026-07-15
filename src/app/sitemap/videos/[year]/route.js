@@ -6,69 +6,65 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://entertainindia.in'
 
 export async function GET(request, { params }) {
   try {
-    const { year } = await params;
-    const cleanYear = year.replace('.xml', '');
+    const resolvedParams = await params;
+    const yearStr = resolvedParams.year || '';
+    
+    // साल में से केवल 4 डिजिट (जैसे "2026") निकालने के लिए
+    const yearMatch = yearStr.match(/\d{4}/);
+    if (!yearMatch) {
+      return new NextResponse('Invalid year', { status: 400 });
+    }
+    const cleanYear = yearMatch;
     const requestedYear = parseInt(cleanYear);
     const currentYear = new Date().getFullYear();
     
-    // ✅ Current year ki videos videos.xml mein hain, yahan nahi
-    if (requestedYear === currentYear) {
-      return new NextResponse(
-        `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-    xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-  <!-- Videos for ${currentYear} are in videos.xml -->
-</urlset>`,
-        { headers: { 'Content-Type': 'application/xml' } }
-      );
-    }
-    
-    // ✅ Future years ke liye empty
+    //  Future years के लिए खाली सैटमैप रिटर्न करें
     if (requestedYear > currentYear) {
       return new NextResponse(
         `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-  <!-- No videos for future year ${cleanYear} -->
-</urlset>`,
+  </urlset>`,
         { headers: { 'Content-Type': 'application/xml' } }
       );
     }
     
-    // Date range for requested year
-    const startDate = new Date(`${cleanYear}-01-01T00:00:00.000Z`);
-    const endDate = new Date(`${requestedYear + 1}-01-01T00:00:00.000Z`);
+    // Date range setup
+    const startDate = `${cleanYear}-01-01T00:00:00.000Z`;
+    const endDate = `${cleanYear}-12-31T23:59:59.999Z`;
     
     const queryParams = new URLSearchParams({
-      'filters[publishedAt][$gte]': startDate.toISOString(),
-      'filters[publishedAt][$lt]': endDate.toISOString(),
+      'filters[publishedAt][$notNull]': 'true',
+      'filters[createdAt][$gte]': startDate,
+      'filters[createdAt][$lte]': endDate,
       'filters[language][$eq]': 'hi',
-      'sort[0]': 'publishedAt:desc',
-      'pagination[pageSize]': 50000,
-      'populate': '*'
+      'sort': 'createdAt:desc',
+      'pagination[pageSize]': '1000',
     });
 
-    const response = await fetch(
-      `${STRAPI_URL}/api/videos?${queryParams.toString()}`,
-      {
-        headers: { 'Content-Type': 'application/json' },
-        next: { revalidate: 86400 }
-      }
-    );
+    // populate=* को सीधे स्ट्रिंग के साथ जोड़ा गया है ताकि Strapi रिलेशंस सही से दें
+    const apiUrl = `${STRAPI_URL}/api/videos?${queryParams.toString()}&populate=*&_cb=${Date.now()}`;
+    console.log("Fetching Videos from URL:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    });
 
     if (!response.ok) {
       throw new Error(`Strapi API error: ${response.status}`);
     }
 
     const data = await response.json();
+    const items = data.data || [];
     
-    console.log(`Videos found for ${cleanYear}:`, data.data?.length || 0);
+    console.log(`Videos found for ${cleanYear}:`, items.length);
 
-    if (data.data && data.data.length > 0) {
+    if (items.length > 0) {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-    ${data.data.map(item => {
+    ${items.map(item => {
       const video = normalizeVideoForSitemap(item);
       
       return `
@@ -97,7 +93,7 @@ export async function GET(request, { params }) {
       return new NextResponse(xml, {
         headers: {
           'Content-Type': 'application/xml',
-          'Cache-Control': 'public, max-age=86400',
+          'Cache-Control': 'no-store, max-age=0',
         },
       });
     } else {
@@ -105,8 +101,7 @@ export async function GET(request, { params }) {
         `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-  <!-- No videos found for year ${cleanYear} -->
-</urlset>`,
+  </urlset>`,
         { headers: { 'Content-Type': 'application/xml' } }
       );
     }
@@ -118,8 +113,7 @@ export async function GET(request, { params }) {
       `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-  <!-- Error: ${escapeXml(error.message)} -->
-</urlset>`,
+  </urlset>`,
       { headers: { 'Content-Type': 'application/xml' } }
     );
   }
@@ -127,7 +121,7 @@ export async function GET(request, { params }) {
 
 function normalizeVideoForSitemap(video) {
   const attrs = video.attributes || video;
-  const videoId = attrs.video_id;
+  const videoId = attrs.video_id || '';
   
   return {
     id: video.id || attrs.id,
@@ -141,7 +135,7 @@ function normalizeVideoForSitemap(video) {
     publishedDate: attrs.publishedAt || attrs.createdAt,
     createdAt: attrs.createdAt,
     videotype: attrs.videotype || null,
-    category: attrs.category?.name || null,
+    category: attrs.category?.name || attrs.category || null,
   };
 }
 
@@ -157,4 +151,5 @@ function escapeXml(unsafe) {
     .replace(/\r/g, '');
 }
 
-export const revalidate = 86400;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

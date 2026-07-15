@@ -1,8 +1,8 @@
 import LatestNewsPage from '../../../page-components/LatestNewsPage';
 import LayoutWrapper from '../../LayoutWrapper';
-import { articlesAPI } from '../../../lib/api';
+import { articlesAPI } from '../../../lib/api/articles';
 
-// ✅ कैटेगरी के हिंदी नाम की डिक्शनरी (URL slug -> Hindi translation)
+//  कैटेगरी के हिंदी नाम की डिक्शनरी (URL slug -> Hindi translation)
 const categoryTranslations = {
   all: 'मनोरंजन',
   latest: 'नवीनतम',
@@ -15,7 +15,7 @@ const categoryTranslations = {
   korean: 'कोरियाई',
 };
 
-// ✅ SEO: डायनेमिक मेटाडेटा जनरेशन (हिंदी और .in डोमेन आधारित)
+//  SEO: डायनेमिक मेटाडेटा जनरेशन (हिंदी और .in डोमेन आधारित)
 export async function generateMetadata({ params }) {
   const { category } = await params;
   
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }) {
           alt: `${categoryHindi} मनोरंजन समाचार`,
         }
       ],
-      locale: 'hi_IN', // ✅ हिंदी लोकेल सेट किया गया
+      locale: 'hi_IN', //  हिंदी लोकेल सेट किया गया
       type: 'website',
     },
     twitter: {
@@ -73,7 +73,7 @@ export default async function LatestNews({ params }) {
   const { category } = await params;
   const currentCategory = category?.toLowerCase() || "latest";
   
-  // ✅ क्लाइंट/स्कीमा के लिए हिंदी नाम निर्धारित करें
+  //  क्लाइंट/स्कीमा के लिए हिंदी नाम निर्धारित करें
   const categoryNameHindi = categoryTranslations[currentCategory] || categoryTranslations['all'];
 
   let initialArticles = [];
@@ -89,10 +89,10 @@ export default async function LatestNews({ params }) {
       fetchParams.category = currentCategory; 
     }
 
-    const res = await articlesAPI.getAll(fetchParams);
+    const res = await articlesAPI.getAllLight(fetchParams);
     initialArticles = res?.articles || [];
 
-    // ✅ 1. ब्रेडक्रंब स्कीमा (Breadcrumb Schema in Hindi)
+    //  1. ब्रेडक्रंब स्कीमा (Breadcrumb Schema in Hindi)
     const breadcrumbLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
@@ -103,7 +103,7 @@ export default async function LatestNews({ params }) {
       ]
     };
 
-    // ✅ 2. न्यूज इंडेक्स स्कीमा (News Index Schema in Hindi)
+    //  2. न्यूज इंडेक्स स्कीमा (News Index Schema in Hindi)
     const itemListLd = {
       "@context": "https://schema.org",
       "@type": "ItemList",
@@ -119,13 +119,13 @@ export default async function LatestNews({ params }) {
 
     return (
       <LayoutWrapper>
-        {/* ✅ स्कीमा इंजेक्शन */}
+        {/*  स्कीमा इंजेक्शन */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, itemListLd]) }}
         />
 
-        {/* ✅ SEO के लिए स्क्रीन रीडर हेडिंग हिंदी में */}
+        {/*  SEO के लिए स्क्रीन रीडर हेडिंग हिंदी में */}
         <h1 className="sr-only">{categoryNameHindi} मनोरंजन समाचार और फिल्म अपडेट</h1>
         
         <LatestNewsPage 

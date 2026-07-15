@@ -2,12 +2,10 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { moviesAPI, genresAPI } from "../lib/api";
-import { getStrapiMedia } from "../lib/constants";
 import { Calendar, Clock, ChevronRight, Filter, ChevronDown, FilmIcon } from "lucide-react";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 
-// ✅ Genre mapping for Hindi display
+//  Genre mapping for Hindi display
 const genreHindiMap = {
   // English to Hindi
   "Action": "एक्शन",
@@ -59,7 +57,7 @@ const genreHindiMap = {
   "एक्शन": "एक्शन",
   "युद्ध": "युद्ध",
 };
-// ✅ Language Mapping Function - English to Hindi
+//  Language Mapping Function - English to Hindi
 export const getHindiLanguageName = (englishName) => {
   const languageMap = {
     // Indian Languages
@@ -142,7 +140,7 @@ const getGenreDisplayName = (genreName) => {
 };
 
 export default function MoviesPage({ serverCategory, initialMovies, initialGenres }) {
-  // ✅ Server se aaye data ko initial state banana
+  //  Server se aaye data ko initial state banana
   const [movies] = useState(initialMovies || []);
   const [loading] = useState(false); // No more initial loading
 

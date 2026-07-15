@@ -4,12 +4,12 @@ import CelebritiesPage from '../../page-components/CelebritiesPage';
 import LayoutWrapper from '../LayoutWrapper';
 import { notFound } from 'next/navigation';
 
-// ✅ Force dynamic rendering to prevent caching
+//  Force dynamic rendering to prevent caching
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// ✅ Dynamic SEO Metadata Function (SEO LIMITS के साथ)
+//  Dynamic SEO Metadata Function (SEO LIMITS के साथ)
 export async function generateMetadata() {
   let categoryData = null;
   
@@ -21,19 +21,19 @@ export async function generateMetadata() {
   
   const seo = categoryData?.seo;
   
-  // ✅ TITLE - MAX 60-70 characters
+  //  TITLE - MAX 60-70 characters
   let seoTitle = seo?.title || 'सेलिब्रिटी प्रोफाइल | व्यक्तिगत जीवन और समाचार - EntertainIndia';
   if (seoTitle.length > 65) {
     seoTitle = seoTitle.slice(0, 62) + '...';
   }
   
-  // ✅ DESCRIPTION - MAX 150-160 characters
+  //  DESCRIPTION - MAX 150-160 characters
   let seoDescription = seo?.description || 'बॉलीवुड, हॉलीवुड और भोजपुरी सेलिब्रिटी की जीवनी, व्यक्तिगत जीवन, परिवार विवरण और फिल्म अपडेट देखें।';
   if (seoDescription.length > 155) {
     seoDescription = seoDescription.slice(0, 152) + '...';
   }
   
-  // ✅ KEYWORDS - कॉमा सेपरेटेड (ज्यादा न डालें)
+  //  KEYWORDS - कॉमा सेपरेटेड (ज्यादा न डालें)
   const keywords = seo?.keywords || 'सेलिब्रिटी न्यूज, एक्टर प्रोफाइल, एक्ट्रेस बायोग्राफी, बॉलीवुड सेलिब्रिटी, हॉलीवुड सेलिब्रिटी, सितारे, मनोरंजन';
 
   return {
@@ -41,12 +41,12 @@ export async function generateMetadata() {
     description: seoDescription,
     keywords: keywords,
     
-    // ✅ CANONICAL URL
+    //  CANONICAL URL
     alternates: {
       canonical: 'https://entertainindia.in/celebrities',
     },
     
-    // ✅ ROBOTS CONFIG
+    //  ROBOTS CONFIG
     robots: {
       index: true,
       follow: true,
@@ -59,7 +59,7 @@ export async function generateMetadata() {
       },
     },
     
-    // ✅ OPEN GRAPH (SOCIAL MEDIA)
+    //  OPEN GRAPH (SOCIAL MEDIA)
     openGraph: {
       title: seoTitle.slice(0, 60),
       description: seoDescription.slice(0, 150),
@@ -77,7 +77,7 @@ export async function generateMetadata() {
       ],
     },
     
-    // ✅ TWITTER CARD
+    //  TWITTER CARD
     twitter: {
       card: 'summary_large_image',
       title: seoTitle.slice(0, 60),
@@ -87,19 +87,19 @@ export async function generateMetadata() {
       creator: '@EntertainIndia',
     },
     
-    // ✅ VERIFICATION CODES
+    //  VERIFICATION CODES
     verification: {
       google: 'your-google-verification-code',
       yandex: 'your-yandex-verification-code',
     },
     
-    // ✅ OTHER META TAGS
+    //  OTHER META TAGS
     category: 'entertainment',
     authors: [{ name: 'EntertainIndia Team', url: 'https://entertainindia.in/about' }],
     creator: 'EntertainIndia',
     publisher: 'EntertainIndia',
     
-    // ✅ APPLE & ANDROID
+    //  APPLE & ANDROID
     appleWebApp: {
       capable: true,
       title: 'सेलिब्रिटीज',
@@ -112,7 +112,7 @@ export async function generateMetadata() {
       address: false,
     },
     
-    // ✅ ADDITIONAL META
+    //  ADDITIONAL META
     other: {
       'facebook-domain-verification': 'your-facebook-code',
       'og:image:alt': 'EntertainIndia सेलिब्रिटी प्रोफाइल पेज',
@@ -121,11 +121,11 @@ export async function generateMetadata() {
   };
 }
 
-// ✅ ITEMLIST स्कीमा (SEO RICH RESULTS के लिए)
+//  ITEMLIST स्कीमा (SEO RICH RESULTS के लिए)
 function generateItemListSchema(categoryData, celebrities, categorySlug) {
   if (!celebrities || celebrities.length === 0) return null;
   
-  // ✅ सिर्फ 10 सेलिब्रिटी दिखाएं (बहुत ज्यादा नहीं)
+  //  सिर्फ 10 सेलिब्रिटी दिखाएं (बहुत ज्यादा नहीं)
   const celebrityItems = celebrities.slice(0, 10).map((celeb, index) => ({
     "@type": "ListItem",
     "position": index + 1,
@@ -157,7 +157,7 @@ function generateItemListSchema(categoryData, celebrities, categorySlug) {
   };
 }
 
-// ✅ BREADCRUMB स्कीमा
+//  BREADCRUMB स्कीमा
 function generateBreadcrumbSchema(categorySlug) {
   return {
     "@context": "https://schema.org",
@@ -179,7 +179,7 @@ function generateBreadcrumbSchema(categorySlug) {
   };
 }
 
-// ✅ WEBSITE स्कीमा
+//  WEBSITE स्कीमा
 function generateWebsiteSchema() {
   return {
     "@context": "https://schema.org",
@@ -198,13 +198,13 @@ function generateWebsiteSchema() {
     "sameAs": [
       "https://facebook.com/entertainindia",
       "https://x.com/EIndia99460",
-      "https://instagram.com/entertainindia",
-      "https://youtube.com/entertainindia"
+      "https://www.instagram.com/entertainindiaofficial/",
+      "https://www.youtube.com/@EIndiaofficial"
     ]
   };
 }
 
-// ✅ COLLECTIONPAGE स्कीमा
+//  COLLECTIONPAGE स्कीमा
 function generateCollectionPageSchema(categorySlug, categoryData) {
   return {
     "@context": "https://schema.org",
@@ -246,13 +246,13 @@ function generateCollectionPageSchema(categorySlug, categoryData) {
   };
 }
 
-// ✅ MAIN COMPONENT
+//  MAIN COMPONENT
 export default async function Page({ searchParams }) {
   const sParams = await searchParams;
   const page = parseInt(sParams.page) || 1;
   const categorySlug = "celebrities";
   
-  // ✅ Cache busting
+  //  Cache busting
   const cacheBuster = Date.now();
   
   let categoryData = null;
@@ -261,7 +261,7 @@ export default async function Page({ searchParams }) {
   let error = null;
   
   try {
-    // ✅ Parallel fetching
+    //  Parallel fetching
     const [catData, celebData] = await Promise.all([
       categoryAPIServer.getBySlug(categorySlug, { 
         cache: 'no-store',
@@ -294,10 +294,10 @@ export default async function Page({ searchParams }) {
     error = err.message;
   }
   
-  // ✅ अगर कोई डाटा नहीं है तो 404 न दिखाएं, बल्कि एरर मैसेज दिखाएं
+  //  अगर कोई डाटा नहीं है तो 404 न दिखाएं, बल्कि एरर मैसेज दिखाएं
   const hasData = celebrities.length > 0 || categoryData;
   
-  // ✅ सभी स्कीमा जनरेट करें
+  //  सभी स्कीमा जनरेट करें
   const itemListSchema = generateItemListSchema(categoryData, celebrities, categorySlug);
   const breadcrumbSchema = generateBreadcrumbSchema(categorySlug);
   const websiteSchema = generateWebsiteSchema();
@@ -305,12 +305,12 @@ export default async function Page({ searchParams }) {
   
   return (
     <>
-      {/* ✅ CACHE CONTROL META TAGS */}
+      {/*  CACHE CONTROL META TAGS */}
       <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
       <meta httpEquiv="Pragma" content="no-cache" />
       <meta httpEquiv="Expires" content="0" />
       
-      {/* ✅ SCHEMA.ORG SCRIPTS */}
+      {/*  SCHEMA.ORG SCRIPTS */}
       {itemListSchema && (
         <script
           type="application/ld+json"
@@ -330,14 +330,14 @@ export default async function Page({ searchParams }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }}
       />
       
-      {/* ✅ HIDDEN SEO H1 */}
+      {/*  HIDDEN SEO H1 */}
       <h1 className="sr-only">
         {categoryData?.seo?.h1 || categoryData?.name || "सेलिब्रिटी प्रोफाइल"} | बॉलीवुड, हॉलीवुड और भोजपुरी सितारे - EntertainIndia
       </h1>
       
       <LayoutWrapper>
         {error && !hasData ? (
-          // ✅ ERROR STATE
+          //  ERROR STATE
           <div className="text-center py-20 px-4">
             <h2 className="text-2xl font-bold text-red-600 mb-4">
               ⚠️ डाटा लोड नहीं हो पाया
@@ -353,7 +353,7 @@ export default async function Page({ searchParams }) {
             </button>
           </div>
         ) : (
-          // ✅ MAIN CONTENT
+          //  MAIN CONTENT
           <CelebritiesPage
             key={cacheBuster}
             categoryData={categoryData}

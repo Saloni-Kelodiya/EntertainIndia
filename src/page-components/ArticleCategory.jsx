@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-import { articlesAPI } from "../lib/api";
+import { articlesAPI } from "../lib;
 import ArticleCard from "../components/ui/ArticleCard";
 import Pagination from "../components/ui/Pagination";
 import { ArticleListSkeleton } from "../components/ui/Skeleton";
@@ -31,7 +31,7 @@ export default function ArticleCategory({ category }) {
   //          const sortedArticles = [...data.articles].sort(
   //         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   //       );
-  //       // ✅ FIXED: Use the sorted articles instead of the original
+  //       //  FIXED: Use the sorted articles instead of the original
   //       setArticles(sortedArticles); // Changed from data.articles to sortedArticles
   //       setPagination(data.pagination);
   //     } finally {
@@ -46,12 +46,12 @@ export default function ArticleCategory({ category }) {
     const fetchArticles = async () => {
       setLoading(true);
       try {
-        // ✅ Use the correct sort parameter
+        //  Use the correct sort parameter
         const data = await articlesAPI.getAll({
           category,
           page: currentPage,
           pageSize: 12,
-          sort: "publish_datetime:desc", // ✅ This should work now
+          sort: "publish_datetime:desc", //  This should work now
         });
 
         // Client-side sorting as backup

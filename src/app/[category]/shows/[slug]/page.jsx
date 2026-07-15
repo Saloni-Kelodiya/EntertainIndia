@@ -1,18 +1,23 @@
 import LayoutWrapper from '../../../LayoutWrapper';
 import TvShowDetailClient from "../../../../page-components/TvShowDetailPage";
-import { tvShowsAPI } from "../../../../lib/api";
+import { tvShowsAPI } from "../../../../lib/api/tv-shows";
 import { notFound } from 'next/navigation';
 
-// ✅ SEO: Dynamic Metadata Generation
+//  SEO: Dynamic Metadata Generation
 export async function generateMetadata({ params }) {
   const { slug, category } = await params;
+
+  // 🔥 STRICT CHECK: Only "tv" category is allowed
+  if (category !== 'tv') {
+    notFound();
+  }
 
   try {
     const tvShow = await tvShowsAPI.getBySlug(slug);
 
     if (!tvShow) return { title: 'TV Show Not Found' };
 
-    const capitalizedCat = category.charAt(0).toUpperCase() + category.slice(1);
+    const capitalizedCat = "Tv"; // Since we only allow "tv"
     const seoTitle = `${tvShow.title} (${capitalizedCat} Show) - Cast, Seasons & Reviews | EntertainIndia`;
     const seoDesc = tvShow.description?.substring(0, 160) || `Watch ${tvShow.title} online. Get the latest details on seasons, cast, crew and expert reviews on EntertainIndia.`;
 
@@ -20,7 +25,7 @@ export async function generateMetadata({ params }) {
       title: seoTitle,
       description: seoDesc,
       alternates: {
-        canonical: `https://entertainindia.in/${category}/tv-shows/${slug}`,
+        canonical: `https://entertainindia.in/tv/shows/${slug}`,
       },
       robots: {
         index: true,
@@ -30,7 +35,7 @@ export async function generateMetadata({ params }) {
       openGraph: {
         title: seoTitle,
         description: seoDesc,
-        url: `https://entertainindia.in/${category}/tv-shows/${slug}`,
+        url: `https://entertainindia.in/tv/shows/${slug}`,
         siteName: 'EntertainIndia',
         images: [
           {
@@ -57,36 +62,39 @@ export async function generateMetadata({ params }) {
 export default async function TvShowDetailPage({ params }) {
   const { slug, category } = await params;
 
+  // 🔥 STRICT CHECK: Only "tv" category is allowed
+  if (category !== 'tv') {
+    notFound();
+  }
+
   try {
-    // ✅ Only fetch main data via getBySlug
     const mainData = await tvShowsAPI.getBySlug(slug);
 
     if (!mainData) {
       notFound();
     }
 
-    // Prepare initial data for client – missing fields become empty arrays
-   // Inside TvShowDetailPage, replace the initialData object:
-const initialData = {
-  show: mainData,
-  crew: mainData.crew || [],
-  cast: mainData.cast || [],
-  articles: mainData.realted_articles || [],   // also use existing articles if needed
-  similar: mainData.similar_tv_shows || [],    // ✅ FIX: use API data
-  seasons: mainData.shows_seasons || [],
-  awards: mainData.tv_show_awards || [],
-  reviews: mainData.shows_reviews || [],
-};
-    const categoryName = category ? category.charAt(0).toUpperCase() + category.slice(1) : "TV Shows";
+    const initialData = {
+      show: mainData,
+      crew: mainData.crew || [],
+      cast: mainData.cast || [],
+      articles: mainData.realted_articles || [],
+      similar: mainData.similar_tv_shows || [],
+      seasons: mainData.shows_seasons || [],
+      awards: mainData.tv_show_awards || [],
+      reviews: mainData.shows_reviews || [],
+    };
+
+    const categoryName = "TV";
 
     const breadcrumbLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://entertainindia.in" },
-        { "@type": "ListItem", "position": 2, "name": categoryName, "item": `https://entertainindia.in/${category}` },
-        { "@type": "ListItem", "position": 3, "name": "TV Shows", "item": `https://entertainindia.in/${category}/tv-shows` },
-        { "@type": "ListItem", "position": 4, "name": mainData.title, "item": `https://entertainindia.in/${category}/tv-shows/${slug}` }
+        { "@type": "ListItem", "position": 2, "name": categoryName, "item": "https://entertainindia.in/tv" },
+        { "@type": "ListItem", "position": 3, "name": "TV Shows", "item": "https://entertainindia.in/tv/shows" },
+        { "@type": "ListItem", "position": 4, "name": mainData.title, "item": `https://entertainindia.in/tv/shows/${slug}` }
       ]
     };
 
@@ -123,7 +131,7 @@ const initialData = {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, tvSeriesLd]) }}
         />
-        <TvShowDetailClient initialData={initialData} slug={slug} serverCategory={category} />
+        <TvShowDetailClient initialData={initialData} slug={slug} serverCategory="tv" />
       </LayoutWrapper>
     );
 

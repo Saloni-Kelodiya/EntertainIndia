@@ -154,7 +154,7 @@ export default function PremiumContentPage() {
               <p className="font-bold text-sm">Ad-Free</p>
             </div>
             <div>
-              <div className="text-3xl mb-2">⚡</div>
+              <div className="text-3xl mb-2"></div>
               <p className="font-bold text-sm">Early Access</p>
             </div>
             <div>

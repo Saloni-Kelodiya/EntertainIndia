@@ -72,7 +72,7 @@ export async function GET() {
       if (page > 50) break; // Safety limit (5000 celebrities max)
     }
 
-    // ✅ FINAL SORTING: Latest First (Updated date ke hisaab se)
+    //  FINAL SORTING: Latest First (Updated date ke hisaab se)
     allCelebrities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Remove duplicates

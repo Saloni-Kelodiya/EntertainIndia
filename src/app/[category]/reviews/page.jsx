@@ -2,25 +2,25 @@ import MovieReviews from '../../../page-components/MovieReviewsPage';
 import LayoutWrapper from '../../LayoutWrapper';
 import { articlesAPI } from '../../../lib/api';
 
-// ✅ Force dynamic rendering
+//  Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// ✅ SEO: सिर्फ टाइटल और डिस्क्रिप्शन ऑप्टिमाइज़्ड (हिंदी में)
+//  SEO: सिर्फ टाइटल और डिस्क्रिप्शन ऑप्टिमाइज़्ड (हिंदी में)
 export async function generateMetadata({ params }) {
   const { category } = await params;
   
-  // ✅ कैटेगरी का नाम - बिल्कुल वैसा ही, कोई बदलाव नहीं
+  //  कैटेगरी का नाम - बिल्कुल वैसा ही, कोई बदलाव नहीं
   const capitalized = category.charAt(0).toUpperCase() + category.slice(1);
 
-  // ✅ टाइटल - ज्यादा से ज्यादा 60-70 अक्षर
+  //  टाइटल - ज्यादा से ज्यादा 60-70 अक्षर
   let seoTitle = `एक्सपर्ट ${capitalized} मूवी रिव्यू और रेटिंग्स | EntertainIndia`;
   if (seoTitle.length > 68) {
     seoTitle = seoTitle.slice(0, 65) + '...';
   }
 
-  // ✅ डिस्क्रिप्शन - ज्यादा से ज्यादा 150-160 अक्षर
+  //  डिस्क्रिप्शन - ज्यादा से ज्यादा 150-160 अक्षर
   let seoDescription = `पढ़ें नवीनतम ${category} मूवी रिव्यू, क्रिटिक्स और स्टार रेटिंग्स। हमारे एक्सपर्ट फिल्म क्रिटिक्स से नई रिलीज़ का गहन विश्लेषण प्राप्त करें।`;
   if (seoDescription.length > 155) {
     seoDescription = seoDescription.slice(0, 152) + '...';
@@ -67,7 +67,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ मेन कंपोनेंट - बिल्कुल वैसा ही, कुछ नहीं बदला
+//  मेन कंपोनेंट - बिल्कुल वैसा ही, कुछ नहीं बदला
 export default async function LatestReviewsPage({ params, searchParams }) {
   const { category } = await params;
   const sParams = await searchParams;
@@ -88,7 +88,7 @@ export default async function LatestReviewsPage({ params, searchParams }) {
 
     const siteUrl = 'https://entertainindia.in';
 
-    // ✅ 1. ब्रेडक्रंब स्कीमा (हिंदी में)
+    //  1. ब्रेडक्रंब स्कीमा (हिंदी में)
     const breadcrumbLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
@@ -99,8 +99,8 @@ export default async function LatestReviewsPage({ params, searchParams }) {
       ]
     };
 
-    // ✅ 2. रिव्यू लिस्ट स्कीमा (हिंदी में)
-  // ✅ 2. रिव्यू लिस्ट स्कीमा (अब ARTICLE की IMAGE भी शामिल है)
+    //  2. रिव्यू लिस्ट स्कीमा (हिंदी में)
+  //  2. रिव्यू लिस्ट स्कीमा (अब ARTICLE की IMAGE भी शामिल है)
 const reviewListLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
@@ -120,7 +120,7 @@ const reviewListLd = {
       if (imageUrl && !imageUrl.startsWith('http')) imageUrl = `https://img.entertainindia.com${imageUrl}`;
     }
 
-    // ✅ नया URL पैटर्न: /[mainCategory]/[slug]
+    //  नया URL पैटर्न: /[mainCategory]/[slug]
     const mainCategory = review.MainCategory||review.mainCategory || 'article'; // fallback 'article'
     const articleUrl = `${siteUrl}/${mainCategory}/${review.slug}`;
 
@@ -140,7 +140,7 @@ const reviewListLd = {
           "@type": "Organization",
           "name": "EntertainIndia"
         },
-        "url": articleUrl,   // ✅ अब URL सही बनेगा
+        "url": articleUrl,   //  अब URL सही बनेगा
         "reviewRating": review.rating ? {
           "@type": "Rating",
           "ratingValue": review.rating,
@@ -153,7 +153,7 @@ const reviewListLd = {
   })
 };
 
-    // ✅ 3. कलेक्शनपेज स्कीमा
+    //  3. कलेक्शनपेज स्कीमा
     const collectionLd = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -169,7 +169,7 @@ const reviewListLd = {
 
     return (
       <>
-        {/* ✅ पैजिनेशन लिंक्स */}
+        {/*  पैजिनेशन लिंक्स */}
         {page > 1 && (
           <link 
             rel="prev" 
@@ -183,7 +183,7 @@ const reviewListLd = {
           />
         )}
 
-        {/* ✅ स्कीमा इंजेक्शन */}
+        {/*  स्कीमा इंजेक्शन */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
@@ -197,7 +197,7 @@ const reviewListLd = {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
         />
 
-        {/* ✅ हिडन H1 - सिर्फ गूगल के लिए (हिंदी में) */}
+        {/*  हिडन H1 - सिर्फ गूगल के लिए (हिंदी में) */}
         <h1 className="sr-only">
           {category.toUpperCase()} मूवी रिव्यू और रेटिंग्स - एक्सपर्ट फिल्म क्रिटिक्स | EntertainIndia
         </h1>

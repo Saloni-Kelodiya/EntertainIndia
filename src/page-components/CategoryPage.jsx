@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, useMemo, lazy, Suspense } from "react";
-import { articlesAPI } from "../lib/api";
+import { articlesAPI } from "../lib/api/articles";
 import ArticleCard from "../components/ui/ArticleCard";
 import Pagination from "../components/ui/Pagination";
 import { ArticleListSkeleton } from "../components/ui/Skeleton";
@@ -12,13 +12,13 @@ import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 import CategorySidebar from "../components/layout/CategorySidebar";
 import { Star } from "lucide-react";
 
-// ✅ Lazy load WebContentCategory (reduces initial bundle)
-const WebContentCategory = lazy(() => import("../page-components/WebContentCategory"));
+//  Lazy load WebContentCategory (reduces initial bundle)
+const WebContentCategory = lazy(() => import("./WebContentCategory"));
 
 const DEFAULT_ARTICLES = [];
 const DEFAULT_MOVIES = [];
 
-// ✅ Category name mapping (moved outside component)
+//  Category name mapping (moved outside component)
 const categoryNamesInHindi = {
   "tv": "टीवी",
   "ott": "ओटीटी",
@@ -71,7 +71,7 @@ const getLanguageDisplayName = (lang) => {
   return languageDisplayNames[lowerLang] || lang;
 };
 
-// ✅ Separate MovieCard component for better memoization
+//  Separate MovieCard component for better memoization
 const MovieCard = ({ movie, category }) => {
   let slugPath = "";
   if (category === "tv") slugPath = "shows";
@@ -114,7 +114,7 @@ const MovieCard = ({ movie, category }) => {
   );
 };
 
-// ✅ Memoized MovieGrid component
+//  Memoized MovieGrid component
 const MovieGrid = memo(({ movies, category, selectedLanguage }) => {
   const filteredMovies = useMemo(() => {
     if (selectedLanguage === "all") return movies;
@@ -139,7 +139,7 @@ const MovieGrid = memo(({ movies, category, selectedLanguage }) => {
 
 MovieGrid.displayName = 'MovieGrid';
 
-// ✅ Memoized Language Filter component
+//  Memoized Language Filter component
 const LanguageFilter = memo(({ languages, selectedLanguage, onLanguageChange }) => {
   return (
     <div className="flex flex-wrap gap-2 mb-6">
@@ -183,12 +183,12 @@ export default function CategoryPage({
   const [selectedLanguage, setSelectedLanguage] = useState("all");
   const isFirstRender = useRef(true);
 
-  // ✅ Scroll to top on mount only
+  //  Scroll to top on mount only
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
 
-  // ✅ Sync SSR props
+  //  Sync SSR props
   useEffect(() => {
     if (initialArticles.length === 0 && allArticles.length > 0) return;
     
@@ -206,7 +206,7 @@ export default function CategoryPage({
     if (initialPagination) setPagination(initialPagination);
   }, [initialArticles, initialMovies, initialPagination]);
 
-  // ✅ Fetch articles with useCallback
+  //  Fetch articles with useCallback
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
@@ -230,7 +230,7 @@ export default function CategoryPage({
     }
   }, [category, currentPage]);
 
-  // ✅ Fetch on page change (not on first render)
+  //  Fetch on page change (not on first render)
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -239,7 +239,7 @@ export default function CategoryPage({
     fetchArticles();
   }, [fetchArticles]);
 
-  // ✅ Search + letter filter (debounced)
+  //  Search + letter filter (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (!searchQuery.trim() && !letterFilter) {
@@ -262,12 +262,12 @@ export default function CategoryPage({
       }
 
       setArticles(filtered);
-    }, 300); // ✅ Debounce search
+    }, 300); //  Debounce search
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, letterFilter, allArticles]);
 
-  // ✅ Languages memoization
+  //  Languages memoization
   const languages = useMemo(() => {
     return ["all", ...new Set(movies.flatMap((m) =>
       (m.languages || []).map(lang => typeof lang === 'object' ? (lang.language || lang.name) : lang)
@@ -304,7 +304,7 @@ export default function CategoryPage({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <main className="lg:col-span-8 overflow-hidden">
             <div>
-              {/* ✅ Lazy loaded WebContentCategory */}
+              {/*  Lazy loaded WebContentCategory */}
               <Suspense fallback={<div className="h-32 animate-pulse bg-gray-100 rounded-xl" />}>
                 <WebContentCategory
                   title={categoryDisplayName}

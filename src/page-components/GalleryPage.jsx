@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { galleriesAPI } from "../lib/api";
+import { galleriesAPI } from "../lib/api/galleries";
 import {
   X,
   ChevronLeft,
@@ -221,7 +221,7 @@ export default function GalleryPage({ slug, initialGallery, initialRelated }) {
                   </h3>
                   <div
                     className="text-gray-500 dark:text-gray-400 leading-relaxed text-[15px] pr-1 custom-scroll"
-                    style={{ height: "200px", overflowY: "auto" }}
+                    style={{ height: "210px", overflowY: "auto" }}
                   >
                     {gallery.description ||
                       "एक्सक्लूसिव फैशन गैलरी जिसमें नवीनतम लुक और ट्रेंड्स शामिल हैं।"}
@@ -534,7 +534,7 @@ export default function GalleryPage({ slug, initialGallery, initialRelated }) {
           )}
         </div>
 
-        {/* ✅ दाईं ओर - 2 कॉलम ग्रिड (Explicit Row/Col के साथ) */}
+        {/*  दाईं ओर - 2 कॉलम ग्रिड (Explicit Row/Col के साथ) */}
        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
   
   {/* सेलिब्रिटी */}

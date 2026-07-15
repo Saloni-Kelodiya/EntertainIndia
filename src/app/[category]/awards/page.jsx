@@ -1,9 +1,10 @@
 // app/[category]/awards/page.jsx
 import AwardsPage from '../../../page-components/AwardsPage';
 import LayoutWrapper from '../../LayoutWrapper';
-import { AwardsAPI, articlesAPI } from "../../../lib/api";
+import { AwardsAPI} from "../../../lib/api/awards";
+import { articlesAPI } from '../../../lib/api/articles';
 
-// ✅ SEO: Dynamic Metadata Generation
+//  SEO: Dynamic Metadata Generation
 export async function generateMetadata({ params }) {
   const { category } = await params;
   const capitalized = category && category !== 'all' 
@@ -12,14 +13,14 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `${capitalized} Award Ceremonies & Winners List | EntertainIndia`,
-    description: `Stay updated with the latest ${category} award ceremonies. Explore winners list, nominees, event dates, and exclusive coverage of film awards on EntertainIndia.`,
+    description: `Stay updated with the latest ${category} award  Explore winners list, nominees, event dates, and exclusive coverage of film awards on EntertainIndia.`,
     robots: {
       index: true,
       follow: true,
       googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
     },
     alternates: {
-      canonical: `https://https://entertainindia.in/${category}/awards`,
+      canonical: `https://entertainindia.in/${category}/awards`,
     },
     openGraph: {
       title: `${capitalized} Movie Awards & Events`,

@@ -1,10 +1,11 @@
 import LayoutWrapper from "../../LayoutWrapper";
-import { tvShowsAPI, GenresAPI } from "../../../lib/api";
+import { tvShowsAPI } from "../../../lib/api/tv-shows";
+import { GenresAPI } from "../../../lib/api/genres";
 import TVShowsPage from "../../../page-components/TvshowsPage";
 
 const SITE_URL = "https://entertainindia.in";
 
-// ✅ TV SHOWS LISTING - PERFECT SCHEMA FOR GOOGLE INDEXING
+//  TV SHOWS LISTING - PERFECT SCHEMA FOR GOOGLE INDEXING
 function generateTVShowsListingSchema(tvShows) {
   const domain = SITE_URL;
   const listingUrl = `${domain}/tv/shows`;
@@ -18,7 +19,7 @@ function generateTVShowsListingSchema(tvShows) {
     "@id": `${domain}/#organization`,
     "name": "EntertainIndia",
     "url": domain,
-    "logo": `${domain}/logo.png`,
+    "logo": `${domain}/og-logo.png`,
     "sameAs": [
       "https://www.facebook.com/profile.php?id=61584375938569",
       "https://x.com/EIndia99460"
@@ -81,16 +82,17 @@ function generateTVShowsListingSchema(tvShows) {
   return { "@context": "https://schema.org", "@graph": graph };
 }
 
-// ✅ SEO METADATA - BACKEND SE REAL DATA
+//  SEO METADATA - BACKEND SE REAL DATA
 export async function generateMetadata() {
   try {
     const tvShowsData = await tvShowsAPI.getAll({ pageSize: 1 });
     const latestShow = tvShowsData?.data?.[0];
     
     // Agar backend se kuch mile toh use karo, nahi toh basic
-    const title = latestShow?.seoTitle || "TV Shows | EntertainIndia";
-    const description = latestShow?.seoDescription || "Watch latest TV shows, serials, reality shows updates in Hindi";
-
+    const title = latestShow?.seoTitle || "Best TV Shows 2026 - Reviews, Ratings & Where to Watch | EntertainIndia";
+const description =
+  latestShow?.seoDescription ||
+  "Watch the latest TV shows, Hindi serials, reality shows, episode updates, cast news, reviews, and entertainment updates in Hindi on EntertainIndia.";
     return {
       title: title,
       description: description,
@@ -114,7 +116,7 @@ export async function generateMetadata() {
   }
 }
 
-// ✅ MAIN COMPONENT
+//  MAIN COMPONENT
 export default async function TVShowsListing() {
   const category = "tv";
 

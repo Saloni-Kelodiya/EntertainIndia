@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { articlesAPI } from "../lib/api";
+import { articlesAPI } from "../lib/api/articles";
 import Image from "next/image";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 import Sidebar from "../components/layout/CategorySidebar";

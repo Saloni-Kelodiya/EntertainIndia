@@ -1,70 +1,156 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Music, ChevronDown, ChevronUp } from "lucide-react";
+import { Music, ChevronDown, ChevronUp, Play, Clock } from "lucide-react";
 import ArticleCard from "../components/ui/ArticleCard";
 import Pagination from "../components/ui/Pagination";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
-import { songsAPI, articlesAPI } from "../lib/api";
+import { articlesAPI } from "../lib/api/articles";
 
-// Hindi genre mapping (unchanged)
+// ─── Genre Mapping ──────────────────────────────────────────
 const GENRE_HINDI_MAP = {
-  'latest-release': 'नवीनतम रिलीज़',
-  'trending': 'ट्रेंडिंग',
-  'romantic': 'रोमांटिक',
-  'party-hits': 'पार्टी हिट्स',
-  'pop': 'पॉप',
-  'rock': 'रॉक',
-  'hip-hop': 'हिप हॉप',
-  'classical': 'शास्त्रीय',
-  'bhajan': 'भजन',
-  'gazal': 'ग़ज़ल',
-  'remix': 'रीमिक्स',
-  'instrumental': 'वाद्य',
-  'folk': 'लोक',
-  'patriotic': 'देशभक्ति',
-  'sad': 'उदास',
-  'happy': 'खुशनुमा',
-  'workout': 'वर्कआउट',
-  'devotional': 'भक्ति',
-  'action-soundtrack': 'एक्शन साउंडट्रैक',
-  'arabic-music': 'अरबी संगीत',
-  'bhangra': 'भांगड़ा',
-  'bhojpuri-song': 'भोजपुरी गाना',
-  'bollywood': 'बॉलीवुड',
-  'dance': 'डांस',
-  'filmi': 'फिल्मी',
-  'item-number': 'आइटम नंबर',
-  'item-song': 'आइटम गाना',
-  'edm': 'ईडीएम',
-  'electronic': 'इलेक्ट्रॉनिक',
-  'jazz': 'जैज़',
-  'lofi': 'लोफाई',
-  'melody': 'मेलोडी',
-  'qawwali': 'क़व्वाली',
-  'sufi': 'सूफ़ी',
-  'wedding': 'वेडिंग',
-  'year-end': 'साल के अंत में',
-  'retro': 'रेट्रो',
-  'birthday': 'जन्मदिन'
+  "latest-release": "नवीनतम रिलीज़",
+  trending: "ट्रेंडिंग",
+  romantic: "रोमांटिक",
+  "party-hits": "पार्टी हिट्स",
+  pop: "पॉप",
+  rock: "रॉक",
+  "hip-hop": "हिप हॉप",
+  classical: "शास्त्रीय",
+  bhajan: "भजन",
+  gazal: "ग़ज़ल",
+  remix: "रीमिक्स",
+  instrumental: "वाद्य",
+  folk: "लोक",
+  patriotic: "देशभक्ति",
+  sad: "उदास",
+  happy: "खुशनुमा",
+  workout: "वर्कआउट",
+  devotional: "भक्ति",
+  "action-soundtrack": "एक्शन साउंडट्रैक",
+  "arabic-music": "अरबी संगीत",
+  bhangra: "भांगड़ा",
+  "bhojpuri-song": "भोजपुरी गाना",
+  bollywood: "बॉलीवुड",
+  dance: "डांस",
+  filmi: "फिल्मी",
+  "item-number": "आइटम नंबर",
+  "item-song": "आइटम गाना",
+  edm: "ईडीएम",
+  electronic: "इलेक्ट्रॉनिक",
+  jazz: "जैज़",
+  lofi: "लोफाई",
+  melody: "मेलोडी",
+  qawwali: "क़व्वाली",
+  sufi: "सूफ़ी",
+  wedding: "वेडिंग",
+  "year-end": "साल के अंत में",
+  retro: "रेट्रो",
+  birthday: "जन्मदिन",
 };
 
-const getGenreInHindi = (genreSlug, genreName) => {
-  if (!genreSlug && !genreName) return "अन्य";
-  if (genreSlug && GENRE_HINDI_MAP[genreSlug.toLowerCase()]) {
-    return GENRE_HINDI_MAP[genreSlug.toLowerCase()];
-  }
-  if (genreName) {
-    const nameKey = genreName.toLowerCase().replace(/\s+/g, '-');
-    if (GENRE_HINDI_MAP[nameKey]) {
-      return GENRE_HINDI_MAP[nameKey];
-    }
-  }
-  return genreName || genreSlug || "अन्य";
+const getGenreInHindi = (slug, name) => {
+  if (!slug && !name) return "अन्य";
+  const key = slug?.toLowerCase();
+  if (key && GENRE_HINDI_MAP[key]) return GENRE_HINDI_MAP[key];
+  const nameKey = name?.toLowerCase().replace(/\s+/g, "-");
+  if (nameKey && GENRE_HINDI_MAP[nameKey]) return GENRE_HINDI_MAP[nameKey];
+  return name || slug || "अन्य";
 };
 
+// ─── Small Song Card (memoized) ──────────────────────────
+const SongCard = memo(function SongCard({ song, index, onClick, isActive }) {
+  const thumbUrl =
+    song.thumbnail?.url ||
+    song.thumbnail?.formats?.thumbnail?.url ||
+    null;
+
+  return (
+    <div
+      onClick={() => onClick(song)}
+      className={`group relative cursor-pointer rounded-xl overflow-hidden border transition-all duration-200 hover:-translate-y-1 hover:shadow-lg
+        ${isActive
+          ? "border-pink-500 shadow-md shadow-pink-100 dark:shadow-pink-900/20"
+          : "border-gray-200 dark:border-gray-800 hover:border-pink-400"
+        }
+        bg-white dark:bg-gray-900`}
+    >
+      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-pink-500 to-purple-600">
+        {thumbUrl ? (
+          <Image
+            src={thumbUrl}
+            alt={song.title || "गाना"}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            priority={index < 4}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white text-3xl">🎵</div>
+        )}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-pink-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 scale-75 group-hover:scale-100 shadow-lg">
+            <Play className="w-4 h-4 ml-0.5" fill="white" />
+          </div>
+        </div>
+        <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-black/50 text-white text-[10px] font-bold flex items-center justify-center">
+          {index + 1}
+        </div>
+        {song.duration && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-0.5 bg-black/60 text-white text-[10px] rounded px-1.5 py-0.5">
+            <Clock className="w-2.5 h-2.5" />
+            {song.duration}
+          </div>
+        )}
+      </div>
+      <div className="p-2.5">
+        <h3 className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-pink-600 transition leading-snug">
+          {song.title?.trim() || song.slug?.replace(/-/g, " ") || "बिना शीर्षक"}
+        </h3>
+        {song.music_genres?.length > 0 && (
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+            {song.music_genres.slice(0, 2).map((g) => getGenreInHindi(g.slug, g.name)).join(" · ")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// ─── Trending Song Row (memoized) ────────────────────────
+const TrendingSongRow = memo(function TrendingSongRow({ song, index, onClick }) {
+  const thumbUrl = song.thumbnail?.url || song.thumbnail?.formats?.thumbnail?.url || null;
+  return (
+    <div
+      onClick={() => onClick(song)}
+      className="group flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer border border-transparent hover:border-pink-300"
+    >
+      <span className="text-xs font-bold text-pink-600 w-5 text-center shrink-0">{index + 1}</span>
+      <div className="relative w-9 h-9 rounded-md overflow-hidden shrink-0 bg-gradient-to-br from-pink-400 to-purple-500">
+        {thumbUrl ? (
+          <Image src={thumbUrl} alt={song.title || "ट्रेंडिंग"} fill sizes="36px" className="object-cover" loading="lazy" />
+        ) : (
+          <span className="absolute inset-0 flex items-center justify-center text-white text-sm">🎵</span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-pink-600 transition">
+          {song.title?.trim() || "बिना शीर्षक"}
+        </p>
+        {song.music_genres?.length > 0 && (
+          <p className="text-[10px] text-gray-400 truncate">
+            {getGenreInHindi(song.music_genres[0].slug, song.music_genres[0].name)}
+          </p>
+        )}
+      </div>
+      {song.duration && <span className="text-[10px] text-gray-400 shrink-0">{song.duration}</span>}
+    </div>
+  );
+});
+
+// ─── Main Page ──────────────────────────────────────────────
 export default function MusicPage({
   serverCategory,
   initialSongs = [],
@@ -74,476 +160,308 @@ export default function MusicPage({
   initialPage = 1,
 }) {
   const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
 
-  const [articlePage, setArticlePage] = useState(initialPage);
-  const [songs, setSongs] = useState(initialSongs);
-  const [trendingSongs, setTrendingSongs] = useState(initialTrending);
+  const [songs] = useState(initialSongs);
+  const [trendingSongs] = useState(initialTrending);
   const [articles, setArticles] = useState(initialArticles);
   const [articlePagination, setArticlePagination] = useState(initialPagination);
-  const [songsLoading, setSongsLoading] = useState(false);
-  const [trendingSongsLoading, setTrendingSongsLoading] = useState(false);
-  const [articlesLoading, setArticlesLoading] = useState(false);
-  const [availableGenres, setAvailableGenres] = useState([]);
+  const [articlePage, setArticlePage] = useState(initialPage);
 
   const [activeGenre, setActiveGenre] = useState("all");
   const [showAllSongs, setShowAllSongs] = useState(false);
-  const [showAllTrendingSongs, setShowAllTrendingSongs] = useState(false);
-  const [viewMode, setViewMode] = useState("list");
+  const [showAllTrending, setShowAllTrending] = useState(false);
   const [showGenreDropdown, setShowGenreDropdown] = useState(false);
+  const [viewMode, setViewMode] = useState("grid");
+  const [articlesLoading, setArticlesLoading] = useState(false);
 
-  useEffect(() => setIsClient(true), []);
-
-  // Extract unique genres
-  useEffect(() => {
-    if (songs.length > 0) {
-      const genresSet = new Set();
-      songs.forEach((song) => {
-        song.music_genres?.forEach((genre) => {
-          if (genre.slug) {
-            genresSet.add(JSON.stringify({ slug: genre.slug, name: genre.name }));
-          }
-        });
+  // ─── Memoized derived data ────────────────────────────
+  const availableGenres = useMemo(() => {
+    const seen = new Set();
+    const genres = [];
+    songs.forEach((song) => {
+      song.music_genres?.forEach((g) => {
+        if (g.slug && !seen.has(g.slug)) {
+          seen.add(g.slug);
+          genres.push({ slug: g.slug, name: g.name });
+        }
       });
-      setAvailableGenres(Array.from(genresSet).map((g) => JSON.parse(g)));
-    }
+    });
+    return genres;
   }, [songs]);
 
-  // Client fallback fetch
-  useEffect(() => {
-    const fetchData = async () => {
-      if (initialSongs.length === 0) setSongsLoading(true);
-      if (initialTrending.length === 0) setTrendingSongsLoading(true);
-      if (initialArticles.length === 0) setArticlesLoading(true);
+  const filteredSongs = useMemo(() => {
+    return songs.filter((song) => {
+      const catOk = serverCategory
+        ? song.categories?.some((c) => c.slug?.toLowerCase() === serverCategory.toLowerCase())
+        : true;
+      const genreOk =
+        activeGenre === "all" ||
+        song.music_genres?.some((g) => g.slug?.toLowerCase() === activeGenre.toLowerCase());
+      return catOk && genreOk;
+    });
+  }, [songs, serverCategory, activeGenre]);
 
-      try {
-        let allSongs = songs;
-        if (initialSongs.length === 0) {
-          const response = await songsAPI.getAll({
-            category: serverCategory,
-            pageSize: 100,
-            sort: "createdAt:desc",
-          });
-          allSongs = response.songs || [];
-          setSongs(allSongs);
-        }
+  const visibleSongs = useMemo(() => showAllSongs ? filteredSongs : filteredSongs.slice(0, 18), [filteredSongs, showAllSongs]);
+  const visibleTrending = useMemo(() => showAllTrending ? trendingSongs : trendingSongs.slice(0, 6), [trendingSongs, showAllTrending]);
 
-        if (initialTrending.length === 0) {
-          const trending = allSongs.filter((song) => song.trending === true);
-          setTrendingSongs(trending);
-        }
+  const pageTitle = useMemo(() => {
+    if (!serverCategory) return "संगीत";
+    const map = { bollywood: "बॉलीवुड संगीत", hollywood: "हॉलीवुड संगीत", tollywood: "टॉलीवुड संगीत", bhojiwood: "भोजपुरी संगीत", korean: "कोरियाई संगीत" };
+    return map[serverCategory.toLowerCase()] || `${serverCategory} संगीत`;
+  }, [serverCategory]);
 
-        if (initialArticles.length === 0) {
-          const articlesRes = await articlesAPI.getAll({
-            page: articlePage,
-            pageSize: 12,
-            moderation_status: "published",
-            related_to: "music",
-            ...(serverCategory && { category: serverCategory }),
-          });
-          setArticles(articlesRes.articles || []);
-          setArticlePagination(articlesRes.pagination || {});
-        }
-      } catch (error) {
-        console.error("Client fetch error:", error);
-      } finally {
-        setSongsLoading(false);
-        setTrendingSongsLoading(false);
-        setArticlesLoading(false);
-      }
-    };
-    fetchData();
-  }, [serverCategory, articlePage]);
-
-  const handlePageChange = useCallback((newPage) => {
-    setArticlePage(newPage);
-    const path = serverCategory
-      ? `/${serverCategory}/music?page=${newPage}`
-      : `/music?page=${newPage}`;
-    router.push(path, { scroll: false });
-  }, [serverCategory, router]);
-
+  // ─── Callbacks ──────────────────────────────────────────
   const handleSongClick = useCallback((song) => {
     if (!song?.slug) return;
-    const path = serverCategory
-      ? `/${serverCategory}/music/${song.slug}`
-      : `/music/${song.slug}`;
-    router.push(path);
+    router.push(serverCategory ? `/${serverCategory}/music/${song.slug}` : `/music/${song.slug}`);
   }, [serverCategory, router]);
 
-  const filteredSongs = songs.filter((song) => {
-    const categoryMatch = serverCategory
-      ? song.categories?.some((cat) => cat.slug.toLowerCase() === serverCategory.toLowerCase())
-      : true;
-    const genreMatch = activeGenre === "all"
-      ? true
-      : song.music_genres?.some((genre) => genre.slug.toLowerCase() === activeGenre.toLowerCase());
-    return categoryMatch && genreMatch;
-  });
-
-  const getPageTitle = () => {
-    if (!serverCategory) return "संगीत";
-    const categoryTitles = {
-      bollywood: "बॉलीवुड संगीत",
-      hollywood: "हॉलीवुड संगीत",
-      tollywood: "टॉलीवुड संगीत",
-      bhojiwood: "भोजपुरी संगीत",
-      korean: "कोरियाई संगीत",
-    };
-    return categoryTitles[serverCategory.toLowerCase()] || `${serverCategory.charAt(0).toUpperCase() + serverCategory.slice(1)} संगीत`;
-  };
-
-  const getPageDescription = () => {
-    if (!serverCategory) {
-      return "बॉलीवुड और हॉलीवुड संगीत में नए हिट गाने, ट्रेंडिंग ट्रैक और कालजयी क्लासिक्स खोजें";
+  const handlePageChange = useCallback(async (newPage) => {
+    setArticlePage(newPage);
+    setArticlesLoading(true);
+    try {
+      const res = await articlesAPI.getAll({
+        page: newPage,
+        pageSize: 12,
+        moderation_status: "published",
+        related_to: "music",
+        ...(serverCategory && { category: serverCategory }),
+      });
+      setArticles(res.articles || []);
+      setArticlePagination(res.pagination || {});
+    } catch (err) {
+      console.error("Page change error:", err);
+    } finally {
+      setArticlesLoading(false);
     }
-    const categoryNames = {
-      bollywood: "बॉलीवुड",
-      hollywood: "हॉलीवुड",
-      tollywood: "टॉलीवुड",
-      bhojiwood: "भोजपुरी",
-      korean: "कोरियाई",
-    };
-    const categoryName = categoryNames[serverCategory.toLowerCase()] || serverCategory;
-    return `${categoryName} संगीत में नए हिट गाने, ट्रेंडिंग ट्रैक और कालजयी क्लासिक्स खोजें`;
-  };
+    router.push(
+      serverCategory ? `/${serverCategory}/music?page=${newPage}` : `/music?page=${newPage}`,
+      { scroll: false }
+    );
+  }, [serverCategory, router]);
 
-  // ✅ No early return – both loading and content are always rendered, visibility toggled after mount
+  // ─── Render ──────────────────────────────────────────────
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">
-      {/* Loading placeholder – visible until client mounts */}
-      <div className={!isClient ? "block" : "hidden"}>
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-600"></div>
-          <p className="mt-3 text-gray-600 dark:text-gray-400 text-sm">लोड हो रहा है...</p>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <TopCategoryTabs />
+
+      {/* Header */}
+      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+        <Music size={28} className="text-pink-500 shrink-0" />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">नए हिट गाने, ट्रेंडिंग ट्रैक और कालजयी क्लासिक्स</p>
         </div>
       </div>
 
-      {/* Actual content – visible after client mounts */}
-      <div className={isClient ? "block" : "hidden"}>
-        {/* Header */}
-        <div>
-          <TopCategoryTabs />
-          <div className="border-b border-gray-300 dark:border-gray-700 py-4 mb-6 flex flex-row gap-4">
-            <Music size={32} className="text-pink-500" />
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                {getPageTitle()}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm">
-                {getPageDescription()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Genre Filter */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">शैली के अनुसार फ़िल्टर करें</h2>
+      {/* Genre Filter */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">शैली</h2>
+          {availableGenres.length > 10 && (
             <button
               onClick={() => setShowGenreDropdown(!showGenreDropdown)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-700 hover:border-pink-500 transition"
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-pink-600 transition"
             >
-              {showGenreDropdown ? "कम दिखाएं" : "सभी शैलियाँ"}
-              {showGenreDropdown ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {showGenreDropdown ? "कम दिखाएं" : "सभी"}
+              {showGenreDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setActiveGenre("all")}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              activeGenre === "all"
+                ? "bg-pink-600 text-white shadow-sm"
+                : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-pink-400"
+            }`}
+          >
+            सभी
+          </button>
+          {(showGenreDropdown ? availableGenres : availableGenres.slice(0, 10)).map((g) => (
             <button
-              onClick={() => setActiveGenre("all")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                activeGenre === "all"
-                  ? "bg-pink-600 text-white shadow-lg shadow-pink-200 dark:shadow-none"
-                  : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:border-pink-500"
+              key={g.slug}
+              onClick={() => setActiveGenre(g.slug)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                activeGenre === g.slug
+                  ? "bg-pink-600 text-white shadow-sm"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-pink-400"
               }`}
             >
-              सभी गाने
+              {getGenreInHindi(g.slug, g.name)}
             </button>
-            {(showGenreDropdown ? availableGenres : availableGenres.slice(0, 12)).map((genre) => (
-              <button
-                key={genre.slug}
-                onClick={() => setActiveGenre(genre.slug)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeGenre === genre.slug
-                    ? "bg-pink-600 text-white shadow-lg shadow-pink-200 dark:shadow-none"
-                    : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:border-pink-500"
-                }`}
-              >
-                {getGenreInHindi(genre.slug, genre.name)}
-              </button>
-            ))}
+          ))}
+        </div>
+      </div>
+
+      {/* Songs + Trending */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">
+              {activeGenre === "all" ? "सभी गाने" : `${getGenreInHindi(activeGenre)} गाने`}
+              <span className="ml-2 text-xs font-normal text-gray-400">({filteredSongs.length})</span>
+            </h2>
           </div>
-          {availableGenres.length > 0 && (
-            <p className="text-xs text-gray-500 mt-3">कुल {availableGenres.length} शैलियाँ उपलब्ध</p>
+          {filteredSongs.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {visibleSongs.map((song, i) => (
+                  <SongCard key={song.id || i} song={song} index={i} onClick={handleSongClick} isActive={false} />
+                ))}
+              </div>
+              {filteredSongs.length > 18 && (
+                <button
+                  onClick={() => setShowAllSongs(!showAllSongs)}
+                  className="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-sm font-semibold transition"
+                >
+                  {showAllSongs ? "▲ कम दिखाएं" : `▼ सभी ${filteredSongs.length} गाने देखें`}
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+              <Music className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">कोई गाना उपलब्ध नहीं है</p>
+            </div>
           )}
         </div>
 
-        {/* Songs + Trending grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-          {/* Main songs */}
-          <div className="lg:col-span-2">
-            {songsLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-600"></div>
-                <p className="mt-3 text-gray-600 dark:text-gray-400 text-sm">गाने लोड हो रहे हैं...</p>
-              </div>
-            ) : filteredSongs.length > 0 ? (
+        {/* Trending Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-24 bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">🔥</span>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">ट्रेंडिंग</h3>
+            </div>
+            {trendingSongs.length > 0 ? (
               <>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    {activeGenre === "all" ? "सभी गाने" : `${getGenreInHindi(activeGenre)} गाने`}
-                  </h3>
-                  <p className="text-sm text-gray-500">{filteredSongs.length} गाने</p>
-                </div>
-                <div className="space-y-2">
-                  {(showAllSongs ? filteredSongs : filteredSongs.slice(0, 10)).map((song, index) => (
-                    <div
-                      key={song.id || index}
-                      onClick={() => handleSongClick(song)}
-                      className="bg-white dark:bg-gray-900 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer border border-gray-200 dark:border-gray-800 hover:border-pink-500 hover:shadow-md group"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <span className="text-sm font-bold text-pink-600 w-6 text-center">{index + 1}</span>
-                          {song.thumbnail?.url ? (
-                            <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
-                              <Image
-                                src={song.thumbnail.url}
-                                alt={song.title || "गाने का थंबनेल"}
-                                fill
-                                sizes="(max-width: 768px) 48px, 48px"
-                                className="object-cover"
-                                loading="lazy"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-lg flex-shrink-0">🎵</div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate group-hover:text-pink-600 transition">
-                              {song.title?.trim() || song.slug?.replace(/-/g, " ") || "बिना शीर्षक वाला गाना"}
-                            </h3>
-                            <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
-                              {song.metadescription || "अज्ञात कलाकार"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {song.music_genres?.slice(0, 2).map((g) => (
-                            <span
-                              key={g.slug}
-                              className={`px-2 py-1 rounded-full text-[10px] font-medium border whitespace-nowrap ${
-                                activeGenre === g.slug
-                                  ? "bg-pink-600 text-white border-pink-600"
-                                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700"
-                              }`}
-                            >
-                              {getGenreInHindi(g.slug, g.name)}
-                            </span>
-                          ))}
-                          {song.duration && <span className="text-xs text-gray-500 dark:text-gray-400">{song.duration}</span>}
-                        </div>
-                      </div>
-                    </div>
+                <div className="space-y-1">
+                  {visibleTrending.map((song, i) => (
+                    <TrendingSongRow key={song.id || i} song={song} index={i} onClick={handleSongClick} />
                   ))}
                 </div>
-                {filteredSongs.length > 10 && (
+                {trendingSongs.length > 6 && (
                   <button
-                    onClick={() => setShowAllSongs(!showAllSongs)}
-                    className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-lg font-semibold transition text-sm"
+                    onClick={() => setShowAllTrending(!showAllTrending)}
+                    className="w-full mt-3 py-1.5 text-xs font-semibold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20 rounded-lg hover:bg-pink-100 transition"
                   >
-                    {showAllSongs ? "▲ कम दिखाएं" : `▼ सभी देखें (${filteredSongs.length})`}
+                    {showAllTrending ? "▲ कम दिखाएं" : `▼ सभी देखें (${trendingSongs.length})`}
                   </button>
                 )}
               </>
             ) : (
-              <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-                <p className="text-gray-600 dark:text-gray-400">कोई गाना उपलब्ध नहीं है</p>
-              </div>
+              <p className="text-center text-sm text-gray-400 py-6">कोई ट्रेंडिंग गाना नहीं</p>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Trending sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🔥</span>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">ट्रेंडिंग गाने</h3>
-              </div>
-              {trendingSongsLoading ? (
-                <div className="text-center py-6">
-                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-pink-600"></div>
-                  <p className="mt-2 text-gray-600 dark:text-gray-400 text-xs">लोड हो रहा है...</p>
-                </div>
-              ) : trendingSongs.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    {(showAllTrendingSongs ? trendingSongs : trendingSongs.slice(0, 5)).map((song, index) => (
-                      <div
-                        key={song.id || index}
-                        onClick={() => handleSongClick(song)}
-                        className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-pink-400 group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-pink-600 w-7 text-center">{index + 1}</span>
-                          {song.thumbnail?.url ? (
-                            <div className="relative w-10 h-10 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
-                              <Image
-                                src={song.thumbnail.url}
-                                alt={song.title || "ट्रेंडिंग गाने का थंबनेल"}
-                                fill
-                                sizes="40px"
-                                className="object-cover"
-                                loading="lazy"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-md flex items-center justify-center text-white text-sm flex-shrink-0">🎵</div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 dark:text-white text-xs truncate group-hover:text-pink-600 transition">
-                              {song.title?.trim() || song.slug?.replace(/-/g, " ") || "बिना शीर्षक"}
-                            </h4>
-                            {song.music_genres?.length > 0 && (
-                              <p className="text-gray-500 dark:text-gray-400 text-[9px] truncate mt-0.5">
-                                {song.music_genres.slice(0, 2).map((g) => getGenreInHindi(g.slug, g.name)).join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {trendingSongs.length > 5 && (
-                    <button
-                      onClick={() => setShowAllTrendingSongs(!showAllTrendingSongs)}
-                      className="w-full mt-3 px-3 py-1.5 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 rounded-lg font-semibold transition text-xs hover:bg-pink-100 dark:hover:bg-pink-900/30"
-                    >
-                      {showAllTrendingSongs ? "▲ कम दिखाएं" : `▼ सभी देखें (${trendingSongs.length})`}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-6 text-gray-600 dark:text-gray-400 text-sm">कोई ट्रेंडिंग गाना नहीं</div>
-              )}
-            </div>
+      {/* ─── Articles Section (direct render) ────────────── */}
+      <div id="articles" className="scroll-mt-24">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">संगीत आर्टिकल</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {articlesLoading ? "लोड हो रहा है..." : `${articles.length} आर्टिकल`}
+            </p>
+          </div>
+          <div className="flex gap-1.5">
+            {["grid", "list"].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`p-2 rounded-lg border text-sm transition ${
+                  viewMode === mode
+                    ? "bg-pink-600 border-pink-600 text-white"
+                    : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {mode === "grid" ? "▦" : "☰"}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Articles section */}
-        <div id="articles" className="mt-10 scroll-mt-24">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">संगीत आर्टिकल</h3>
-              <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-                {articlesLoading ? "लोड हो रहा है..." : `${articles.length} आर्टिकल`}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition border ${
-                  viewMode === "grid"
-                    ? "bg-pink-600 border-pink-600 text-white"
-                    : "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <span className="text-lg">▦</span>
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition border ${
-                  viewMode === "list"
-                    ? "bg-pink-600 border-pink-600 text-white"
-                    : "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <span className="text-lg">☰</span>
-              </button>
-            </div>
-          </div>
-
-          {articlesLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-600"></div>
-              <p className="mt-3 text-gray-600 dark:text-gray-400 text-sm">आर्टिकल लोड हो रहे हैं...</p>
-            </div>
-          ) : articles.length > 0 ? (
-            <>
-              <div className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
-                {articles.map((article) => {
-                  if (viewMode === "list") {
-                    const articlePath = `/${article.mainCategory || article.MainCategory || "article"}/${article.slug}`;
-                    return (
-                      <Link key={article.id} href={articlePath} className="block">
-                        <div className="bg-white dark:bg-gray-900 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer border border-gray-200 dark:border-gray-800 hover:border-pink-400 group flex gap-3">
-                          <div className="flex-shrink-0">
-                            {(() => {
-                              const imageUrl =
-                                article.heroImage?.formats?.medium?.url ||
-                                article.heroImage?.formats?.small?.url ||
-                                article.heroImage?.url;
-                              return imageUrl ? (
-                                <div className="relative w-24 h-24 rounded-lg overflow-hidden shadow-md group-hover:scale-105 transition-transform">
-                                  <Image
-                                    src={imageUrl}
-                                    alt={article.title || "आर्टिकल थंबनेल"}
-                                    fill
-                                    sizes="(max-width: 768px) 96px, 96px"
-                                    className="object-cover"
-                                    loading="lazy"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-24 h-24 bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg flex items-center justify-center text-white text-xl">📰</div>
-                              );
-                            })()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-2 group-hover:text-pink-600 transition">
-                              {article.title}
-                            </h4>
-                            <p className="text-gray-600 dark:text-gray-400 text-xs mt-1 line-clamp-2">
-                              {typeof article.description === "string"
-                                ? article.description
-                                : typeof article.content === "string"
-                                ? article.content
-                                : ""}
-                            </p>
-                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                              {article.category && (
-                                <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded font-medium">
-                                  {typeof article.category === "string" ? article.category : article.category?.name}
-                                </span>
-                              )}
-                              {article.publishedAt && (
-                                <span>{new Date(article.publishedAt).toLocaleDateString("hi-IN")}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  } else {
-                    return <ArticleCard key={article.id} article={article} viewMode={viewMode} />;
-                  }
-                })}
+        {articlesLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-pulse">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                <div className="aspect-video bg-gray-200 dark:bg-gray-700" />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                </div>
               </div>
-              {articlePagination?.pageCount > 1 && (
+            ))}
+          </div>
+        ) : articles.length > 0 ? (
+          <>
+            <div className={
+              viewMode === "grid"
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                : "flex flex-col gap-3"
+            }>
+              {articles.map((article) => {
+                if (viewMode === "list") {
+                  const imgUrl =
+                    article.heroImage?.formats?.medium?.url ||
+                    article.heroImage?.formats?.small?.url ||
+                    article.heroImage?.url ||
+                    null;
+                  const path = `/${article.mainCategory || "article"}/${article.slug}`;
+                  return (
+                    <Link key={article.id} href={path} className="block group">
+                      <div className="flex gap-3 p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-pink-400 hover:shadow-sm transition">
+                        <div className="shrink-0 relative w-24 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                          {imgUrl ? (
+                            <Image
+                              src={imgUrl}
+                              alt={article.title || ""}
+                              fill
+                              sizes="96px"
+                              className="object-cover group-hover:scale-105 transition-transform"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl">📰</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-600 transition">
+                            {article.title}
+                          </h4>
+                          {article.publishedAt && (
+                            <p className="text-[11px] text-gray-400 mt-1.5">
+                              {new Date(article.publishedAt).toLocaleDateString("hi-IN")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                }
+                // Grid mode – use existing ArticleCard component
+                return <ArticleCard key={article.id} article={article} viewMode={viewMode} />;
+              })}
+            </div>
+
+            {articlePagination?.pageCount > 1 && (
+              <div className="mt-6">
                 <Pagination
                   currentPage={articlePagination.page || 1}
                   totalPages={articlePagination.pageCount}
                   onPageChange={handlePageChange}
                 />
-              )}
-            </>
-          ) : (
-            <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-              <p className="text-gray-600 dark:text-gray-400">कोई आर्टिकल उपलब्ध नहीं है</p>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+            <p className="text-gray-500 text-sm">कोई आर्टिकल उपलब्ध नहीं</p>
+          </div>
+        )}
       </div>
     </div>
   );

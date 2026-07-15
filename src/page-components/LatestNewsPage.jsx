@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, Eye, Newspaper } from "lucide-react"; // TrendingUp hata diya
-import { articlesAPI } from "../lib/api";
+import { articlesAPI } from "../lib/api/articles";
 import { getStrapiMedia } from "../lib/constants";
 import { formatDate } from "../lib/helpers";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
@@ -15,7 +15,7 @@ export default function LatestNewsPage({ serverCategory, initialArticles }) {
   const [loading, setLoading] = useState(false);
   const isFirstRender = useRef(true); // Double fetch rokne ke liye
 
-  // ✅ Naye Filters: Trending ki jagah TV aur OTT
+  //  Naye Filters: Trending ki jagah TV aur OTT
  const filters = [
   { label: "नवीनतम", value: "latest" },
   { label: "बॉलीवुड", value: "bollywood" },
@@ -40,11 +40,11 @@ export default function LatestNewsPage({ serverCategory, initialArticles }) {
       setLoading(true);
       let params = {
         pageSize: 12,
-        mainCategory: "News", // ✅ Sirf News data mangwane ke liye
+        mainCategory: "News", //  Sirf News data mangwane ke liye
       };
 
       if (filter !== "latest") {
-        params.category = filter; // ✅ Specific category filter
+        params.category = filter; //  Specific category filter
       }
 
       const res = await articlesAPI.getAll(params);

@@ -40,6 +40,16 @@ export const normalizeArticle = (article) => {
 
   const normalizedAuthors = rawAuthors.map(normalizeAuthor).filter(Boolean);
 
+  //  FIX: Category ko handle karo – array ho toh pehla element lo, warna seedha normalize karo
+  let normalizedCategory = null;
+  if (data.category) {
+    if (Array.isArray(data.category) && data.category.length > 0) {
+      normalizedCategory = normalizeCategory(data.category[0]);
+    } else if (!Array.isArray(data.category)) {
+      normalizedCategory = normalizeCategory(data.category);
+    }
+  }
+
   const normalizedArticle = {
     id: article.id,
     title: data.title,
@@ -63,9 +73,8 @@ export const normalizeArticle = (article) => {
     cons_1: data.cons_1 || null,
     cons_2: data.cons_2 || null,
     heroImage: heroRaw ? normalizeMedia(heroRaw) : null,
-    category: data.category ? normalizeCategory(data.category) : null,
+    category: normalizedCategory, // ab single object hai, array nahi
     genres: data.genres ? normalizeGenres(data.genres.data || data.genres) : [],
-
     tags: data.tags || [],
     authors: normalizedAuthors,
     Authors: normalizedAuthors.length > 0 ? normalizedAuthors[0] : null,
@@ -167,7 +176,7 @@ export const articlesAPIServer = {
       q.append("populate[3]", "genres");
       q.append("populate[4]", "tags");
 
-
+ 
       const slugMap = {
         bollywood: "bollywood",
         hollywood: "hollywood",
@@ -190,6 +199,7 @@ export const articlesAPIServer = {
         reviews: ["Movie Review", "movie review", "Movie Reviews", "movie reviews", "Review", "Reviews"],
         fashion: ["Fashion", "fashion", "Celebrity Fashion", "CelebrityFashion"]
       };
+      
 
       if (params.category && slugMap[params.category]) {
         const categorySlug = slugMap[params.category];
@@ -231,7 +241,7 @@ export const articlesAPIServer = {
         q.append("filters[$and][1][$or][1][summary][$containsi]", params.search);
       }
 
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const url = `${API_URL}?endpoint=articles&${q.toString()}`;
 
       const res = await fetch(url, {
@@ -243,7 +253,10 @@ export const articlesAPIServer = {
       const json = await res.json();
       const data = json?.data || [];
       const pagination = json?.meta?.pagination || {};
-
+    //  Updated Console Log
+     console.log("📦 JSON DATA:", json);
+console.log("📦 TOTAL RECORDS:", json?.data?.length);
+console.log("📦 PAGINATION:", json?.meta?.pagination);
       return { articles: data.map(normalizeArticle), pagination };
     } catch (error) {
       console.error('Error fetching articles:', error);
@@ -266,7 +279,7 @@ export const articlesAPIServer = {
     queryParams.append('populate[3]', 'genres');
     queryParams.append('populate[4]', 'tags');
 
-    // ✅ FIX: URL Structure - Make sure API_URL is defined
+    //  FIX: URL Structure - Make sure API_URL is defined
     const url = `${API_URL}?endpoint=articles&${queryParams.toString()}`;
     
     const res = await fetch(url, {
@@ -326,7 +339,7 @@ export const normalizeWebStory = (story) => {
     id: story.id,
     title: data.title,
     slug: data.slug,
-    moderationStatus: data.moderation_status || "pending", // ✅ Status mapping
+    moderationStatus: data.moderation_status || "pending", //  Status mapping
     heroText: data.heroText || "",
     seo_title: data.seo_title || data.title,
     seo_description: data.seo_description || data.heroText,
@@ -382,7 +395,7 @@ export const webStoriesAPIServer = {
         const limit = params.limit || 10;
         const category = params.category || '';
         
-        // ✅ SIRF THUMBNAIL POPULATE KARO - Slides nahi chahiye home page pe
+        //  SIRF THUMBNAIL POPULATE KARO - Slides nahi chahiye home page pe
         let url = `${API_URL}?endpoint=web-stories&` +
           `filters[moderation_status][$eq]=published` +
           `&filters[language][$eq]=hi` +
@@ -406,7 +419,7 @@ export const webStoriesAPIServer = {
         
         const json = await res.json();
         
-        // ✅ Sirf light fields normalize karo
+        //  Sirf light fields normalize karo
         const lightStories = (json.data || []).map(item => normalizeWebStory(item));
         
         return {
@@ -420,7 +433,7 @@ export const webStoriesAPIServer = {
     },
   async getAll() {
     try {
-      // ✅ FIX: URL Structure & String concat with "&" instead of "?"
+      //  FIX: URL Structure & String concat with "&" instead of "?"
       const url = `${API_URL}?endpoint=web-stories&` +
         `filters[moderation_status][$eq]=published` +
         `&filters[language][$eq]=hi` + // सिर्फ हिंदी वेब स्टोरीज
@@ -449,7 +462,7 @@ export const webStoriesAPIServer = {
 
   async getBySlug(slug) {
     try {
-      // ✅ FIX: URL Structure with language filter
+      //  FIX: URL Structure with language filter
       const url = `${API_URL}?endpoint=web-stories&` +
         `filters[slug][$eq]=${slug}` +
         `&filters[language][$eq]=hi` + // सिर्फ हिंदी वेब स्टोरी
@@ -620,7 +633,7 @@ export const normalizeMovieServer = (movie) => {
 };
 
 export const moviesAPIServer = {
-  // ✅ 1. Get All Movies (with Search, Category, and Filters)
+  //  1. Get All Movies (with Search, Category, and Filters)
   getAll: async (params = {}) => {
     const q = new URLSearchParams();
 
@@ -656,7 +669,7 @@ export const moviesAPIServer = {
     }
 
     try {
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const res = await fetch(`${API_URL}?endpoint=movies&${q.toString()}`, {
         next: { revalidate: 60 }, // Cache for 60 seconds
       });
@@ -674,7 +687,7 @@ export const moviesAPIServer = {
     }
   },
 
-  // ✅ 2. Get Single Movie by Slug (with Deep Populate)
+  //  2. Get Single Movie by Slug (with Deep Populate)
   getBySlug: async (slug) => {
     try {
       // Step 1: Get Basic Data to find DocumentID
@@ -682,7 +695,7 @@ export const moviesAPIServer = {
       q.append('filters[slug][$eq]', slug);
       q.append('populate', '*');
 
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const res = await fetch(`${API_URL}?endpoint=movies&${q.toString()}`, {
         next: { revalidate: 60 },
       });
@@ -696,7 +709,7 @@ export const moviesAPIServer = {
       // Note: Agar aapka Strapi v4/v5 hai toh complex objects ke liye deep fetch zaroori hota hai
       const documentId = item.documentId || item.id;
       
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const deepRes = await fetch(`${API_URL}?endpoint=movies/${documentId}&populate[cast][populate][celebrities_profile][populate]=*&populate[crewMembers][populate]=*&populate[poster]=*&populate[backdrop]=*&populate[movie_review]=*&populate[similar_movies][populate]=*`, {
         next: { revalidate: 60 },
       });
@@ -757,7 +770,7 @@ export const celebritiesAPIServer = {
         q.append("filters[industry][$eq]", params.industry);
       }
 
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const res = await fetch(`${API_URL}?endpoint=celebrities-profiles&${q.toString()}`, {
         next: { revalidate: 60 } // Cache for 1 minute
       });
@@ -802,7 +815,7 @@ const normalizeCategorySEO = (item) => {
 export const categoryAPIServer = {
   async getBySlug(slug) {
     try {
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const url = `${API_URL}?endpoint=categories&filters[slug][$eq]=${slug}&populate[seoinfo]=*`;
 
       const res = await fetch(url, {
@@ -908,7 +921,7 @@ export const webSeriesAPIServer = {
         q.append('filters[categories][slug][$eq]', params.category);
       }
 
-      // ✅ FIX: URL Structure
+      //  FIX: URL Structure
       const url = `${API_URL}?endpoint=web-series-collections&${q.toString()}`;
 
       const res = await fetch(url, { next: { revalidate: 60 } });

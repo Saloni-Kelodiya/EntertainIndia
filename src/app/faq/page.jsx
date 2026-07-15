@@ -2,7 +2,7 @@ import FaqPage from '../../page-components/FaqPage';
 import LayoutWrapper from '../LayoutWrapper';
 
 export const metadata = {
-  title: 'FAQ | EntertainIndia Hindi',
+  title: 'मनोरंजन FAQs: फ़िल्में, OTT, सेलिब्रिटीज़ और वेब सीरीज़ | EntertainIndia',
   description: 'EntertainIndia के बारे में अक्सर पूछे जाने वाले सवालों (FAQ) के जवाब यहाँ पढ़ें।',
   keywords: 'faq in hindi, frequently asked questions, entertainindia help, entertainment news faq hindi',
   alternates: {
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default function FAQ() {
-  // --- ✅ FAQ Schema for Google Rich Results ---
+  // ---  FAQ Schema for Google Rich Results ---
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

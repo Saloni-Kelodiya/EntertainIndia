@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { articlesAPI } from '../../lib/api';
+import { articlesAPI } from '../../lib/api/articles';
 import { getStrapiMedia } from '../../lib/constants';
 
 const PLATFORM_COLORS = {
@@ -15,8 +15,7 @@ const PLATFORM_COLORS = {
   Zee5: 'bg-orange-600',
   Stage: 'bg-green-600'
 };
-
-// ✅ Platform name mapping to Hindi
+//  Platform name mapping to Hindi
 const getPlatformNameHindi = (platformName) => {
   const platformMap = {
     'Netflix': 'नेटफ्लिक्स',
@@ -29,8 +28,7 @@ const getPlatformNameHindi = (platformName) => {
   };
   return platformMap[platformName?.trim()] || platformName;
 };
-
-// ✅ Helper to get platform color
+//  Helper to get platform color
 const getPlatformColor = (platformName) => {
   return PLATFORM_COLORS[platformName?.trim()] || 'bg-gray-600';
 };
@@ -48,7 +46,7 @@ export default function WhatToWatch() {
     try {
       setLoading(true);
 
-      const res = await articlesAPI.getAll({
+      const res = await articlesAPI.getWhattoWatch({
         pageSize: 4,
         sort: 'publish_datetime:desc',
         filters: {
@@ -105,14 +103,14 @@ export default function WhatToWatch() {
             item?.heroImage?.url
           );
 
-          // ✅ Get first watching platform (if multiple)
+          //  Get first watching platform (if multiple)
           const firstPlatform = item.watching_platform?.[0];
           const platformName = firstPlatform?.platform?.trim() || '';
           const platformNameHindi = getPlatformNameHindi(platformName);
           const platformUrl = firstPlatform?.url || '';
           const badgeColor = getPlatformColor(platformName);
 
-          // ✅ Click handler for platform badge
+          //  Click handler for platform badge
           const handlePlatformClick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -145,7 +143,7 @@ export default function WhatToWatch() {
                   {item.title}
                 </p>
 
-                {/* ✅ Platform badge with Hindi name */}
+                {/*  Platform badge with Hindi name */}
                 {platformNameHindi && (
                   platformUrl ? (
                     <span

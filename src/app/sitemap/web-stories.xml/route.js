@@ -15,12 +15,12 @@ export async function GET() {
     let hasMore = true;
 
     while (hasMore) {
-      // ✅ ONLY ENGLISH CONTENT
+      //  ONLY ENGLISH CONTENT
       const queryParams = new URLSearchParams({
         'pagination[page]': page.toString(),
         'pagination[pageSize]': pageSize.toString(),
         'filters[moderation_status][$eq]': 'published',
-        'filters[language][$eq]': 'hi', // ✅ ONLY ENGLISH
+        'filters[language][$eq]': 'hi', //  ONLY ENGLISH
         'fields[0]': 'slug',
         'fields[1]': 'title',
         'fields[2]': 'updatedAt',
@@ -47,7 +47,7 @@ export async function GET() {
         break;
       }
 
-      // ✅ NO HINDI CHECK NEEDED - API already filtered English
+      //  NO HINDI CHECK NEEDED - API already filtered English
       stories.forEach(storyItem => {
         const attrs = storyItem.attributes || storyItem;
         const slug = attrs.slug;
@@ -71,7 +71,7 @@ export async function GET() {
       if (page > 50) break; // 5000 stories limit
     }
 
-    // ✅ FINAL SORTING: Latest First
+    //  FINAL SORTING: Latest First
     allStories.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Generate XML

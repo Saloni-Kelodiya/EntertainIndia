@@ -17,8 +17,7 @@ export default function TrendingTicker() {
         setLoading(true);
         // API already returns trending=true articles first
         const data = await articlesAPI.getTrending({
-          limit: 15,
-
+          limit: 10,
         });
         setArticles(data);
       } catch (error) {

@@ -5,7 +5,7 @@ import { User2, Mail, Calendar, Shield, LogOut, Settings, Users, CheckCircle, Re
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-import { authAPI } from "../lib/api";
+import { authAPI } from "../lib/api/auth";
 
 export default function ProfilePage() {
   const router = useRouter();

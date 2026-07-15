@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Heart, Crown, Shirt, Camera, TrendingUp, Grid, List, Eye, Calendar } from "lucide-react";
 import TopCategoryTabs from "../components/ui/TopCategoryTabs";
 import Image from "next/image";
-// ✅ डायनेमिक फ़िल्टर आइकॉन
+
 const filterIcons = {
   "red-carpet": Crown,
   "pink-carpet": Crown,
@@ -13,10 +13,9 @@ const filterIcons = {
   "photoshoot": Camera,
   "trends": TrendingUp,
   "met-gala": Crown,
-  "default": Sparkles
+  "default": Sparkles,
 };
 
-// 📌 अंग्रेजी से हिंदी फ़िल्टर मैपिंग (दिखाने के लिए)
 const englishToHindiFilter = {
   "all": "सभी",
   "red-carpet": "रेड कार्पेट",
@@ -24,25 +23,227 @@ const englishToHindiFilter = {
   "casual": "कैज़ुअल",
   "photoshoot": "फोटोशूट",
   "trends": "ट्रेंड्स",
-  "met-gala": "मेट गाला"
+  "met-gala": "मेट गाला",
 };
 
-// 📌 बैकएंड fashionCategory को हिंदी में बदलने के लिए
+const fashionCategoryMap = {
+  "red carpet": "रेड कार्पेट",
+  "pink carpet": "पिंक कार्पेट",
+  "red-carpet": "रेड कार्पेट",
+  "pink-carpet": "पिंक कार्पेट",
+  "casual": "कैज़ुअल",
+  "photoshoot": "फोटोशूट",
+  "trends": "ट्रेंड्स",
+  "met gala": "मेट गाला",
+  "met-gala": "मेट गाला",
+};
+
 const getHindiFashionCategory = (englishValue) => {
   if (!englishValue) return "";
-  const mapping = {
-    "red carpet": "रेड कार्पेट",
-    "pink carpet": "पिंक कार्पेट",
-    "red-carpet": "रेड कार्पेट",
-    "pink-carpet": "पिंक कार्पेट",
-    "casual": "कैज़ुअल",
-    "photoshoot": "फोटोशूट",
-    "trends": "ट्रेंड्स",
-    "met gala": "मेट गाला",
-    "met-gala": "मेट गाला"
-  };
-  return mapping[englishValue.toLowerCase()] || englishValue;
+  return fashionCategoryMap[englishValue.toLowerCase()] || englishValue;
 };
+
+const formatShortDate = (dateStr) =>
+  dateStr
+    ? new Date(dateStr).toLocaleDateString("hi-IN", { month: "short", day: "numeric" })
+    : "हाल ही में";
+
+const formatFullDate = (dateStr) =>
+  dateStr ? new Date(dateStr).toLocaleDateString("hi-IN") : "हाल ही में";
+
+//  Reusable, memoized gallery card
+const GalleryCard = memo(function GalleryCard({ gallery, onClick }) {
+  return (
+    <div
+      onClick={() => onClick(gallery.slug)}
+      className="group relative overflow-hidden rounded-xl bg-gray-200 dark:bg-gray-800 aspect-[3/4] cursor-pointer hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300 hover:-translate-y-1"
+    >
+      {gallery.image?.url ? (
+        <div className="absolute inset-0">
+          <Image
+            src={gallery.image.url}
+            alt={gallery.title || "Gallery image"}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-300 dark:bg-gray-800">
+          <Camera className="w-16 h-16 text-gray-500 dark:text-gray-600" />
+        </div>
+      )}
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+      <button
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-3 right-3 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-pink-600/80 transition-colors z-10"
+      >
+        <Heart className="w-5 h-5 text-white" />
+      </button>
+
+      {gallery.photos?.length > 1 && (
+        <div className="absolute top-3 left-3 bg-pink-600 rounded-full px-3 py-1 text-white font-bold text-xs z-10">
+          +{gallery.photos.length - 1}
+        </div>
+      )}
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+        <h3 className="text-white text-sm font-bold line-clamp-2 group-hover:text-pink-300 transition-colors">
+          {gallery.title}
+        </h3>
+      </div>
+
+      {gallery.fashionCategory && gallery.fashionCategory !== "all" && (
+        <div className="absolute bottom-14 left-4 z-10">
+          <span className="inline-block bg-pink-600/90 text-white text-xs px-3 py-1 rounded-full font-medium">
+            {getHindiFashionCategory(gallery.fashionCategory)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+});
+
+//  Single reusable ArticleCard used everywhere (fixes duplication + the 'relative' bug)
+const ArticleCard = memo(function ArticleCard({ article, variant = "grid", compact = false }) {
+  const dateLabel = compact ? formatShortDate(article.publishDate) : formatFullDate(article.publishDate);
+
+  if (variant === "list") {
+    return (
+      <a
+        href={`/article/${article.slug}`}
+        className="group flex gap-4 card-theme overflow-hidden hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300 p-4"
+      >
+        <div className="relative w-40 sm:w-48 h-28 sm:h-32 flex-shrink-0 overflow-hidden rounded-lg">
+          {article.heroImage?.url ? (
+            <Image
+              src={article.heroImage.url}
+              alt={article.title || "Article thumbnail"}
+              fill
+              sizes="192px"
+              className="object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-3xl">
+              📰
+            </div>
+          )}
+        </div>
+        <div className="flex-1 flex flex-col justify-between min-w-0">
+          <div>
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              {article.category && (
+                <span className="bg-pink-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                  {article.category.name}
+                </span>
+              )}
+              <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-500">
+                <Calendar className="w-3 h-3" />
+                <span>{dateLabel}</span>
+              </div>
+            </div>
+            <h3 className="text-gray-900 dark:text-white font-bold text-lg sm:text-xl line-clamp-2 mb-2 group-hover:text-pink-400 transition-colors">
+              {article.title}
+            </h3>
+            {article.summary && (
+              <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 sm:line-clamp-3 mb-2">
+                {article.summary}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-500 mt-1">
+            <div className="flex items-center gap-1">
+              <Eye className="w-4 h-4" />
+              <span>{article.views || 0} व्यूज</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    );
+  }
+
+  // grid variant
+  return (
+    <a
+      href={`/article/${article.slug}`}
+      className="group card-theme overflow-hidden hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300 hover:-translate-y-1"
+    >
+      <div className={`relative overflow-hidden ${compact ? "h-40" : "h-48"}`}>
+        {article.heroImage?.url ? (
+          <Image
+            src={article.heroImage.url}
+            alt={article.title || "Article thumbnail"}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+            <span className="text-gray-500 dark:text-gray-500 text-4xl">📰</span>
+          </div>
+        )}
+        {!compact && article.category && (
+          <div className="absolute top-3 left-3 bg-pink-600 text-white text-xs px-3 py-1 rounded-full font-semibold z-10">
+            {article.category.name}
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="text-gray-900 dark:text-white font-bold text-lg line-clamp-2 mb-2 group-hover:text-pink-400 transition-colors">
+          {article.title}
+        </h3>
+        {!compact && article.summary && (
+          <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">
+            {article.summary}
+          </p>
+        )}
+        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-500">
+          {!compact && (
+            <div className="flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              <span>{article.views || 0}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            <span>{dateLabel}</span>
+          </div>
+        </div>
+      </div>
+    </a>
+  );
+});
+const ViewToggle = memo(function ViewToggle({ mode, onChange }) {
+  return (
+    <div className="flex gap-2">
+      <button
+        onClick={() => onChange("grid")}
+        className={`p-2.5 rounded-lg transition-all ${
+          mode === "grid"
+            ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30"
+            : "bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
+        }`}
+      >
+        <Grid className="w-5 h-5" />
+      </button>
+      <button
+        onClick={() => onChange("list")}
+        className={`p-2.5 rounded-lg transition-all ${
+          mode === "list"
+            ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30"
+            : "bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
+        }`}
+      >
+        <List className="w-5 h-5" />
+      </button>
+    </div>
+  );
+});
 
 export default function FashionPage({ initialGalleries, initialArticles, categorySlug = "bollywood" }) {
   const [galleries] = useState(initialGalleries);
@@ -55,89 +256,77 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
   const [displayCount, setDisplayCount] = useState(8);
   const [previewCount, setPreviewCount] = useState(8);
 
-  const galleriesLoading = false;
-  const articlesLoading = false;
+  const router = useRouter();
 
-  // ✅ गैलरी से यूनिक फैशन कैटेगरी निकालें (हिंदी लेबल के साथ)
   const fashionFilters = useMemo(() => {
     const uniqueCategories = new Map();
-    
     uniqueCategories.set("all", { id: "all", label: "सभी", icon: Sparkles });
-    
-    galleries.forEach(gallery => {
+
+    galleries.forEach((gallery) => {
       if (gallery.fashionCategory && gallery.fashionCategory !== "all") {
-        let catId = gallery.fashionCategory.toLowerCase().replace(/\s+/g, '-');
-        // Normalize category IDs
+        let catId = gallery.fashionCategory.toLowerCase().replace(/\s+/g, "-");
         if (catId === "red-carpet" || catId === "red carpet") catId = "red-carpet";
         if (catId === "pink-carpet" || catId === "pink carpet") catId = "pink-carpet";
         if (catId === "met-gala" || catId === "met gala") catId = "met-gala";
-        
+
         if (!uniqueCategories.has(catId)) {
           uniqueCategories.set(catId, {
             id: catId,
             label: englishToHindiFilter[catId] || gallery.fashionCategory,
-            icon: filterIcons[catId] || filterIcons.default
+            icon: filterIcons[catId] || filterIcons.default,
           });
         }
       }
     });
-    
+
     return Array.from(uniqueCategories.values());
   }, [galleries]);
 
-  // आर्टिकल्स को लेटेस्ट के हिसाब से सॉर्ट करें
   const sortedArticles = useMemo(() => {
     if (!articles) return [];
-    return [...articles].sort((a, b) => {
-      const dateA = new Date(a.publishDate || a.publishedAt || 0);
-      const dateB = new Date(b.publishDate || b.publishedAt || 0);
-      return dateB - dateA;
-    });
+    return [...articles].sort(
+      (a, b) =>
+        new Date(b.publishDate || b.publishedAt || 0) -
+        new Date(a.publishDate || a.publishedAt || 0)
+    );
   }, [articles]);
 
-  const visibleArticles = useMemo(() => {
-    return sortedArticles.slice(0, displayCount);
-  }, [sortedArticles, displayCount]);
+  const visibleArticles = useMemo(
+    () => sortedArticles.slice(0, displayCount),
+    [sortedArticles, displayCount]
+  );
 
-  const router = useRouter();
+  const previewArticles = useMemo(
+    () => sortedArticles.slice(0, previewCount),
+    [sortedArticles, previewCount]
+  );
 
-  const handleGalleryClick = (slug) => {
-    router.push(`/photos/${slug}`);
-  };
-
-  // ✅ फिक्स्ड: फ़िल्टर के हिसाब से गैलरी फ़िल्टर करें
   const filteredGalleries = useMemo(() => {
-    let result = [...galleries];
-    
-    if (activeFilter !== "all") {
-      result = result.filter((gallery) => {
-        if (!gallery.fashionCategory) return false;
-        
-        let galleryValue = gallery.fashionCategory.toLowerCase().trim();
-        
-        // Normalize gallery values to match filter IDs
-        if (galleryValue === "red carpet") galleryValue = "red-carpet";
-        if (galleryValue === "pink carpet") galleryValue = "pink-carpet";
-        if (galleryValue === "met gala") galleryValue = "met-gala";
-        
-        return galleryValue === activeFilter;
-      });
-    }
-    
-    return result;
+    if (activeFilter === "all") return galleries;
+
+    return galleries.filter((gallery) => {
+      if (!gallery.fashionCategory) return false;
+      let galleryValue = gallery.fashionCategory.toLowerCase().trim();
+      if (galleryValue === "red carpet") galleryValue = "red-carpet";
+      if (galleryValue === "pink carpet") galleryValue = "pink-carpet";
+      if (galleryValue === "met gala") galleryValue = "met-gala";
+      return galleryValue === activeFilter;
+    });
   }, [activeFilter, galleries]);
 
-  const loadMorePreview = () => setPreviewCount(prev => prev + 8);
-  const loadMore = () => setDisplayCount(prev => prev + 8);
+  const handleGalleryClick = useCallback(
+    (slug) => router.push(`/photos/${slug}`),
+    [router]
+  );
 
-  // कैटेगरी का नाम हिंदी में
-  const categoryName = categorySlug === "bollywood" ? "बॉलीवुड" : 
-                       categorySlug === "hollywood" ? "हॉलीवुड" : 
-                       "सेलिब्रिटी";
+  const loadMorePreview = useCallback(() => setPreviewCount((prev) => prev + 8), []);
+  const loadMore = useCallback(() => setDisplayCount((prev) => prev + 8), []);
+
+  const categoryName =
+    categorySlug === "bollywood" ? "बॉलीवुड" : categorySlug === "hollywood" ? "हॉलीवुड" : "सेलिब्रिटी";
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-[#f6f6f6] rounded-2xl dark:bg-gray-800">
-      {/* हेडर */}
       <div>
         <TopCategoryTabs />
         <div className="border-b border-gray-300 dark:border-gray-700 py-4 mb-4 flex flex-row gap-4">
@@ -154,7 +343,6 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
       </div>
 
       <div>
-        {/* टैब स्विचर - हिंदी में */}
         <div className="flex gap-4 mb-4">
           <button
             className={`tab-base ${activeTab === "looks" ? "tab-active" : "tab-inactive"}`}
@@ -162,7 +350,6 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
           >
             फैशन लुक्स ({filteredGalleries.length})
           </button>
-
           <button
             className={`tab-base ${activeTab === "articles" ? "tab-active" : "tab-inactive"}`}
             onClick={() => setActiveTab("articles")}
@@ -171,10 +358,8 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
           </button>
         </div>
 
-        {/* फैशन लुक्स टैब */}
         {activeTab === "looks" && (
           <div>
-            {/* डायनेमिक फ़िल्टर बटन - हिंदी में */}
             {fashionFilters.length > 1 && (
               <div className="flex flex-wrap gap-3 mb-8">
                 {fashionFilters.map((filter) => {
@@ -197,197 +382,46 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
               </div>
             )}
 
-            {/* गैलरी ग्रिड */}
-            {galleriesLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="aspect-[3/4] bg-gray-300 dark:bg-gray-700 rounded-xl animate-pulse"></div>
-                ))}
-              </div>
-            ) : filteredGalleries.length > 0 ? (
+            {filteredGalleries.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {filteredGalleries.map((gallery) => (
-                  <div
-                    key={gallery.id}
-                    onClick={() => handleGalleryClick(gallery.slug)}
-                    className="group relative overflow-hidden rounded-xl bg-gray-200 dark:bg-gray-800 aspect-[3/4] cursor-pointer hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300 hover:-translate-y-1"
-                  >
-                   {gallery.image?.url ? (
-  <div className="absolute inset-0">
-    <Image
-      src={gallery.image.url}
-      alt={gallery.title || "Gallery image"}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      className="object-cover group-hover:scale-110 transition-transform duration-500"
-      loading="lazy"
-    />
-  </div>
-) : (
-  <div className="absolute inset-0 flex items-center justify-center bg-gray-300 dark:bg-gray-800">
-    <Camera className="w-16 h-16 text-gray-500 dark:text-gray-600" />
-  </div>
-)}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute top-3 right-3 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-pink-600/80 transition-colors z-10"
-                    >
-                      <Heart className="w-5 h-5 text-white" />
-                    </button>
-
-                    {gallery.photos && gallery.photos.length > 1 && (
-                      <div className="absolute top-3 left-3 bg-pink-600 rounded-full px-3 py-1 text-white font-bold text-xs z-10">
-                        +{gallery.photos.length - 1}
-                      </div>
-                    )}
-
-                    <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-                      <h3 className="text-white text-sm font-bold line-clamp-2 group-hover:text-pink-300 transition-colors">
-                        {gallery.title}
-                      </h3>
-                    </div>
-
-                    {/* फैशन कैटेगरी बैज - हिंदी में */}
-                    {gallery.fashionCategory && gallery.fashionCategory !== "all" && (
-                      <div className="absolute bottom-14 left-4 z-10">
-                        <span className="inline-block bg-pink-600/90 text-white text-xs px-3 py-1 rounded-full font-medium">
-                          {getHindiFashionCategory(gallery.fashionCategory)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  <GalleryCard key={gallery.id} gallery={gallery} onClick={handleGalleryClick} />
                 ))}
               </div>
             ) : (
               <div className="text-center py-20">
-                <h3 className="text-2xl font-medium text-gray-700 dark:text-gray-300 mb-2">कोई फोटो नहीं मिली</h3>
-                <p className="text-gray-500 dark:text-gray-500">{categoryName} के लिए कोई फैशन गैलरी उपलब्ध नहीं है</p>
+                <h3 className="text-2xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  कोई फोटो नहीं मिली
+                </h3>
+                <p className="text-gray-500 dark:text-gray-500">
+                  {categoryName} के लिए कोई फैशन गैलरी उपलब्ध नहीं है
+                </p>
               </div>
             )}
 
-            {/* फैशन आर्टिकल्स प्रीव्यू */}
             {articles.length > 0 && (
               <div className="mt-16">
-                {/* हेडर + व्यू टॉगल - हिंदी में */}
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-serif">
                     फैशन आर्टिकल्स
                   </h2>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPreviewViewMode("grid")}
-                      className={`p-2.5 rounded-lg transition-all ${previewViewMode === "grid"
-                        ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30"
-                        : "bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
-                      }`}
-                    >
-                      <Grid className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setPreviewViewMode("list")}
-                      className={`p-2.5 rounded-lg transition-all ${previewViewMode === "list"
-                        ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30"
-                        : "bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
-                      }`}
-                    >
-                      <List className="w-5 h-5" />
-                    </button>
-                  </div>
+                  <ViewToggle mode={previewViewMode} onChange={setPreviewViewMode} />
                 </div>
 
-                {/* ग्रिड व्यू */}
                 {previewViewMode === "grid" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {sortedArticles.slice(0, previewCount).map((article) => (
-                      <a
-                        key={article.id}
-                        href={`/article/${article.slug}`}
-                        className="group card-theme overflow-hidden hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300 hover:-translate-y-1"
-                      >
-                        <div className="h-40 overflow-hidden">
-                          {article.heroImage?.url ? (
-                           
-                            <Image
-                              src={article.heroImage.url}
-                       alt={article.title || "Article thumbnail"}
-                                  fill
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
-                              <span className="text-gray-500 dark:text-gray-500 text-4xl">📰</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <h3 className="text-gray-900 dark:text-white text-sm font-bold line-clamp-2 group-hover:text-pink-400 transition-colors mb-2">
-                            {article.title}
-                          </h3>
-                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            <span>
-                              {article.publishDate
-                                ? new Date(article.publishDate).toLocaleDateString("hi-IN", {
-                                  month: "short",
-                                  day: "numeric",
-                                })
-                                : "हाल ही में"}
-                            </span>
-                          </div>
-                        </div>
-                      </a>
+                    {previewArticles.map((article) => (
+                      <ArticleCard key={article.id} article={article} variant="grid" compact />
                     ))}
                   </div>
                 ) : (
-                  /* लिस्ट व्यू */
                   <div className="space-y-4">
-                    {sortedArticles.slice(0, previewCount).map((article) => (
-                      <a
-                        key={article.id}
-                        href={`/article/${article.slug}`}
-                        className="group flex gap-4 card-theme hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300"
-                      >
-                        <div className="w-40 h-28 flex-shrink-0 overflow-hidden rounded-lg">
-                          {article.heroImage?.url ? (
-                            <img
-                              src={article.heroImage.url}
-                              alt={article.title}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-4xl">
-                              📰
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-gray-900 dark:text-white font-bold text-lg line-clamp-2 mb-2 group-hover:text-pink-400 transition-colors">
-                            {article.title}
-                          </h3>
-                          {article.summary && (
-                            <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-2">
-                              {article.summary}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            <span>
-                              {article.publishDate
-                                ? new Date(article.publishDate).toLocaleDateString("hi-IN")
-                                : "हाल ही में"}
-                            </span>
-                          </div>
-                        </div>
-                      </a>
+                    {previewArticles.map((article) => (
+                      <ArticleCard key={article.id} article={article} variant="list" compact />
                     ))}
                   </div>
                 )}
 
-                {/* और लोड करें - हिंदी में */}
                 {previewCount < sortedArticles.length && (
                   <div className="text-center mt-8">
                     <button
@@ -406,10 +440,8 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
           </div>
         )}
 
-        {/* फैशन आर्टिकल्स टैब */}
         {activeTab === "articles" && (
           <div>
-            {/* व्यू टॉगल - हिंदी में */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-serif">
                 फैशन आर्टिकल्स
@@ -417,151 +449,23 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
                   {sortedArticles.length} आर्टिकल्स
                 </span>
               </h2>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === "grid"
-                    ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30"
-                    : "bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
-                  }`}
-                >
-                  <Grid className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2.5 rounded-lg transition-all ${viewMode === "list"
-                    ? "bg-pink-600 text-white shadow-lg shadow-pink-600/30"
-                    : "bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
-              </div>
+              <ViewToggle mode={viewMode} onChange={setViewMode} />
             </div>
 
-            {articlesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="h-64 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                ))}
-              </div>
-            ) : viewMode === "grid" ? (
+            {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {visibleArticles.map((article) => (
-                  <a
-                    key={article.id}
-                    href={`/article/${article.slug}`}
-                    className="group card-theme overflow-hidden hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300"
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      {article.heroImage?.url ? (
-                        <img
-                          src={article.heroImage.url}
-                          alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
-                          <span className="text-gray-500 dark:text-gray-500 text-4xl">📰</span>
-                        </div>
-                      )}
-                      {article.category && (
-                        <div className="absolute top-3 left-3 bg-pink-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                          {article.category.name}
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-gray-900 dark:text-white font-bold text-lg line-clamp-2 mb-2 group-hover:text-pink-400 transition-colors">
-                        {article.title}
-                      </h3>
-                      {article.summary && (
-                        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">
-                          {article.summary}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          <span>{article.views || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>
-                            {article.publishDate
-                              ? new Date(article.publishDate).toLocaleDateString("hi-IN", {
-                                month: "short",
-                                day: "numeric",
-                              })
-                              : "हाल ही में"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </a>
+                  <ArticleCard key={article.id} article={article} variant="grid" />
                 ))}
               </div>
             ) : (
               <div className="space-y-4">
                 {visibleArticles.map((article) => (
-                  <a
-                    key={article.id}
-                    href={`/article/${article.slug}`}
-                    className="group flex gap-4 card-theme overflow-hidden hover:shadow-2xl hover:shadow-pink-600/20 transition-all duration-300 p-4"
-                  >
-                    <div className="relative w-48 h-32 flex-shrink-0 overflow-hidden rounded-lg">
-                      {article.heroImage?.url ? (
-                        <img
-                          src={article.heroImage.url}
-                          alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
-                          <span className="text-gray-500 dark:text-gray-500 text-3xl">📰</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          {article.category && (
-                            <span className="bg-pink-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                              {article.category.name}
-                            </span>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            <span>
-                              {article.publishDate
-                                ? new Date(article.publishDate).toLocaleDateString("hi-IN")
-                                : "हाल ही में"}
-                            </span>
-                          </div>
-                        </div>
-                        <h3 className="text-gray-900 dark:text-white font-bold text-xl line-clamp-2 mb-2 group-hover:text-pink-400 transition-colors">
-                          {article.title}
-                        </h3>
-                        {article.summary && (
-                          <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3">
-                            {article.summary}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-500 mt-3">
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{article.views || 0} व्यूज</span>
-                        </div>
-                      </div>
-                    </div>
-                  </a>
+                  <ArticleCard key={article.id} article={article} variant="list" />
                 ))}
               </div>
             )}
 
-            {/* और लोड करें - हिंदी में */}
             {displayCount < sortedArticles.length && (
               <div className="text-center mt-10">
                 <button
@@ -576,9 +480,11 @@ export default function FashionPage({ initialGalleries, initialArticles, categor
               </div>
             )}
 
-            {sortedArticles.length === 0 && !articlesLoading && (
+            {sortedArticles.length === 0 && (
               <div className="text-center py-20">
-                <h3 className="text-2xl font-medium text-gray-700 dark:text-gray-300 mb-2">अभी कोई आर्टिकल नहीं</h3>
+                <h3 className="text-2xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  अभी कोई आर्टिकल नहीं
+                </h3>
                 <p className="text-gray-500 dark:text-gray-500">फैशन आर्टिकल्स जल्द आ रहे हैं...</p>
               </div>
             )}

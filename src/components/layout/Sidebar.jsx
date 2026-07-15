@@ -3,7 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { formatDate } from "../../lib/helpers";
-import { usersAPI, moviesAPI } from "../../lib/api";
+import { usersAPI} from "../../lib/api/users";
+import {moviesAPI} from "../../lib/api/movies"
 import MoviePoll from "./MoviePoll";
 import {
   Facebook,
@@ -115,7 +116,7 @@ function useMoviesWidget(activeTab) {
 
 // --- 3. FIXED Movie List Item ---
 const MovieItem = ({ movie, disableScroll }) => {
-  // ✅ 1. Pehle category nikal lo (Bina kuch fetch tode)
+  //  1. Pehle category nikal lo (Bina kuch fetch tode)
 
   let catSlug = movie?.category?.slug || movie?.categories?.[0]?.slug || "sidebar";
   const movieUrl = `/${catSlug}/movies/${movie.slug}`;
@@ -246,7 +247,7 @@ const articleUrl = isNews ? `/news/${article.slug}` : `/article/${article.slug}`
       </div>
       <div className="p-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
         <h4 className="text-sm md:text-base font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 group-hover:text-pink-600 transition-colors">
-          {article.title}
+         {article.title}
         </h4>
       </div>
     </Link>

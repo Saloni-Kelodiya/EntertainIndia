@@ -18,7 +18,7 @@ import {
   MessageCircle,
   HelpCircle
 } from "lucide-react";
-import { contactMessagesAPI } from "../lib/api";
+import { contactMessagesAPI } from "../lib/api/contactMessages";
 import { useStore } from "../store/useStore";
 import Link from "next/link";
 import { SOCIAL_LINKS } from "../lib/constants";
@@ -107,11 +107,11 @@ export default function ContactPage() {
   ];
 
   const socialLinks = [
-    { icon: <Facebook className="w-5 h-5" />, href: "https://facebook.com/entertainindia", label: "फेसबुक" },
+    { icon: <Facebook className="w-5 h-5" />, href: "https://www.facebook.com/profile.php?id=61584375938569", label: "फेसबुक" },
     { icon: <Twitter className="w-5 h-5" />, href: "https://x.com/EIndia99460", label: "ट्विटर" },
-    { icon: <Instagram className="w-5 h-5" />, href: "https://instagram.com/entertainindia", label: "इंस्टाग्राम" },
-    { icon: <Youtube className="w-5 h-5" />, href: "https://youtube.com/entertainindia", label: "यूट्यूब" },
-    { icon: <Linkedin className="w-5 h-5" />, href: "https://linkedin.com/company/entertainindia", label: "लिंक्डइन" }
+    { icon: <Instagram className="w-5 h-5" />, href: "https://www.instagram.com/entertainindiaofficial/", label: "इंस्टाग्राम" },
+    { icon: <Youtube className="w-5 h-5" />, href: "https://www.youtube.com/@EIndiaofficial", label: "यूट्यूब" },
+  
   ];
 
   const faqs = [
@@ -146,9 +146,9 @@ export default function ContactPage() {
           <div className="flex flex-col items-center text-center">
             <div className="flex items-center gap-3 mb-6 flex-wrap justify-center">
               <MessagesSquare className="w-10 h-10 sm:w-12 sm:h-12" />
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight">
+              <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight">
                 संपर्क <span className="text-yellow-300">करें</span>
-              </h1>
+              </div>
             </div>
             <p className="text-xl sm:text-2xl text-pink-100 max-w-3xl mx-auto mb-6 px-4">
               हम आपकी सहायता के लिए यहां हैं

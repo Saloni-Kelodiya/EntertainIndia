@@ -1,6 +1,7 @@
 import apiClient from './client';
 import qs from "qs";
-import { getHindiGenreName } from './hindiMaps';
+import { getHindiGenreName,getHindiLanguageName } from './hindiMaps';
+
 
 export const normalizeWebSeries = (item) => {
   if (!item) return null;
@@ -49,7 +50,7 @@ const normalizeImage = (img) => {
   return null;
 };
 
-  // ✅ FIXED: Cast normalizer - use normalizeImage consistently
+  //  FIXED: Cast normalizer - use normalizeImage consistently
   const normalizeCast = (castItems) => {
   if (!Array.isArray(castItems)) return [];
 
@@ -62,6 +63,7 @@ const normalizeImage = (img) => {
     return {
       id: item.id,
       characterName: item.characterName,
+      seasons:item.seasons,
       celebrity: celebrity
         ? {
             id: celebrity.id,
@@ -76,7 +78,7 @@ const normalizeImage = (img) => {
     };
   });
 };
-  // ✅ FIXED: Crew normalizer
+  //  FIXED: Crew normalizer
   const normalizeCrew = (crewItems) => {
     if (!Array.isArray(crewItems)) return [];
 
@@ -116,7 +118,7 @@ const normalizeImage = (img) => {
     });
   };
 
-  // ✅ FIXED: Awards normalizer
+  //  FIXED: Awards normalizer
   const normalizeAwards = (awardItems) => {
     if (!Array.isArray(awardItems)) return [];
 
@@ -171,7 +173,6 @@ const normalizeImage = (img) => {
   return {
     id: item.id,
     documentId: item.documentId,
-
     title: item.title || '',
     slug: item.slug || '',
     description: item.description || '',
@@ -180,7 +181,7 @@ const normalizeImage = (img) => {
     country: item.country || '',
     age_rating: item.age_rating || '',
     seasonNumber: item.seasonNumber ?? null,
-   language: item.language, // ✅ language field भी normalize करें
+   language: item.language, //  language field भी normalize करें
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     publishedAt: item.publishedAt,
@@ -199,7 +200,7 @@ const normalizeImage = (img) => {
       }))
       : [],
 
-    // ✅ Genres with Hindi mapping
+    //  Genres with Hindi mapping
     genres: Array.isArray(item.genres)
       ? item.genres.map((g) => ({
         id: g.id,
@@ -213,7 +214,7 @@ const normalizeImage = (img) => {
     rating: item.rating || null,
 
     // Languages
-   // ✅ Languages with Hindi mapping
+   //  Languages with Hindi mapping
     languages: Array.isArray(item.languages)
       ? item.languages.map((l) => ({
         id: l.id,
@@ -244,13 +245,14 @@ const normalizeImage = (img) => {
     relatedArticles: Array.isArray(item.relatedArticles)
       ? item.relatedArticles.map((a) => ({
         id: a.id,
-        title: a.title || '',
+      h1_title: a.h1_title || a.title,
+      title:a.title,
         slug: a.slug || '',
         publishedAt: a.publishedAt,
         views: a.views ?? 0,
         summary: a.summary,
         hero_image: a.hero_image,
-         mainCategory:a.MainCategory||'',
+        mainCategory:a.MainCategory||'',
       }))
       : [],
 
@@ -278,7 +280,7 @@ const normalizeImage = (img) => {
             country: ws.country,
             seasons: ws.seasonNumber,
             age_rating: ws.age_rating,
-            poster: ws.poster ? normalizeImage(ws.poster) : null, // ✅ FIXED: Use normalizeImage
+            poster: ws.poster ? normalizeImage(ws.poster) : null, //  FIXED: Use normalizeImage
           }));
         })
         .filter(Boolean)
@@ -316,7 +318,7 @@ seasons: Array.isArray(item.series_seasons)
 
 
 export const webSeriesAPI = {
-  // ✅ GetAll method restored and fixed
+  //  GetAll method restored and fixed
   getAll: async (params = {}) => {
     const q = new URLSearchParams({
       "pagination[page]": params.page || 1,
@@ -324,7 +326,7 @@ export const webSeriesAPI = {
     });
     q.append("filters[language][$eq]", "hi");
     q.append("sort[0]", params.sort || "releaseDate:desc");
-   // ✅ FORCE ENGLISH LANGUAGE FILTER
+   //  FORCE ENGLISH LANGUAGE FILTER
     
     // Explicitly populate relations and media for listing and filtering
     // ⚠️ DO NOT populate scalar fields like 'age_rating' or 'seasons' to avoid 400 error
@@ -380,7 +382,112 @@ export const webSeriesAPI = {
     }
   },
 
-  // ✅ Simple Search Method for Web Series
+getAllLight: async (options = {}) => {
+  const {
+    language = "hi",
+    pageSize = 20,
+    sort = "releaseDate:desc",
+  } = options;
+
+  try {
+    const query = {
+      filters: {
+        language: { $eq: language },
+      },
+      fields: ["title", "slug", "releaseDate", "language"], // 👈 relation hataya, slug add kiya
+      populate: {
+        poster: {
+          fields: ["url"],
+        },
+        languages: {
+          fields: ["language"],
+        },
+      },
+      pagination: {
+        pageSize,
+      },
+      sort: [sort],
+    };
+
+    const q = qs.stringify(query, { encodeValuesOnly: true });
+
+    const res = await apiClient.get(`/web-series-collections?${q}`);
+    const items = res.data?.data || [];
+
+    return items.map((item) => ({
+      id: item.id,
+      documentId: item.documentId,
+      title: item.title,
+      slug: item.slug,                          // 👈 add kiya
+      releaseDate: item.releaseDate,
+      language: item.language,
+      languages: Array.isArray(item.languages)   // 👈 add kiya
+        ? item.languages.map((l) => ({
+            id: l.id,
+            language: l.language,
+          }))
+        : [],
+      poster: item.poster?.url || null,
+    }));
+  } catch (error) {
+    console.error(
+      "❌ webSeriesAPI.getAllLight Error:",
+      error?.response?.data || error.message
+    );
+    return [];
+  }
+},
+getAllTrending: async (options = {}) => {
+  const {
+    language = 'hi',
+    category = null,
+    pageSize = 20,
+    sort = 'releaseDate:desc',
+    trending = false,
+  } = options;
+
+  try {
+    const query = {
+      filters: { language: { $eq: language } },
+      fields: ['title', 'slug', 'releaseDate'],
+      populate: {
+        categories: { fields: ['name', 'slug'] },
+        languages: { fields: ['language'] },
+      },
+      pagination: { pageSize },
+      sort: [sort],
+    };
+
+    if (category) {
+      query.filters.categories = { slug: { $eq: category } };
+    }
+
+    if (trending) {
+      query.filters.trending = { $eq: true };
+    }
+
+    const q = qs.stringify(query, { encodeValuesOnly: true });
+    const res = await apiClient.get(`/web-series-collections?${q}`);
+    const items = res.data?.data || [];
+
+    const mapped = items.map(item => ({
+      id: item.id,
+      documentId: item.documentId,
+      title: item.title,
+      slug: item.slug,
+      releaseDate: item.releaseDate,
+      categories: item.categories?.map(c => c.name) || [],
+      languages: item.languages?.map(l => l.language) || [],
+    }));
+
+    return { webSeries: mapped };
+
+  } catch (error) {
+    
+    return { webSeries: [] };
+  }
+},
+  //  Simple Search Method for Web Series
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8 } = options;
@@ -430,8 +537,9 @@ export const webSeriesAPI = {
             }
           },
           web_series_awards: { populate: '*' },
-         cast: {
+          cast: {
   populate: {
+    seasons: true,
     celebrities_profiles: {
       populate: {
         Avatar: {
@@ -539,7 +647,7 @@ export const webSeriesAPI = {
           populate: {
             related_web_series: {
               populate: {
-                poster: { // ✅ Make sure to populate poster
+                poster: { //  Make sure to populate poster
                   fields: ['url', 'formats']
                 }
               }
@@ -825,7 +933,7 @@ export const webSeriesReviewsAPI = {
 
       const response = await apiClient.delete(`/web-series-reviews/${reviewDocumentId}`);
 
-      console.log("✅ Review deleted successfully");
+      console.log(" Review deleted successfully");
       return response.data;
     } catch (error) {
       console.error("❌ Delete review error:", error.response?.data || error.message);
@@ -851,7 +959,7 @@ export const webSeriesReviewsAPI = {
 
       const res = await apiClient.put(`/web-series-reviews/${reviewDocumentId}`, payload);
 
-      console.log("✅ Review updated successfully:", res.data);
+      console.log(" Review updated successfully:", res.data);
       return res.data;
     } catch (error) {
       console.error("❌ Update review failed:", error.response?.data || error.message);

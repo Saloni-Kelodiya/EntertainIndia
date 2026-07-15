@@ -1,10 +1,16 @@
 import Home from '../page-components/Home';
 import LayoutWrapper from './LayoutWrapper';
-import { galleriesAPI, celebritiesAPI, articlesAPI, moviesAPI, songsAPI, videosAPI } from '../lib/api';
-import { webStoriesAPIServer } from "../lib/api-server";
-import LogoImg from '../../public/og-logo.png';
+import { articlesAPI } from "../lib/api/articles";
+import {galleriesAPI} from '../lib/api/galleries';
+import {celebritiesAPI} from '../lib/api/celebrities';
+import {moviesAPI} from '../lib/api/movies';
+import {songsAPI} from '../lib/api/songs';
+import {videosAPI} from '../lib/api/videos';
+import {webStoriesAPI} from "../lib/api/web-stories";
 
-// ✅ ISR Caching - Revalidate every 5 minutes (300 seconds)
+
+//  ISR Caching - Revalidate every 5 minutes (300 seconds)
+
 export const revalidate = 300;
 export const dynamic = 'force-static';
 export const fetchCache = 'force-cache';
@@ -14,9 +20,14 @@ const SITE_URL = 'https://entertainindia.in';
 // ──────────────────────────────────────────────
 // 1️⃣ LOGO (Square) – Favicon, Organization, Icons
 // ──────────────────────────────────────────────
+const LogoImg = {
+  src: '/og-logo.png',
+  width: 512,
+  height: 512
+};
 const LOGO_URL = LogoImg?.src?.startsWith('http')
   ? LogoImg.src
-  : `${SITE_URL}${LogoImg?.src || '/logo.png'}`;
+  : `${SITE_URL}${LogoImg?.src || '/og-logo.png'}`;
 const LOGO_WIDTH = LogoImg?.width || 512;
 const LOGO_HEIGHT = LogoImg?.height || 512;
 
@@ -36,14 +47,14 @@ const DEFAULT_OG_HEIGHT = OG_IMAGE_HEIGHT;
 // ⚠️ ARTICLE_BASE_PATH – सही है (कोई 404 नहीं)
 const ARTICLE_BASE_PATH = '/article';
 
-// ✅ Helper function to safely get data
+//  Helper function to safely get data
 const getSafeData = (result, defaultValue = []) => {
   if (!result) return defaultValue;
   return result.articles || result.movies || result.songs || result.videos ||
     result.stories || result.galleries || result.celebrities || defaultValue;
 };
 
-// ✅ Strapi media object se absolute URL + real width/height
+//  Strapi media object se absolute URL + real width/height
 const resolveImageMeta = (img) => {
   if (!img) return null;
   const formats = img?.formats || {};
@@ -59,7 +70,7 @@ const resolveImageMeta = (img) => {
   };
 };
 
-// ✅ Featured article se meta nikalna (LCP ke liye)
+//  Featured article se meta nikalna (LCP ke liye)
 const getFeaturedMeta = (featuredArticles) => {
   const primary = featuredArticles?.[0];
   if (!primary) return null;
@@ -76,13 +87,13 @@ const getFeaturedMeta = (featuredArticles) => {
 };
 
 // ──────────────────────────────────────────────
-// ✅ generateMetadata – अब DEFAULT OG वाली इमेज और सही DIMENSIONS
+//  generateMetadata – अब DEFAULT OG वाली इमेज और सही DIMENSIONS
 // ──────────────────────────────────────────────
 export async function generateMetadata() {
   const title = 'एंटरटेनइंडिया | ताज़ा बॉलीवुड समाचार और फिल्म समीक्षाएं';
   const description = 'एंटरटेनइंडिया पर पाएं लेटेस्ट बॉलीवुड न्यूज़, हॉलीवुड अपडेट्स, ओटीटी बज़ और वायरल सेलिब्रिटी फोटोज।';
 
-  // ✅ अब DEFAULT वाले वेरिएबल का उपयोग
+  //  अब DEFAULT वाले वेरिएबल का उपयोग
   const ogImage = DEFAULT_OG_IMAGE;
   const ogImageWidth = DEFAULT_OG_WIDTH;   // 1200
   const ogImageHeight = DEFAULT_OG_HEIGHT; // 630
@@ -135,7 +146,7 @@ export async function generateMetadata() {
 }
 
 // ──────────────────────────────────────────────
-// ✅ Main Page Component
+//  Main Page Component
 // ──────────────────────────────────────────────
 export default async function Page() {
   let initialData = {
@@ -157,9 +168,9 @@ export default async function Page() {
       articlesAPI.getAllLight({ mainCategory: "news", pageSize: 6, sort: 'publishDate:desc', typeContent: 'CelebrityNews' }),
       articlesAPI.getAllLight({ mainCategory: "news", pageSize: 6, sort: 'publishDate:desc', typeContent: 'ViralNews' }),
       articlesAPI.getAllLight({ mainCategory: "article", pageSize: 8, sort: 'publishDate:desc', populate: '*' }),
-      webStoriesAPIServer.getAll(),
+      webStoriesAPI.getLightList(),
       galleriesAPI.getAll({ pageSize: 6, sort: 'publishedAt:desc' }),
-      celebritiesAPI.getAll({ pageSize: 6, sort: 'updatedAt:desc', filters: { language: 'hi' } }),
+      celebritiesAPI.getLightList({ pageSize: 6, sort: 'publishedAt:desc', filters: { trending: true, language: 'hi' } }),
       moviesAPI.getAllLight({ pageSize: 6, sort: 'publishedAt:desc', filters: { trending: true } }).catch(() => ({ movies: [] })),
       songsAPI.getAll({ pageSize: 6, sort: 'publishedAt:desc', filters: { trending: true } }).catch(() => ({ songs: [] })),
       videosAPI.getAll({ pageSize: 6, sort: 'publishedAt:desc', filters: { trending: true } }).catch(() => ({ videos: [] })),
@@ -287,7 +298,7 @@ export default async function Page() {
   const lcpImageUrl = featuredMeta?.image?.url || null;
 
   // ──────────────────────────────────────────────
-  // ✅ JSON-LD Schema
+  //  JSON-LD Schema
   // ──────────────────────────────────────────────
 
   const organizationLd = {
@@ -298,7 +309,7 @@ export default async function Page() {
     "url": SITE_URL,
     "logo": {
       "@type": "ImageObject",
-      "url": LOGO_URL,          // ✅ Square logo
+      "url": LOGO_URL,          //  Square logo
       "width": LOGO_WIDTH,
       "height": LOGO_HEIGHT
     },
@@ -332,7 +343,7 @@ export default async function Page() {
     "about": { "@id": `${SITE_URL}/#organization` },
     "primaryImageOfPage": {
       "@type": "ImageObject",
-      "url": DEFAULT_OG_IMAGE   // ✅ अब /og-logo.png
+      "url": DEFAULT_OG_IMAGE   //  अब /og-logo.png
     }
   };
 
@@ -347,33 +358,53 @@ export default async function Page() {
     }]
   };
 
-  const latestArticlesForSchema = (initialData.latestArticles || []).filter(a => a?.title && a?.slug).slice(0, 8);
-  const itemListLd = latestArticlesForSchema.length ? {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "itemListElement": latestArticlesForSchema.map((article, index) => {
-      const img = article?.heroImage || article?.hero_image || article?.image;
-      const imageMeta = resolveImageMeta(img);
-      return {
-        "@type": "ListItem",
-        "position": index + 1,
-        "url": `${SITE_URL}${ARTICLE_BASE_PATH}/${article.slug}`,
-        "item": {
-          "@type": "NewsArticle",
-          "headline": article.title,
-          ...(imageMeta?.url ? { "image": [imageMeta.url] } : {}),
-          ...(article.publishDate || article.publishedAt
-            ? { "datePublished": article.publishDate || article.publishedAt }
-            : {}),
-          ...(article.updatedAt ? { "dateModified": article.updatedAt } : {}),
-          ...(article?.author?.name
-            ? { "author": { "@type": "Person", "name": article.author.name } }
-            : {}),
-          "publisher": { "@id": `${SITE_URL}/#organization` }
-        }
-      };
-    })
-  } : null;
+  
+
+const latestArticlesForSchema = (initialData.latestArticles || []).filter(a => a?.title && a?.slug).slice(0, 8);
+
+const itemListLd = latestArticlesForSchema.length ? {
+  "@context": "https://schema.org", // 1. यहाँ खाली था, "https://schema.org" डालना ज़रूरी है
+  "@type": "ItemList",
+  "itemListElement": latestArticlesForSchema.map((article, index) => {
+    const img = article?.heroImage || article?.hero_image || article?.image;
+    const imageMeta = resolveImageMeta(img);
+    const articleUrl = `${SITE_URL}${ARTICLE_BASE_PATH}/${article.slug}`;
+
+    // मान लेते हैं कि आपके डेटाबेस/API में लेखक की जानकारी article.author में आती है
+    const authorData = article?.author || article?.Authors; 
+
+    return {
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "NewsArticle",
+        "url": articleUrl,
+        "headline": article.title,
+        ...(imageMeta?.url ? { "image": [imageMeta.url] } : {}),
+        ...(article.publishDate || article.publishedAt
+          ? { "datePublished": article.publishDate || article.publishedAt }
+          : {}),
+        ...(article.updatedAt ? { "dateModified": article.updatedAt } : {}),
+        "author": {
+          "@type": "Person",
+          "name": authorData?.username || "EntertainIndia Team", // 2. नाम न होने पर 'Missing Author' से बचाएगा
+          "url": authorData?.username 
+            ? `${SITE_URL}/author/${authorData.username?.toLowerCase().replace(/\s+/g, '-')}` 
+            : `${SITE_URL}/about` // 'Missing URL' की चेतावनी को ठीक करेगा
+        },
+      "publisher": {
+            "@type": "Organization",
+            "name": "EntertainIndia",
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${SITE_URL}/og-logo.png`
+            }
+          }
+      }
+    };
+  })
+} : null;
+
 
   return (
     <>

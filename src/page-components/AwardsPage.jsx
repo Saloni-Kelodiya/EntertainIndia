@@ -7,7 +7,7 @@ import MenuSidebar from "../components/layout/Sidebar";
 import ArticleCard from "../components/ui/ArticleCard";
 
 export default function AwardsListPage({ serverCategory, initialAwards, initialArticles }) {
-  // ✅ Data seedha props se state mein load ho raha hai (No initial useEffect fetch)
+  //  Data seedha props se state mein load ho raha hai (No initial useEffect fetch)
   const [awards] = useState(initialAwards || []);
   const [awardArticles] = useState(initialArticles || []);
   const [loading] = useState(false); // Page load hote hi data ready hai
@@ -41,9 +41,9 @@ export default function AwardsListPage({ serverCategory, initialAwards, initialA
               <AwardIcon className="text-pink-600 dark:text-pink-400 w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 पुरस्कार समारोह
-              </h1>
+              </div>
               <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm">
                 किसी भी पुरस्कार पर क्लिक करें ताकि पूरी जानकारी देखें
               </p>

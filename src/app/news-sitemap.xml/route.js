@@ -15,7 +15,7 @@ export async function GET() {
     const queryParams = new URLSearchParams({
       'filters[$or][0][MainCategory][$eq]': 'news',
       'filters[$or][1][MainCategory][$eq]': 'article',
-      'filters[language][$eq]': 'hi', // ✅ SECURITY 1: Sirf Hindi language wala data aayega
+      'filters[language][$eq]': 'hi', //  SECURITY 1: Sirf Hindi language wala data aayega
       'filters[moderation_status][$eq]': 'published',
       'filters[createdAt][$gte]': fortyEightHoursAgo.toISOString(),
       'sort[0]': 'createdAt:desc',
@@ -32,7 +32,7 @@ export async function GET() {
       const attrs = item.attributes || item;
       const title = attrs.title || '';
       
-      // ✅ SECURITY 2: Agar title mein Hindi akshar nahi hain, toh usko block kar do
+      //  SECURITY 2: Agar title mein Hindi akshar nahi hain, toh usko block kar do
       const hasHindiChars = /[\u0900-\u097F]/.test(title);
       return hasHindiChars; 
     });
@@ -60,7 +60,7 @@ export async function GET() {
         <loc>${BASE_URL}/${category}/${attrs.slug}</loc>
         <news:news>
             <news:publication>
-                <news:name>Entertain India</news:name>
+                <news:name>EntertainIndia</news:name>
                 <news:language>hi</news:language> </news:publication>
             <news:publication_date>${pubDate}</news:publication_date>
             <news:title>${title}</news:title>

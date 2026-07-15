@@ -1,6 +1,7 @@
 import apiClient from './client';
 import qs from "qs";
-import { normalizeMedia } from './helpers';
+import { normalizeMedia } from './helper';
+
 
 export const normalizeGallery = (gallery) => {
   if (!gallery) return null;
@@ -18,14 +19,14 @@ export const normalizeGallery = (gallery) => {
     topSearchRank: data.topSearchRank || 0,
     updatedAt: data.updatedAt,
     publishedAt: data.publishedAt,
-language: data.language, // ✅ language field भी normalize करें
+language: data.language, //  language field भी normalize करें
     fashionCategory: data.fashionCategory || data.category || "PHOTOSHOOTS",
     celebrity_name: data.celebrity_name || data.celebrity || data.artist || "",
     event: data.event || data.Event || data.event_name || data.eventName || "",
     location: data.location || data.Location || data.place || data.Place || "",
     event_date: data.event_date || data.eventDate || data.date || data.Date || "",
     
-    // ✅ FIXED FOR YOUR FLAT API STRUCTURE
+    //  FIXED FOR YOUR FLAT API STRUCTURE
     image: data.image ? normalizeMedia(data.image) : null,
  categories: Array.isArray(data.categories)
       ? data.categories.map((cat) => ({
@@ -34,7 +35,7 @@ language: data.language, // ✅ language field भी normalize करें
         slug: cat.slug,
       }))
       : [],
-    // ✅ PHOTOS ARRAY SAFE
+    //  PHOTOS ARRAY SAFE
     photos:
       data.photos?.map((p) => ({
         id: p.id,
@@ -45,17 +46,17 @@ language: data.language, // ✅ language field भी normalize करें
   };
 };
 export const galleriesAPI = {
-  // ✅ GET ALL GALLERIES (ONLY HINDI)
+  //  GET ALL GALLERIES (ONLY HINDI)
   getAll: async (params = {}) => {
     try {
       const q = new URLSearchParams();
       
-      // 1. ✅ SORT BY CREATED AT (Latest First)
+      // 1.  SORT BY CREATED AT (Latest First)
       // Agar aap chahte hain ki latest publish hui galleries upar aayein toh 'publishedAt:desc' rehne dein
       // Lekin 'createdAt:desc' sabse accurate "Latest First" result deta hai.
       q.append('sort', 'createdAt:desc'); 
       
-      // ✅ FORCE ENGLISH LANGUAGE FILTER
+      //  FORCE ENGLISH LANGUAGE FILTER
       q.append("filters[language][$eq]", "hi");
       
       if (params.language) {
@@ -70,7 +71,7 @@ export const galleriesAPI = {
         q.append('filters[title][$containsi]', params.search.trim());
       }
 
-      // ✅ POPULATE
+      //  POPULATE
       q.append('populate[categories]', 'true');
       q.append('populate[photos][populate]', 'image');
       q.append('populate', 'image');
@@ -84,7 +85,7 @@ export const galleriesAPI = {
       console.error("Error fetching galleries:", error);
       return { galleries: [] };
     }},
-  // ✅ GET BY SLUG (ONLY HINDI)
+  //  GET BY SLUG (ONLY HINDI)
   getBySlug: async (slug) => {
     try {
       const res = await apiClient.get(
@@ -99,7 +100,7 @@ export const galleriesAPI = {
     }
   },
 
-  // ✅ RELATED GALLERIES (ONLY HINDI)
+  //  RELATED GALLERIES (ONLY HINDI)
   getRelated: async (slug, limit = 6) => {
     try {
       const res = await apiClient.get(

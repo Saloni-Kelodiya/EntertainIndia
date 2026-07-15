@@ -1,6 +1,6 @@
 import apiClient from './client';
 import qs from "qs";
-import { normalizeMedia } from './helpers';
+import { normalizeMedia } from './helper';
 
 export const normalizeSong = (song) => {
   if (!song) return null;
@@ -25,15 +25,15 @@ export const normalizeSong = (song) => {
     language: data.song_language || data.song_Language || '',
     label: data.label || '',
     trandingRank: data.trandingRank || null,
-    Language: data.language, // ✅ language field भी normalize करें
+    Language: data.language, //  language field भी normalize करें
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
     publishedAt: data.publishedAt,
 topSearchRank:data.topSearchRank,
-    // ✅ Thumbnail
+    //  Thumbnail
     thumbnail: data.thumbnail ? normalizeMedia(data.thumbnail) : null,
 
-    // ✅ Categories
+    //  Categories
     categories: Array.isArray(data.categories)
       ? data.categories.map(cat => ({
         id: cat.id,
@@ -50,7 +50,7 @@ topSearchRank:data.topSearchRank,
       }))
       : [],
 
-    // ✅ Platforms
+    //  Platforms
     platforms: (() => {
       const platformData = data.Platform || data.platforms || data.platform;
       if (!platformData) return [];
@@ -76,7 +76,7 @@ topSearchRank:data.topSearchRank,
 
 
 
-    // ✅ IMPORTANT: Song Artists - Repeatable Component
+    //  IMPORTANT: Song Artists - Repeatable Component
     song_artists: Array.isArray(data.song_artists)
       ? data.song_artists.map((item) => {
         // CASE 1: Profile exists (profile_Notexist = false)
@@ -112,7 +112,7 @@ topSearchRank:data.topSearchRank,
       })
       : [],
 
-    // ✅ Helper: Get all artist names as comma-separated string (for display)
+    //  Helper: Get all artist names as comma-separated string (for display)
     artistNames: (() => {
       if (!Array.isArray(data.song_artists)) return '';
 
@@ -126,7 +126,7 @@ topSearchRank:data.topSearchRank,
         .join(', ');
     })(),
 
-    // ✅ Helper: Get all clickable artists (for linking)
+    //  Helper: Get all clickable artists (for linking)
     clickableArtists: (() => {
       if (!Array.isArray(data.song_artists)) return [];
 
@@ -137,7 +137,7 @@ topSearchRank:data.topSearchRank,
           slug: item.artist_profile.Slug || item.artist_profile.slug,
         }));
     })(),
-    // ✅ Related Songs
+    //  Related Songs
     relatedSongs: Array.isArray(data.relatedSongs)
       ? data.relatedSongs.map(normalizeSong)
       : [],
@@ -155,7 +155,7 @@ export const songsAPI = {
                 $eq: categorySlug
               }
             },
-            // ✅ FORCE HINDI LANGUAGE FILTER
+            //  FORCE HINDI LANGUAGE FILTER
             language: { $eq: params.language || "hi" }
           },
           populate: {
@@ -243,7 +243,7 @@ export const songsAPI = {
   }
 },
   
-  // ✅ SIMPLE SEARCH METHOD - FIXED: Use term variable properly
+  //  SIMPLE SEARCH METHOD - FIXED: Use term variable properly
   simpleSearch: async (searchTerm, options = {}) => {
     try {
       const { page = 1, pageSize = 8, language = "hi" } = options;
@@ -266,11 +266,11 @@ export const songsAPI = {
         queryObj.filters.$or = [
           { title: { $containsi: term } },
           { slug: { $containsi: term } },
-          { lead_artist_name: { $containsi: term } }, // ✅ FIXED
+          { lead_artist_name: { $containsi: term } }, //  FIXED
           { album: { $containsi: term } },
           {
             song_artists: {
-              artist_name: { $containsi: term } // ✅ nested artist search
+              artist_name: { $containsi: term } //  nested artist search
             }
           }
         ];
@@ -294,7 +294,7 @@ export const songsAPI = {
       const queryObj = {
         filters: {
           slug: { $eq: slug },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: "hi" }
         },
         populate: {
@@ -333,7 +333,7 @@ export const songsAPI = {
           music_genres: {
             slug: { $eq: "trending" }
           },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: "hi" }
         },
         populate: {
@@ -366,7 +366,7 @@ export const songsAPI = {
             { artist: { $containsi: artistName } },
             { song_artists: { artist_name: { $containsi: artistName } } }
           ],
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: params.language || "hi" }
         },
         sort: ["release_date:desc"],
@@ -398,7 +398,7 @@ export const songsAPI = {
           music_genres: {
             slug: { $eq: genreSlug }
           },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: params.language || "hi" }
         },
         populate: {
@@ -432,7 +432,7 @@ export const songsAPI = {
       const queryObj = {
         filters: {
           id: { $ne: songId },
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: "hi" }
         },
         pagination: {
@@ -453,7 +453,7 @@ export const songsAPI = {
     }
   },
 
-  // ✅ SEARCH METHOD - पूरी तरह से फिक्स्ड
+  //  SEARCH METHOD - पूरी तरह से फिक्स्ड
   search: async (searchTerm, params = {}) => {
     try {
       if (!searchTerm || searchTerm.trim().length < 2) {
@@ -471,7 +471,7 @@ export const songsAPI = {
             { album: { $containsi: trimmedTerm } },
             { description: { $containsi: trimmedTerm } }
           ],
-          // ✅ FORCE HINDI LANGUAGE FILTER
+          //  FORCE HINDI LANGUAGE FILTER
           language: { $eq: params.language || "hi" }
         },
         pagination: {

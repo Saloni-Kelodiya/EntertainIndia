@@ -2,7 +2,7 @@ import DisclaimerPage from '../../page-components/DisclaimerPage';
 import LayoutWrapper from '../LayoutWrapper';
 
 export const metadata = {
-  title: 'अस्वीकरण (Disclaimer) | EntertainIndia',
+  title: 'अस्वीकरण (Disclaimer) | मनोरंजन समाचार एवं सामग्री नीति - EntertainIndia ' ,
   description: 'EntertainIndia (entertenindia.in) का आधिकारिक अस्वीकरण (Disclaimer) पढ़ें। हमारी कंटेंट पॉलिसी और कॉपीराइट नियम।',
   keywords: 'disclaimer in hindi, entertainindia disclaimer, copyright policy hindi',
   alternates: {

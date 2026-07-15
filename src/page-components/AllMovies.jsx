@@ -247,7 +247,7 @@ export default function MoviePage({ initialMovies = [] }) {
     const posterUrl = movie.poster?.url || null;
     const year = movie.year || (movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : "उपलब्ध नहीं");
 
-    // ✅ सर्वर कैटेगरी हटा दी – अब सीधे movie.category.slug का उपयोग करें, या डिफ़ॉल्ट 'movies'
+    //  सर्वर कैटेगरी हटा दी – अब सीधे movie.category.slug का उपयोग करें, या डिफ़ॉल्ट 'movies'
     const movieCategorySlug = movie.category?.slug ;
     const movieUrl = `/${movieCategorySlug}/movies/${movie.slug}`;
 
@@ -649,7 +649,7 @@ export default function MoviePage({ initialMovies = [] }) {
         ) : (
           <>
             {renderMovieSection("🔥 ट्रेंडिंग फिल्में", trendingMovies, "trending")}
-            {renderMovieSection("⚡ नई रिलीज़", latestMovies, "latest")}
+            {renderMovieSection(" नई रिलीज़", latestMovies, "latest")}
             {renderMovieSection("📅 आने वाली फिल्में", upcomingMovies, "upcoming")}
           </>
         )}

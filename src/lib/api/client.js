@@ -7,12 +7,12 @@ const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    // ✅ Cache control headers
+    //  Cache control headers
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0',
   },
-  // ✅ Important: Disable caching
+  //  Important: Disable caching
   withCredentials: false, // Set to true if you need cookies
 });
 

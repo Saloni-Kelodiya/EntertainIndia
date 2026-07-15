@@ -1,12 +1,14 @@
 import PhotosPage from "../../page-components/PhotosPage";
 import LayoutWrapper from "../LayoutWrapper";
-import { galleriesAPI, articlesAPI } from "../../lib/api";
+import { galleriesAPI} from "../../lib/api/galleries";
+import {articlesAPI} from "../../lib/api/articles";
+
 
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://entertainindia.in";
 
-// ✅ Generate Complete Schema for Photos Listing Page
+//  Generate Complete Schema for Photos Listing Page
 function generatePhotosListingSchema(galleries) {
   const domain = SITE_URL;
   const photosUrl = `${domain}/photos`;
@@ -23,7 +25,7 @@ function generatePhotosListingSchema(galleries) {
     "url": domain,
     "logo": {
       "@type": "ImageObject",
-      "url": `${domain}/logo.png`,
+      "url": `${domain}/og-logo.png`,
       "width": "512",
       "height": "512"
     },
@@ -180,7 +182,7 @@ export default async function Photos() {
       articlesAPI.getAll({
         category: "fashion",
         pageSize: 12,
-        sort: "createdAt:desc",  // ✅ Fixed: publish_datetime -> createdAt
+        sort: "createdAt:desc",  //  Fixed: publish_datetime -> createdAt
       }),
     ]);
 
@@ -190,7 +192,7 @@ export default async function Photos() {
     console.error("फोटो SSR त्रुटि:", error);
   }
 
-  // ✅ Generate complete schema (not separate scripts)
+  //  Generate complete schema (not separate scripts)
   const schemaData = generatePhotosListingSchema(galleries);
 
   return (

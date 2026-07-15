@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft, Star, Clock, Calendar, Play, Film, User, Users,
-  Globe, Camera, DollarSign, TrendingUp, BarChart, Award, Eye,
-  Ticket, AlertCircle, Maximize2, ExternalLink, Video, Send, MessageSquare,
-  Loader, Trash2, LogIn, MonitorPlay, IndianRupee, Wallet, Trophy, 
-  TrendingUp as TrendingUpIcon, Calendar as CalendarIcon, Coins, PiggyBank,Info
+  Globe,  DollarSign,  Award, Eye,
+  Ticket, AlertCircle, ExternalLink, Video, Send, MessageSquare,
+  Loader, Trash2,  IndianRupee, Trophy, 
+  TrendingUp as TrendingUpIcon, Calendar as CalendarIcon, Coins,Info
 } from "lucide-react";
 import { movieReviewsAPI } from '../lib/api';
 import { MEDIA_URL } from '../lib/constants';
@@ -17,7 +17,7 @@ import { formatDate } from '../lib/helpers';
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// ✅ PLATFORM ICONS CONFIG
+//  PLATFORM ICONS CONFIG
 const PLATFORM_ICONS = {
   'netflix': '/platform-icons/Netflix.webp',
   'amazon prime': '/platform-icons/Amazon-Prime.svg',
@@ -52,7 +52,7 @@ const getPlatformLogo = (platformName) => {
   return null;
 };
 
-// ✅ Complete Genre mapping for Hindi display
+//  Complete Genre mapping for Hindi display
 const getHindiGenreName = (genre) => {
   if (!genre) return "";
   
@@ -152,7 +152,7 @@ const getHindiGenreName = (genre) => {
   // Return original if no mapping found
   return genre;
 };
-// ✅ Language Mapping Function - English to Hindi
+//  Language Mapping Function - English to Hindi
 export const getHindiLanguageName = (englishName) => {
   const languageMap = {
     // Indian Languages
@@ -225,7 +225,7 @@ export const getHindiLanguageName = (englishName) => {
   // Return Hindi name if mapping exists, otherwise return original
   return languageMap[englishName] || englishName;
 };
-// ✅ HOVER POPUP CARD COMPONENT - Small Portrait Design
+//  HOVER POPUP CARD COMPONENT - Small Portrait Design
 const HoverPopupCard = ({ children, name, role, imageUrl, slug, type = 'cast' }) => {
   const [isHovepink, setIsHovepink] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -336,7 +336,7 @@ const HoverPopupCard = ({ children, name, role, imageUrl, slug, type = 'cast' })
   );
 };
 
-// ✅ COMPONENT START
+//  COMPONENT START
 export default function MovieDetailPage({ serverSlug, serverCategory, initialData, initialReviews }) {
   const [showFullDesc, setShowFullDesc] = useState(false);
   const router = useRouter();
@@ -613,8 +613,8 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
 )}
       {/* MOVIE CONTENT SECTION */}
       <div className="relative z-10">
-        <div className="lg:px-4">
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mt-5">
+        <div className="lg:px-2">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-5  mt-2">
 
             {/* LEFT SIDEBAR - Poster & Where to Watch (Desktop only) */}
             <div className="hidden lg:block w-full lg:w-80 flex-shrink-0 mt-6 lg:-mt-20">
@@ -685,11 +685,11 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
             </div>
 
             {/* MAIN CONTENT AREA - Mobile First Order */}
-            <div className="order-1 lg:order-2 flex-1 space-y-6 lg:space-y-8 pb-12">
+           <div className="order-1 lg:order-2 flex-1 flex flex-col gap-6 lg:gap-6 pb-12">
                {/* मोबाइल में टॉप पैडिंग - पोस्टर के नीचे ज्यादा स्पेस */}
   <div className="lg:hidden mt-20 sm:mt-28"></div>
               {/* Movie Title and Basic Info */}
-             <div className="space-y-4 px-2 sm:px-0 hidden lg:block">
+             <div className="space-y-4 px-2 sm:px-0 hidden lg:block lg:-mt-6">
                 <h2 className="text-[20px] sm:text-[24px] lg:text-[34px] font-black leading-tight text-gray-900 dark:text-white">
                   {movie.title}
                 </h2>
@@ -831,7 +831,7 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
 
                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
   {(showAllCast ? cast : cast.slice(0, 6)).map((role, idx) => {
-    // ✅ Access the celebrity profile data correctly
+    //  Access the celebrity profile data correctly
     const celebrity = role.celebrities_profile || {};
     
     const actorName = celebrity.name || role.characterName;
@@ -872,14 +872,20 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
                   )}
                 </div>
               )}
+                {crewMembers.length > 0 && (
+                <div className="rounded-xl shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 hover:shadow-lg transition-all duration-300">
+                  <h3 className="text-xl font-bold mb-5 flex items-center gap-3">
+                    <Users className="text-gray-900 dark:text-white" size={22} />
+                     मुख्य क्रू
+                  </h3>
 
-              {/* ===== 4. CREW SECTION ===== */}
+                  {/* ===== 4. CREW SECTION ===== */}
            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
   {(showAllCrew ? crewMembers : crewMembers.slice(0, 6)).map((member, idx) => {
     let avatarUrl = null;
     const photoData = member.photo;
     
-    // ✅ FIX: Handle photo as an array
+    //  FIX: Handle photo as an array
     if (photoData && Array.isArray(photoData) && photoData.length > 0) {
       const firstPhoto = photoData[0];
       if (firstPhoto) {
@@ -917,6 +923,17 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
     );
   })}
 </div>
+                  {crewMembers.length > 6 && (
+                    <button
+                      onClick={() => setShowAllCrew(!showAllCrew)}
+                      className="mt-5 w-full text-center text-sm font-semibold text-pink-500 hover:text-pink-600 transition-colors"
+                    >
+                      {showAllCrew ? "कम  क्रू दिखाएं ▲" : `और  क्रू दिखाएं (${crewMembers.length - 6}) ▼`}
+                    </button>
+                  )}
+                </div>
+              )}
+             
 
 
               {/* ===== 5. OFFICIAL TRAILER SECTION ===== */}
@@ -1087,7 +1104,7 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
                     {movie.similarMovies.slice(0, showAllSimilar ? 999 : 4).map((simMovie) => {
                       const posterUrl = getImageUrl(simMovie.poster);
                       return (
-                        <Link key={simMovie.id || simMovie.slug} href={`/${serverCategory}/movies/${simMovie.slug}`} className="flex gap-3 group">
+                        <Link key={simMovie.id || simMovie.slug} href={`/${simMovie.category.name.toLowerCase()}/${simMovie.slug}`} className="flex gap-3 group">
                           <div className="relative w-14 h-20 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 dark:bg-neutral-900">
                             {posterUrl ? (
                               <Image src={posterUrl} alt={simMovie.title} fill className="object-cover group-hover:scale-105 transition-transform" sizes="56px" />
@@ -1122,42 +1139,50 @@ export default function MovieDetailPage({ serverSlug, serverCategory, initialDat
               )}
 
               {/* ===== 8. RELATED ARTICLES - MOBILE ===== */}
-              {movie?.articles?.length > 0 && (
-                <div className="lg:hidden rounded-xl shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <MessageSquare className="text-blue-500" size={20} />
-                    संबंधित लेख
-                  </h3>
-                  <div className="space-y-3">
-                    {movie.articles.slice(0, showAllArticles ? 999 : 4).map((article) => (
-                      <Link key={article.id} href={`/${article.mainCategory}/${article.slug}`} className="flex gap-3 group">
-                        <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
-                          {article.hero_image?.url ? (
-                            <Image src={article.hero_image.url} alt={article.title} fill className="object-cover group-hover:scale-105 transition-transform" sizes="64px" />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-lg">📄</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {article.category?.name && <span className="inline-block text-[8px] px-1.5 py-0.5 rounded bg-pink-600 text-white font-semibold mb-1">{article.category.name}</span>}
-                          <h4 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-500 transition-colors">
-                            {article.title}
-                          </h4>
-                          <div className="flex items-center gap-2 text-[9px] text-gray-500 mt-1">
-                            <span className="flex items-center gap-1"><Clock size={8} />{article.publishedAt ? formatDate(article.publishedAt, 'relative') : 'हाल ही में'}</span>
-                            <span className="flex items-center gap-1"><Eye size={8} />{Number(article.views || 0).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                  {movie.articles.length > 4 && (
-                    <button onClick={() => setShowAllArticles(!showAllArticles)} className="w-full mt-4 text-xs font-semibold text-pink-500 hover:text-pink-600 transition-colors text-center">
-                      {showAllArticles ? "कम दिखाएं" : `${movie.articles.length - 4} और दिखाएं`}
-                    </button>
-                  )}
-                </div>
+           {movie?.articles?.length > 0 && (
+  <div className="lg:hidden rounded-xl shadow-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+      <MessageSquare className="text-blue-500" size={20} />
+      संबंधित लेख
+    </h3>
+    <div className="space-y-3">
+      {movie.articles.slice(0, showAllArticles ? 999 : 4).map((article) => {
+        //  केवल MainCategory, fallback 'general'
+        const categorySlug = article.MainCategory?.toLowerCase() ;
+        return (
+          <Link key={article.id} href={`/${categorySlug}/${article.slug}`} className="flex gap-3 group">
+            <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
+              {article.hero_image?.url ? (
+                <Image src={article.hero_image.url} alt={article.title} fill className="object-cover group-hover:scale-105 transition-transform" sizes="64px" />
+              ) : (
+                <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-lg">📄</div>
               )}
+            </div>
+            <div className="flex-1 min-w-0">
+              {article.MainCategory && (
+                <span className="inline-block text-[8px] px-1.5 py-0.5 rounded bg-pink-600 text-white font-semibold mb-1">
+                  {article.MainCategory}
+                </span>
+              )}
+              <h4 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-500 transition-colors">
+                {article.title}
+              </h4>
+              <div className="flex items-center gap-2 text-[9px] text-gray-500 mt-1">
+                <span className="flex items-center gap-1"><Clock size={8} />{article.publishedAt ? formatDate(article.publishedAt, 'relative') : 'हाल ही में'}</span>
+                <span className="flex items-center gap-1"><Eye size={8} />{Number(article.views || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+    {movie.articles.length > 4 && (
+      <button onClick={() => setShowAllArticles(!showAllArticles)} className="w-full mt-4 text-xs font-semibold text-pink-500 hover:text-pink-600 transition-colors text-center">
+        {showAllArticles ? "कम दिखाएं" : `${movie.articles.length - 4} और दिखाएं`}
+      </button>
+    )}
+  </div>
+)}
             </div>
 
             {/* RIGHT SIDEBAR - Similar Movies & Related Articles (Desktop only) */}
@@ -1377,7 +1402,7 @@ const SimilarMoviesSection = ({ similarMovies, serverCategory, showAllSimilar, s
         <div className="space-y-3">
           {similarMovies.slice(0, showAllSimilar ? 999 : 4).map((simMovie) => {
             const posterUrl = getImageUrl(simMovie.poster);
-            const categorySlug = simMovie.category?.slug?.toLowerCase() || simMovie.category?.toLowerCase() || "";
+            const categorySlug = simMovie.category?.name?.toLowerCase() || simMovie.category?.toLowerCase() || "";
             
             return (
               <Link 
@@ -1385,14 +1410,14 @@ const SimilarMoviesSection = ({ similarMovies, serverCategory, showAllSimilar, s
                 href={`/${categorySlug}/movies/${simMovie.slug}`}
                 className="flex gap-3 group"
               >
-                <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 dark:bg-neutral-900">
+                <div className="relative w-20 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 dark:bg-neutral-900">
                   {posterUrl ? (
                     <Image 
                       src={posterUrl} 
                       alt={simMovie.title || 'फ़िल्म का पोस्टर'} 
                       fill 
                       className="object-cover group-hover:scale-105 transition-transform duration-300" 
-                      sizes="80px" 
+                      sizes="64px" 
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-neutral-700 dark:to-neutral-600">
@@ -1407,15 +1432,10 @@ const SimilarMoviesSection = ({ similarMovies, serverCategory, showAllSimilar, s
                   </h4>
                   
                   <div className="flex items-center gap-2 flex-wrap">
-                    {simMovie.category && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 font-semibold uppercase tracking-wider">
-                        {simMovie.category.name || simMovie.category}
-                      </span>
-                    )}
                     
-                    {simMovie.year && (
+                    {simMovie.releaseDate && (
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {simMovie.year}
+                        {simMovie.releaseDate}
                       </span>
                     )}
                   </div>
@@ -1454,27 +1474,45 @@ const RelatedArticlesSection = ({ articles, serverCategory, showAllArticles, set
     {articles?.length > 0 ? (
       <>
         <div className="space-y-3">
-          {articles.slice(0, showAllArticles ? 999 : 4).map((article) => (
-            <Link key={article.id} href={`/${article.MainCategory}/${article.slug}`} className="flex gap-3 group">
-              <div className="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
-                {article.hero_image?.url ? (
-                  <Image src={article.hero_image.url} alt={article.title} fill className="object-cover group-hover:scale-105 transition-transform" sizes="64px" />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-lg">📄</div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                {article.category?.name && <span className="inline-block text-[8px] px-1.5 py-0.5 rounded bg-pink-600 text-white font-semibold mb-1">{article.category.name}</span>}
-                <h4 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-500 transition-colors">
-                  {article.title}
-                </h4>
-                <div className="flex items-center gap-2 text-[9px] text-gray-500 mt-1">
-                  <span className="flex items-center gap-1"><Clock size={8} />{article.publishedAt ? formatDate(article.publishedAt, 'relative') : 'हाल ही में'}</span>
-                  <span className="flex items-center gap-1"><Eye size={8} />{Number(article.views || 0).toLocaleString()}</span>
+          {articles.slice(0, showAllArticles ? 999 : 4).map((article) => {
+            //  केवल MainCategory का उपयोग करें, fallback के रूप में 'general'
+            const categorySlug = article.MainCategory ;
+            return (
+              <Link 
+                key={article.id} 
+                href={`/${categorySlug}/${article.slug}`} 
+                className="flex gap-3 group"
+              >
+                <div className="relative w-16 sm:w-20 aspect-[4/3] rounded-md overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-700">
+  {article.hero_image?.url ? (
+   <Image
+  src={article.hero_image.url}
+  alt={article.title}
+  fill
+  className="object-cover group-hover:scale-105 transition-transform duration-300"
+  sizes="64px"
+  quality={80}
+  placeholder="blur"
+  blurDataURL={article.hero_image.placeholder || "data:image/jpeg;base64,..."} // if available
+/>
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-2xl">
+      📄
+    </div>
+  )}
+</div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-500 transition-colors">
+                    {article.title}
+                  </h4>
+                  <div className="flex items-center gap-2 text-[9px] text-gray-500 mt-1">
+                    <span className="flex items-center gap-1"><Clock size={8} />{article.publishedAt ? formatDate(article.publishedAt, 'relative') : 'हाल ही में'}</span>
+                    <span className="flex items-center gap-1"><Eye size={8} />{Number(article.views || 0).toLocaleString()}</span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
         {articles.length > 4 && (
           <button onClick={() => setShowAllArticles(!showAllArticles)} className="w-full mt-4 text-xs font-semibold text-pink-500 hover:text-pink-600 transition-colors text-center">

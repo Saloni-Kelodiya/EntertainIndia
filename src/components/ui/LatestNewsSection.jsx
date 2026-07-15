@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Clock } from 'lucide-react';
-import { getStrapiMedia } from '../../lib/constants';
 import { formatDate } from '../../lib/helpers';
+import { getResponsiveImageUrl } from '../../lib/api/helper'; //  आपका ग्लोबल इमेज हेल्पर
+import OptimizedImage from './OptimizedImage'; //  आपका ग्लोबल इमेज कंपोनेंट
 
 const categoryHindiNames = {
   bollywood: "बॉलीवुड",
@@ -14,7 +14,7 @@ const categoryHindiNames = {
   korean: "कोरियाई",
 };
 
-// No "use client" – this is now a Server Component
+// No "use client" – this remains a Server Component
 export default function LatestNewsList ({ initialData = [] }) {
   if (!initialData || initialData.length === 0) {
     return (
@@ -36,12 +36,9 @@ export default function LatestNewsList ({ initialData = [] }) {
       "
     >
       {initialData.map((article) => {
-        // Get the best available image URL
-        const imgUrl = getStrapiMedia(
-          article?.heroImage?.formats?.thumbnail?.url ||
-          article?.heroImage?.formats?.small?.url ||
-          article?.heroImage?.url
-        );
+        //  ग्लोबल परफॉर्मेंस सुधार: पुराना बड़ा स्ट्रैपी लॉजिक हटाया
+        // इस साइडबार लिस्ट के थंबनेल्स के लिए 'small' साइज़ की इमेज सबसे लाइटवेट और बेस्ट रहेगी
+        const imgUrl = getResponsiveImageUrl(article, "small");
 
         const articleTitle = article.title || "समाचार";
         const altText = `${articleTitle} - समाचार थंबनेल`;
@@ -58,21 +55,20 @@ export default function LatestNewsList ({ initialData = [] }) {
               border border-gray-100 dark:border-gray-700
               hover:shadow-md
               group
+              touch-manipulation
             "
             aria-label={articleTitle}
           >
-            {/* Thumbnail Container - fixed dimensions prevent CLS */}
+            {/* Thumbnail Container - w-28 h-20 (Prevent CLS) */}
             <div className="relative w-28 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-700">
               {imgUrl ? (
-                <Image
+                /*  आपके OptimizedImage कंपोनेंट का उपयोग */
+                <OptimizedImage
                   src={imgUrl}
                   alt={altText}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 768px) 112px, 112px"
-                  quality={75}
-                  loading="lazy"
-                  decoding="async"
+                  type="thumbnail" // यह खुद-ब-खुद मोबाइल और डेस्कटॉप के हिसाब से 100px-120px का नाप (sizes) ब्राउज़र को दे देगा
+                  isPriority={false} // यह साइडबार लिस्ट नीचे होती है, इसलिए इसे लेज़ी लोड (lazy load) होने देंगे
+                  className="transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-200 dark:bg-gray-700">
@@ -91,7 +87,7 @@ export default function LatestNewsList ({ initialData = [] }) {
               )}
 
               {/* Title */}
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors leading-snug">
                 {articleTitle}
               </h3>
 

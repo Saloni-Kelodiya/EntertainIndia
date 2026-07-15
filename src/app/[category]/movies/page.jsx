@@ -7,11 +7,11 @@ import { moviesAPI, genresAPI } from '../../../lib/api';
 const SITE_URL = "https://entertainindia.in";
 const VALID_CATEGORIES = ['bollywood', 'hollywood', 'bhojiwood', 'tollywood', 'korean'];
 
-// ✅ Dynamic SEO Metadata
+//  Dynamic SEO Metadata
 export async function generateMetadata({ params }) {
   const { category } = await params;
   
-  // ✅ FIX: Check if category is valid
+  //  FIX: Check if category is valid
   if (!VALID_CATEGORIES.includes(category)) {
     return {
       title: 'Page Not Found',
@@ -42,11 +42,11 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// ✅ Main Component
+//  Main Component
 export default async function MoviePage({ params }) {
   const { category } = await params;
   
-  // ✅ FIX: Check if category is valid
+  //  FIX: Check if category is valid
   if (!VALID_CATEGORIES.includes(category)) {
     return notFound();
   }
@@ -57,7 +57,7 @@ export default async function MoviePage({ params }) {
   try {
     const apiParams = {
       pageSize: 50,
-      sort: "createdAt:desc",  // ✅ Fixed: publishedAt -> createdAt
+      sort: "createdAt:desc",  //  Fixed: publishedAt -> createdAt
     };
     
     if (category && category !== 'all') {
@@ -72,20 +72,20 @@ export default async function MoviePage({ params }) {
     const initialMovies = moviesRes?.movies || [];
     const initialGenres = [...new Set(genresRes.map(i => i.name).filter(Boolean))];
     
-    // ✅ FIX: Filter out movies with invalid category
+    //  FIX: Filter out movies with invalid category
     const validMovies = initialMovies.filter(movie => {
       const movieCategory = movie.category?.slug || '';
       return movieCategory !== 'movies';  // Exclude movies with category "movies"
     });
     
-    // ✅ Schema with correct URLs
+    //  Schema with correct URLs
     const itemListElement = validMovies.slice(0, 10).map((movie, index) => ({
       "@type": "ListItem",
       "position": index + 1,
       "item": {
         "@type": "Movie",
         "name": movie.title,
-        "url": `${domain}/${category}/movies/${movie.slug}`,  // ✅ Correct URL
+        "url": `${domain}/${category}/movies/${movie.slug}`,  //  Correct URL
         "image": movie.poster?.url || movie.backdrop?.url || '',
         "datePublished": movie.releaseDate,
       }
@@ -99,7 +99,7 @@ export default async function MoviePage({ params }) {
           "@id": `${domain}/#organization`,
           "name": "EntertainIndia",
           "url": domain,
-          "logo": `${domain}/logo.png`
+          "logo": `${domain}/og-logo.png`
         },
         {
           "@type": "WebSite",

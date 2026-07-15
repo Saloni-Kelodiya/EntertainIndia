@@ -69,7 +69,7 @@ function generateMoviesListSchema(movies) {
     "logo": {
       "@type": "ImageObject",
       "@id": `${SITE_URL}/#logo`,
-      "url": `${SITE_URL}/logo.png`,
+      "url": `${SITE_URL}/og-logo.png`,
     },
     "sameAs": [
       "https://www.facebook.com/profile.php?id=61584375938569",
@@ -170,7 +170,7 @@ export default async function MoviesRoutePage() {
   let initialMovies = [];
 
   try {
-    // ✅ SERVER SIDE FETCHING: Saari mixed movies ek saath fetch ho rahi hain
+    //  SERVER SIDE FETCHING: Saari mixed movies ek saath fetch ho rahi hain
     const response = await moviesAPI.getAll({
       pageSize: 100,
       sort: "publishedAt:desc",

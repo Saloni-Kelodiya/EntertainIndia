@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { moviesAPI, pollAPI } from "../../lib/api";
-import apiClient from "../../lib/api";
+import { moviesAPI} from "../../lib/api/movies";
+import {pollAPI} from "../../lib/api/polls";
 import { CheckSquare } from "lucide-react";
 import { useStore } from "../../store/useStore";
 
@@ -17,7 +17,7 @@ const openLoginModal = useStore((state) => state.openLoginModal);
  async function loadPoll() {
   try {
     setLoading(true);
-    const { movies } = await moviesAPI.getAll({ pageSize: 4 });
+    const { movies } = await moviesAPI.getAllLight({ pageSize: 4 });
     setMovies(movies || []);
 
     const votes = await pollAPI.results();
